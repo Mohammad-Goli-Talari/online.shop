@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 function SignUpForm() {
-  const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     password: '',
@@ -16,48 +16,50 @@ function SignUpForm() {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault(); // Prevents default form submission behavior (page reload)
+    e.preventDefault();
     console.log('Form Submitted:', formData);
-    // You can send this data to an API or perform further actions here
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label htmlFor="fullName">Full Name:</label>
-        <input
-          type="text"
-          id="fullName"
-          name="fullName"
-          value={formData.fullName}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      <div>
-        <label htmlFor="email">Email:</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      <div>
-        <label htmlFor="password">Password:</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      <button type="submit">Submit</button>
-    </form>
+    <div className="container">
+      <h2>ایجاد حساب کاربری</h2>
+      <form onSubmit={handleSubmit}>
+        <div className="info">
+          <label htmlFor="fullName">نام و نام خانوادگی:</label>
+          <input
+            type="text"
+            id="fullName"
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="info">
+          <label htmlFor="email">ایمیل:</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="info">
+          <label htmlFor="password">رمز ورود:</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <button type="submit">ورود</button>
+      </form>
+    </div>
   );
 }
 
