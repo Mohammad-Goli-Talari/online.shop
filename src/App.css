@@ -29,7 +29,7 @@ h2 {
 .info {
     display: flex;
     justify-content: flex-end;
-    padding: 15px 50px 0 0;
+    padding: 15px 65px 0 0;
 }
 
 input {
@@ -37,9 +37,13 @@ input {
     color: #eeebe7;
     border: none;
     border-bottom: 2px solid white;
-    direction: rtl;
+    direction: ltr;
     padding-right: 15px;
     padding-bottom: 5px;
+}
+
+.hidden-eye {
+  margin-right: -20px;
 }
 
 input:focus {

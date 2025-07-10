@@ -92,7 +92,7 @@ function SignUpForm() {
             placeholder="Password"
             required
           />
-          <span onClick={handlePasswordToggle} style={{ cursor: 'pointer' }}>
+          <span className="hidden-eye" onClick={handlePasswordToggle} style={{ cursor: 'pointer' }}>
             {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
           </span>
           {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>}
