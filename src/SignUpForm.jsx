@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { Icon } from 'react-icons-kit';
-import { eyeOff } from 'react-icons-kit/feather/eyeOff';
-import { eye } from 'react-icons-kit/feather/eye';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 function SignUpForm() {
     const [formData, setFormData] = useState({
@@ -11,7 +9,7 @@ function SignUpForm() {
   });
 
   const [passwordType, setPasswordType] = useState('password');
-  const [passwordIcon, setPasswordIcon] = useState(eyeOff);
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   
   const handleChange = (e) => {
@@ -23,14 +21,9 @@ function SignUpForm() {
   };
 
   const handlePasswordToggle = () => {
-      if (passwordType === 'password') {
-        setPasswordIcon(eye);
-        setPasswordType('text');
-      } else {
-        setPasswordIcon(eyeOff);
-        setPasswordType('password');
-      }
-    };
+    setShowPassword((prev) => !prev);
+    setPasswordType(passwordType === 'password' ? 'text' : 'password');
+  };
 
     const validateForm = () => {
       let newErrors = {};
@@ -99,8 +92,8 @@ function SignUpForm() {
             placeholder="Password"
             required
           />
-          <span onClick={handlePasswordToggle}>
-            <Icon icon={passwordIcon} size={20} />
+          <span onClick={handlePasswordToggle} style={{ cursor: 'pointer' }}>
+            {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
           </span>
           {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>}
         </div>
