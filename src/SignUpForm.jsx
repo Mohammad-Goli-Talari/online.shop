@@ -66,7 +66,7 @@ function SignUpForm() {
       <p>Already have an account? <Link to="/auth/sign-in">Get started</Link></p>
       <form onSubmit={handleSubmit}>
         <div className="info">
-          <label htmlFor="firstName">First Name:</label>
+          <label htmlFor="firstName">First name</label>
           <input
           type="text"
           id="firstName"
@@ -78,7 +78,7 @@ function SignUpForm() {
           {errors.firstName && <p style={{ color: 'red' }}>{errors.firstName}</p>}
         </div>
         <div className="info">
-          <label htmlFor="lastName">Last Name:</label>
+          <label htmlFor="lastName">Last name</label>
           <input
           type="text"
           id="lastName"
@@ -90,7 +90,7 @@ function SignUpForm() {
           {errors.lastName && <p style={{ color: 'red' }}>{errors.lastName}</p>}
         </div>
         <div className="info">
-          <label htmlFor="email">Email Address:</label>
+          <label htmlFor="email">Email address</label>
           <input
             type="email"
             id="email"
@@ -103,7 +103,7 @@ function SignUpForm() {
           {errors.email && <p style={{ color: 'red' }}>{errors.email}</p>}
         </div>
         <div className="info">
-          <label htmlFor="password">Password:</label>
+          <label htmlFor="password">Password</label>
           <input
             type={passwordType}
             id="password"
@@ -118,7 +118,7 @@ function SignUpForm() {
           </span>
           {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>}
         </div>
-        <button type="submit">Sign Up</button>
+        <button type="submit">Create account</button>
       </form>
     </div>
   );
