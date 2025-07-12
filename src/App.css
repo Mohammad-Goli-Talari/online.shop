@@ -15,6 +15,10 @@ h2 {
     padding-bottom: 20px;
 }
 
+label {
+    display: none;
+}
+
 .container {
     width: 300px;
     height: 280px;

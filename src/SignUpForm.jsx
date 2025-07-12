@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 function SignUpForm() {
     const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
   });
@@ -11,7 +13,8 @@ function SignUpForm() {
   const [passwordType, setPasswordType] = useState('password');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  
+  // const navigate = useNavigate();
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -30,9 +33,12 @@ function SignUpForm() {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-      if (!formData.fullName.trim()) {
-        newErrors.fullName = 'Full Name is required';
-      }
+      if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First Name is required.';
+    }
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last Name is required.';
+    }
       if (!formData.email.trim() || !emailRegex.test(formData.email)) {
         newErrors.email = 'Valid Email is required';
       }
@@ -56,21 +62,35 @@ function SignUpForm() {
 
   return (
     <div className="container">
-      <h2>Sing Up</h2>
+      <h2>Get started absolutely free</h2>
+      <p>Already have an account? <Link to="/auth/sign-in">Get started</Link></p>
       <form onSubmit={handleSubmit}>
         <div className="info">
+          <label htmlFor="firstName">First Name:</label>
           <input
-            type="text"
-            id="fullName"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleChange}
-            placeholder="Full Name"
-            required
-          />
-          {errors.fullName && <p style={{ color: 'red' }}>{errors.fullName}</p>}
+          type="text"
+          id="firstName"
+          name="firstName"
+          value={formData.firstName}
+          onChange={handleChange}
+          required
+        />
+          {errors.firstName && <p style={{ color: 'red' }}>{errors.firstName}</p>}
         </div>
         <div className="info">
+          <label htmlFor="lastName">Last Name:</label>
+          <input
+          type="text"
+          id="lastName"
+          name="lastName"
+          value={formData.lastName}
+          onChange={handleChange}
+          required
+        />
+          {errors.lastName && <p style={{ color: 'red' }}>{errors.lastName}</p>}
+        </div>
+        <div className="info">
+          <label htmlFor="email">Email Address:</label>
           <input
             type="email"
             id="email"
@@ -83,6 +103,7 @@ function SignUpForm() {
           {errors.email && <p style={{ color: 'red' }}>{errors.email}</p>}
         </div>
         <div className="info">
+          <label htmlFor="password">Password:</label>
           <input
             type={passwordType}
             id="password"
