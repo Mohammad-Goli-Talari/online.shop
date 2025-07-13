@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import SignInForm from "./SignInForm.jsx";
+
 
 function SignUpForm() {
     const [formData, setFormData] = useState({
@@ -61,66 +63,88 @@ function SignUpForm() {
     };
 
   return (
-    <div className="container">
-      <h2>Get started absolutely free</h2>
-      <p>Already have an account? <Link to="/auth/sign-in">Get started</Link></p>
-      <form onSubmit={handleSubmit}>
-        <div className="info">
-          <label htmlFor="firstName">First name</label>
-          <input
-          type="text"
-          id="firstName"
-          name="firstName"
-          value={formData.firstName}
-          onChange={handleChange}
-          required
-        />
-          {errors.firstName && <p style={{ color: 'red' }}>{errors.firstName}</p>}
+    <>
+      <div className="container">
+        <div className="img-container">
+          <h1>Manage the job</h1>
+          <p>More effectively with optimized workflows.</p>
         </div>
-        <div className="info">
-          <label htmlFor="lastName">Last name</label>
-          <input
-          type="text"
-          id="lastName"
-          name="lastName"
-          value={formData.lastName}
-          onChange={handleChange}
-          required
-        />
-          {errors.lastName && <p style={{ color: 'red' }}>{errors.lastName}</p>}
+        <div className="register-container">
+          <div className="title">
+            <h2>Get started absolutely free</h2>
+            <BrowserRouter>
+              <p>Already have an account? <Link className="Link" to="./SignInForm">Get started</Link></p>
+              <Routes>
+                <Route path="./SignInForm" element={<SignInForm />} />
+              </Routes>
+            </BrowserRouter>
+          </div>
+          <div className="form">
+            <form onSubmit={handleSubmit}>
+              <div className="full-name">
+                <fieldset>
+                  <legend>First name</legend>
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    required
+                  />
+                  {errors.firstName && <p style={{ color: 'red' }}>{errors.firstName}</p>}
+                </fieldset>
+                <fieldset>
+                  <legend>Last name</legend>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    required
+                  />
+                  {errors.lastName && <p style={{ color: 'red' }}>{errors.lastName}</p>}
+                </fieldset>
+              </div>
+              <div className="email">
+                <fieldset>
+                  <legend>Email address</legend>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                  {errors.email && <p style={{ color: 'red' }}>{errors.email}</p>}
+                </fieldset>
+              </div>
+              <div className="password">
+                <fieldset>
+                  <legend>Password</legend>
+                  <input
+                    type={passwordType}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="6+ characters"
+                    required
+                  />
+                  <span className="hidden-eye" onClick={handlePasswordToggle} style={{ cursor: 'pointer' }}>
+                    {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                  </span>
+                  {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>}
+                </fieldset>
+              </div>
+              <button type="submit">Create account</button>
+            </form>
+          </div>
         </div>
-        <div className="info">
-          <label htmlFor="email">Email address</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Email"
-            required
-          />
-          {errors.email && <p style={{ color: 'red' }}>{errors.email}</p>}
-        </div>
-        <div className="info">
-          <label htmlFor="password">Password</label>
-          <input
-            type={passwordType}
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Password"
-            required
-          />
-          <span className="hidden-eye" onClick={handlePasswordToggle} style={{ cursor: 'pointer' }}>
-            {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
-          </span>
-          {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>}
-        </div>
-        <button type="submit">Create account</button>
-      </form>
-    </div>
+      </div> 
+    </>
   );
 }
 
