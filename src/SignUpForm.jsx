@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Link } from 'react-router-dom';
 
 function SignUpForm() {
@@ -13,7 +14,6 @@ function SignUpForm() {
   const [passwordType, setPasswordType] = useState('password');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  // const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -69,8 +69,8 @@ function SignUpForm() {
         </div>
         <div className="register-container">
           <div className="title">
-            <h2>Get started absolutely free</h2>
-            <p>Already have an account? <Link className="Link" to="/signin">Get started</Link></p>
+            <h3>Get started absolutely free</h3>
+            <p className="signin-link">Already have an account? <Link className="Link" to="/signin">Get started</Link></p>
           </div>
           <div className="form">
             <form onSubmit={handleSubmit}>
@@ -123,11 +123,11 @@ function SignUpForm() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="6+ characters"
+                    placeholder="8+ characters"
                     required
                   />
                   <span className="hidden-eye" onClick={handlePasswordToggle} style={{ cursor: 'pointer' }}>
-                    {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
                   </span>
                   {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>}
                 </fieldset>
