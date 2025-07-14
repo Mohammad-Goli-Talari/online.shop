@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import SignInForm from "./SignInForm.jsx";
-
+import { Link } from 'react-router-dom';
 
 function SignUpForm() {
     const [formData, setFormData] = useState({
@@ -72,12 +70,7 @@ function SignUpForm() {
         <div className="register-container">
           <div className="title">
             <h2>Get started absolutely free</h2>
-            <BrowserRouter>
-              <p>Already have an account? <Link className="Link" to="./SignInForm">Get started</Link></p>
-              <Routes>
-                <Route path="./SignInForm" element={<SignInForm />} />
-              </Routes>
-            </BrowserRouter>
+            <p>Already have an account? <Link className="Link" to="/signin">Get started</Link></p>
           </div>
           <div className="form">
             <form onSubmit={handleSubmit}>
