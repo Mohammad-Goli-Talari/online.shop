@@ -64,12 +64,15 @@ function SignUpForm() {
     <>
       <div className="container">
         <div className="img-container">
-          <h1>Manage the job</h1>
-          <p>More effectively with optimized workflows.</p>
+          <h1 className="job-name">Hamed Boutiq</h1>
+          <p className="Slogan">If you don't like so we will exchange</p>
+          <div className="img">
+            <img className="img-1" src="src\assets\hamed 1.png" />
+          </div>
         </div>
         <div className="register-container">
           <div className="title">
-            <h3>Get started absolutely free</h3>
+            <h3 className='page-title'>Get started absolutely free</h3>
             <p className="signin-link">Already have an account? <Link className="Link" to="/signin">Get started</Link></p>
           </div>
           <div className="form">
@@ -136,7 +139,6 @@ function SignUpForm() {
             </form>
           </div>
           <p className="term">By signing up, I agree to <span className="terms-policy" to="/terms">Terms of service</span> and <span className="terms-policy" to="policy">Privacy policy</span>.<br/><br/><span className="term-or">OR</span></p>
-          
         </div>
       </div> 
     </>
