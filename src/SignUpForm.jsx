@@ -135,6 +135,8 @@ function SignUpForm() {
               <button type="submit">Create account</button>
             </form>
           </div>
+          <p className="term">By signing up, I agree to <span className="terms-policy" to="/terms">Terms of service</span> and <span className="terms-policy" to="policy">Privacy policy</span>.<br/><br/><span className="term-or">OR</span></p>
+          
         </div>
       </div> 
     </>

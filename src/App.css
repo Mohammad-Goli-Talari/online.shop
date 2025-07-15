@@ -9,25 +9,24 @@
     height: 100%;
     display: flex;
     justify-content: center;
-    background-color: white;
     color: black;
 }
 
 .img-container {
-    width: 35%;
+    width: 28.5%;
     height: 100vh;
-    background-color: rgb(236, 236, 236);
+    background-color: #fafafa;
     text-align: center;
 }
 
 .register-container {
-    width: 65%;
+    width: 71.5%;
     height: 100vh;
-    margin-top: 100px;
-    padding-left: 210px;
+    padding-top: 120px;
+    padding-left: 400px;
     display: flex;
     flex-direction: column;
-    flex-wrap: wrap;
+    background-color: white;
 }
 
 .signin-link {
@@ -36,14 +35,15 @@
 }
 
 .Link {
-    color: rgb(58, 128, 58);
+    color: #31a76f;
     text-decoration: none;
     font-weight: bold;
 }
 
 .form {
-    width: 350px;
-    margin: 30px 0 0 10px;
+    width: 420px;
+    margin-top: 50px;
+    background-color: white;
 }
 
 .full-name {
@@ -51,10 +51,31 @@
     gap: 9px;
 }
 
-input {
-    border: none;
+.full-name input {
+    width: 150px;
+    height: 30px;
     margin: 0 0 10px 10px;
-    padding: 5px 0;
+    padding: 5px 5px;
+    border: none;
+}
+
+.full-name fieldset {
+    width: 205px;
+    height: 65px;
+    padding: 3px 0 3px 5px;
+    border-style: solid;
+    border-color: rgb(218, 218, 218);
+    border-radius: 7.5px;
+    font-size: 12px;
+    margin: 7px 0;
+}
+
+input {
+    width: 350px;
+    height: 30px;
+    margin: 0 0 10px 10px;
+    padding: 5px 5px;
+    border: none;
 }
 
 input:focus {
@@ -62,6 +83,10 @@ input:focus {
 }
 
 fieldset {
+    width: 420px;
+    height: 65px;
+    padding: 3px 0 3px 5px;
+    color: rgb(126, 126, 126);
     border-style: solid;
     border-color: rgb(218, 218, 218);
     border-radius: 7.5px;
@@ -70,30 +95,59 @@ fieldset {
 } 
 
 fieldset:hover {
+    color: rgb(126, 126, 126);
     border-style: solid;
-    border-color: rgb(97, 97, 97);
-    border-radius: 7.5px;
+    border-color: rgb(0, 0, 0);
 }
 
 fieldset:focus-within {
+    color: rgb(0, 0, 0);
     border-style: solid;
     border-color: rgb(0, 0, 0);
-    border-radius: 7.5px;
 }
 
 legend {
-    margin-left: 10px;
+    margin-left: 5px;
 }
 
 .hidden-eye {
-    padding-left: 150px;
-    padding-top: 10px;
+    margin-left: 15px;
+}
+
+.email {
+    padding: 2px 0;
+}
+
+.password {
+    padding: 2px 0;
 }
 
 button {
-    width: 350px;
-    height: 40px;
+    width: 419px;
+    height: 50px;
+    margin: 10px 0 30px 0;
     background-color: #20242c;
     color: white;
+    font-weight: 600;
     border-radius: 8px;
+}
+
+.term {
+    margin-left: 15px;
+    color: rgb(126, 126, 126);
+}
+
+.term-or {
+    padding-left: 185px;
+}
+
+.terms-policy {
+    color: black;
+    text-decoration: underline;
+    text-decoration-color: rgb(126, 126, 126);
+}
+
+.terms-policy:hover {
+    text-decoration-color: black;
+    cursor: pointer;
 }
