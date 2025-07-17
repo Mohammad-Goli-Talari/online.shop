@@ -1,78 +1,111 @@
 import React, { useState } from 'react';
 import {
-  Box,
-  Button,
-  Grid,
-  TextField,
-  Typography,
-  InputAdornment,
-  IconButton,
-  Link,
-  Stack
+  Box, Button, TextField, Typography, IconButton,
+  InputAdornment, CircularProgress, Divider, Stack
 } from '@mui/material';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
-import XIcon from '@mui/icons-material/X';
+import XIcon from '@mui/icons-material/Close';
+import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+
+const schema = yup.object().shape({
+  firstName: yup.string().required('First name is required.'),
+  lastName: yup.string().required('Last name is required.'),
+  email: yup.string().email().required('Email is required.'),
+  password: yup.string().min(8).required('Password is required.'),
+});
 
 function SignUpForm({ switchForm }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSocialSignup = (platform) => {
-    window.location.href = `/auth/${platform}`;
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    resolver: yupResolver(schema),
+  });
+
+  const onSubmit = async (data) => {
+    setLoading(true);
+    setTimeout(() => {
+      console.log('Sign up:', data);
+      reset(); // پاک‌سازی فرم
+      setLoading(false);
+    }, 1500);
   };
 
   return (
-    <Box textAlign="center">
-      <Typography variant="h6" fontWeight="bold">Get started absolutely free</Typography>
-      <Typography variant="body2" sx={{ mt: 1 }}>
+    <Box width="100%">
+      <Typography variant="h6" fontWeight="bold" gutterBottom>
+        Create your account
+      </Typography>
+
+      <Typography variant="body2" mb={2}>
         Already have an account?{' '}
-        <Link href="#" onClick={switchForm} underline="none" sx={{ color: 'green' }}>Get started</Link>
+        <Typography component="span" color="green" sx={{ cursor: 'pointer' }} onClick={switchForm}>
+          Sign in
+        </Typography>
       </Typography>
 
-      <Grid container spacing={2} sx={{ mt: 2 }}>
-        <Grid item xs={12} sm={6}><TextField fullWidth label="First name" /></Grid>
-        <Grid item xs={12} sm={6}><TextField fullWidth label="Last name" /></Grid>
-      </Grid>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Box display="flex" gap={1}>
+          <TextField
+            fullWidth label="First name" variant="outlined" size="small"
+            {...register('firstName')} error={!!errors.firstName}
+            helperText={errors.firstName?.message}
+          />
+          <TextField
+            fullWidth label="Last name" variant="outlined" size="small"
+            {...register('lastName')} error={!!errors.lastName}
+            helperText={errors.lastName?.message}
+          />
+        </Box>
 
-      <TextField fullWidth label="Email address" sx={{ mt: 2 }} />
-      <TextField
-        fullWidth
-        label="Password"
-        type={showPassword ? 'text' : 'password'}
-        sx={{ mt: 2 }}
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? <VisibilityOff /> : <Visibility />}
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-      />
+        <TextField
+          fullWidth label="Email address" variant="outlined" size="small"
+          margin="normal" {...register('email')} error={!!errors.email}
+          helperText={errors.email?.message}
+        />
 
-      <Button fullWidth variant="contained" sx={{ mt: 3, py: 1.5, backgroundColor: '#1c1c1c' }}>
-        Create account
-      </Button>
+        <TextField
+          fullWidth label="Password" variant="outlined" size="small"
+          type={showPassword ? 'text' : 'password'} margin="normal"
+          {...register('password')} error={!!errors.password}
+          helperText={errors.password?.message || '8+ characters'}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
 
-      <Typography variant="body2" sx={{ mt: 2 }}>
-        By signing up, I agree to <Link href="#">Terms of service</Link> and <Link href="#">Privacy policy</Link>.
+        <Button
+          fullWidth type="submit" variant="contained"
+          sx={{ backgroundColor: '#1e1e1e', color: 'white', mt: 2 }}
+          disabled={loading}
+        >
+          {loading ? <CircularProgress size={20} color="inherit" /> : 'Create account'}
+        </Button>
+      </form>
+
+      <Typography variant="caption" display="block" align="center" sx={{ mt: 2 }}>
+        By signing up, I agree to{' '}
+        <Typography component="span" color="primary">Terms of service</Typography>{' '}
+        and{' '}
+        <Typography component="span" color="primary">Privacy policy</Typography>.
       </Typography>
 
-      <Typography variant="body2" align="center" sx={{ mt: 2 }}>OR</Typography>
+      <Divider sx={{ my: 2 }}>OR</Divider>
 
-      <Stack direction="row" spacing={2} justifyContent="center" mt={2}>
-        <IconButton onClick={() => handleSocialSignup('google')} sx={{ border: '1px solid #db4437', color: '#db4437' }}>
-          <GoogleIcon />
-        </IconButton>
-        <IconButton onClick={() => handleSocialSignup('github')} sx={{ border: '1px solid #24292e', color: '#24292e' }}>
-          <GitHubIcon />
-        </IconButton>
-        <IconButton onClick={() => handleSocialSignup('x')} sx={{ border: '1px solid #000000', color: '#000000' }}>
-          <XIcon />
-        </IconButton>
+      <Stack direction="row" spacing={2} justifyContent="center">
+        <IconButton sx={{ border: '1px solid #ccc' }}><GoogleIcon /></IconButton>
+        <IconButton sx={{ border: '1px solid #ccc' }}><GitHubIcon /></IconButton>
+        <IconButton sx={{ border: '1px solid #ccc' }}><XIcon /></IconButton>
       </Stack>
     </Box>
   );
