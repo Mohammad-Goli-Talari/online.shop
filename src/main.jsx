@@ -1,21 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom'; // ✅ اصلاح شد
 import App from './App';
-import { CssBaseline } from '@mui/material';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-  },
-  direction: 'ltr', // اگر بعداً خواستی RTL هم پشتیبانی کنه، اینجا تغییر بده
-});
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <BrowserRouter>
       <App />
-    </ThemeProvider>
+    </BrowserRouter>
   </React.StrictMode>
 );
