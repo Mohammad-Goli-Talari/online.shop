@@ -33,14 +33,14 @@ const ForgotPasswordForm = () => {
     mode: 'onChange',
   });
 
-  const onSubmit = async (_data) => {
+  const onSubmit = async (data) => {
     try {
       setLoading(true);
       await new Promise((res) => setTimeout(res, 1500)); // Simulate API
       setSnackbarMessage('Reset link sent to your email!');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
-    } catch (_err) {
+    } catch (err) {
       setSnackbarMessage('Something went wrong!');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);

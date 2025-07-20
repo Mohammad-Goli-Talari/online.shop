@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import {
-  Box, Button, Divider, IconButton, Snackbar, Stack, TextField, Typography
+  Box, Button, Divider, IconButton, InputAdornment, Snackbar, Stack, TextField, Typography
 } from '@mui/material';
-import { GitHub, Google, Twitter } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { GitHub, Google, Twitter, Visibility, VisibilityOff } from '@mui/icons-material';
+import { Link, useNavigate } from 'react-router-dom';
 import MuiAlert from '@mui/material/Alert';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { useNavigate } from 'react-router-dom';
 
 const schema = yup.object().shape({
   firstName: yup.string().required('First name is required'),
@@ -19,6 +18,7 @@ const schema = yup.object().shape({
 
 const SignUpForm = () => {
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
@@ -32,30 +32,30 @@ const SignUpForm = () => {
     resolver: yupResolver(schema),
     mode: 'onChange',
   });
-  
+
   const navigate = useNavigate();
 
   const onSubmit = async (_data) => {
-  try {
-    setLoading(true);
-    await new Promise((res) => setTimeout(res, 1500)); // simulate API
+    try {
+      setLoading(true);
+      await new Promise((res) => setTimeout(res, 1500)); // simulate API
 
-    setSnackbarSeverity('success');
-    setSnackbarMessage('Account created successfully!');
-    setSnackbarOpen(true);
-    reset();
-    localStorage.setItem('signupEmail', _data.email);
-    setTimeout(() => {
-      navigate('/verify-email');
-    }, 1000);
-  } catch (_err) {
-    setSnackbarSeverity('error');
-    setSnackbarMessage('Something went wrong!');
-    setSnackbarOpen(true);
-  } finally {
-    setLoading(false);
-  }
-};
+      setSnackbarSeverity('success');
+      setSnackbarMessage('Account created successfully!');
+      setSnackbarOpen(true);
+      reset();
+      localStorage.setItem('signupEmail', _data.email);
+      setTimeout(() => {
+        navigate('/verify-email');
+      }, 1000);
+    } catch (_err) {
+      setSnackbarSeverity('error');
+      setSnackbarMessage('Something went wrong!');
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Box
@@ -78,7 +78,25 @@ const SignUpForm = () => {
         </Box>
 
         <TextField label="Email" fullWidth size="small" {...register('email')} error={!!errors.email} helperText={errors.email?.message} />
-        <TextField label="Password" type="password" fullWidth size="small" {...register('password')} error={!!errors.password} helperText={errors.password?.message} />
+
+        <TextField
+          label="Password"
+          type={showPassword ? 'text' : 'password'}
+          fullWidth
+          size="small"
+          {...register('password')}
+          error={!!errors.password}
+          helperText={errors.password?.message}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            )
+          }}
+        />
 
         <Button type="submit" variant="contained" fullWidth size="medium" disabled={loading} sx={{ mt: 0.5, textTransform: 'none', backgroundColor: '#1a1a1a', '&:hover': { backgroundColor: '#333' } }}>
           {loading ? 'Loading...' : 'Sign Up'}

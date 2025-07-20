@@ -1,4 +1,3 @@
-// SignInForm.jsx
 import React, { useState } from 'react';
 import {
   Box,
@@ -10,9 +9,10 @@ import {
   Typography,
   Divider,
   Alert,
+  InputAdornment,
 } from '@mui/material';
-import { Link } from 'react-router-dom';
-import { GitHub, Google, Twitter } from '@mui/icons-material';
+import { Link, useNavigate } from 'react-router-dom';
+import { GitHub, Google, Twitter, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -33,19 +33,24 @@ const SignInForm = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
+  const navigate = useNavigate();
+  
   const onSubmit = async (_formData) => {
     try {
       setLoading(true);
       await new Promise((res) => setTimeout(res, 1500));
-
       setSnackbarSeverity('success');
       setSnackbarMessage('Signed in successfully!');
       setSnackbarOpen(true);
       reset();
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
     } catch {
       setSnackbarSeverity('error');
       setSnackbarMessage('Sign in failed!');
@@ -69,23 +74,16 @@ const SignInForm = () => {
       }}
     >
       <Stack spacing={2}>
-        {/* Title and Link */}
         <Box>
-          <Typography variant="h5" fontWeight={700}>
-            Sign In
-          </Typography>
+          <Typography variant="h5" fontWeight={700}>Sign In</Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
             Don’t have an account?{' '}
-            <Link
-              to="/signup"
-              style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}
-            >
+            <Link to="/signup" style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}>
               Sign up
             </Link>
           </Typography>
         </Box>
 
-        {/* Email and Password */}
         <TextField
           label="Email"
           fullWidth
@@ -96,25 +94,29 @@ const SignInForm = () => {
         />
         <TextField
           label="Password"
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           fullWidth
           size="small"
           {...register('password')}
           error={!!errors.password}
           helperText={errors.password?.message}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            )
+          }}
         />
 
-        {/* Forgot Password + Remember Me */}
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Link
-            to="/forgot-password"
-            style={{ fontSize: '0.75rem', color: '#2e7d32', textDecoration: 'none' }}
-          >
+          <Link to="/forgot-password" style={{ fontSize: '0.75rem', color: '#2e7d32', textDecoration: 'none' }}>
             Forgot password?
           </Link>
         </Box>
 
-        {/* Submit Button */}
         <Button
           variant="contained"
           fullWidth
@@ -130,10 +132,8 @@ const SignInForm = () => {
           {loading ? 'Signing in...' : 'Sign In'}
         </Button>
 
-        {/* Divider */}
         <Divider sx={{ fontSize: '0.65rem', my: 1 }}>OR</Divider>
 
-        {/* OAuth Buttons */}
         <Box display="flex" justifyContent="center" gap={2}>
           <IconButton sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}>
             <Google sx={{ color: '#DB4437', fontSize: 20 }} />
@@ -147,7 +147,6 @@ const SignInForm = () => {
         </Box>
       </Stack>
 
-      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}

@@ -2,9 +2,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import AuthPage from './components/AuthPage';
 import SignInForm from './components/SignInForm';
 import SignUpForm from './components/SignUpForm';
-import ForgotPasswordForm from './components/forgot-password/ForgotPasswordForm';
+import ForgotPasswordForm from './components/ForgotPasswordForm';
 import EmailVerificationForm from './components/EmailVerificationForm';
 import Dashboard from './components/Dashboard';
+import LoginWithCodeForm from './components/LoginWithCodeForm';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       <Route path="/signup" element={<AuthPage><SignUpForm /></AuthPage>} />
       <Route path="/forgot-password" element={<AuthPage><ForgotPasswordForm /></AuthPage>} />
       <Route path="/verify-email" element={<AuthPage><EmailVerificationForm /></AuthPage>} />
+      <Route path="/login-with-code" element={<AuthPage><LoginWithCodeForm /></AuthPage>} />
       <Route path="/dashboard" element={<Dashboard />} />
     </Routes>
   );

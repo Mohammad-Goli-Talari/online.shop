@@ -56,7 +56,7 @@ const EmailVerificationForm = () => {
         reset();
 
         setTimeout(() => {
-          window.location.href = '/dashboard'; // ✅ ریدایرکت پس از موفقیت
+          window.location.href = '/dashboard'; // ✅ Redirect after success
         }, 1500);
       } else {
         setSnackbarMessage('Incorrect verification code!');

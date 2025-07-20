@@ -1,10 +1,12 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 
-const Dashboard = () => (
-  <Box sx={{ p: 4 }}>
-    <Typography variant="h4">Welcome to the Dashboard 🎉</Typography>
-  </Box>
-);
+const Dashboard = () => {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h4" fontWeight="bold">Welcome to the Dashboard</Typography>
+    </Box>
+  );
+};
 
 export default Dashboard;
