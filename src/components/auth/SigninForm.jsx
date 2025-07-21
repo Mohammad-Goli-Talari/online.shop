@@ -12,7 +12,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { GitHub, Google, Twitter, Visibility, VisibilityOff } from '@mui/icons-material';
+import { Facebook, GitHub, Google, Twitter, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -22,7 +22,7 @@ const schema = yup.object().shape({
   password: yup.string().required('Password is required'),
 });
 
-const SignInForm = () => {
+const SigninForm = () => {
   const {
     register,
     handleSubmit,
@@ -144,6 +144,9 @@ const SignInForm = () => {
           <IconButton sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}>
             <Twitter sx={{ color: '#1DA1F2', fontSize: 20 }} />
           </IconButton>
+          <IconButton sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}>
+            <Facebook sx={{ color: '#1d32f2ff', fontSize: 20 }} />
+          </IconButton>
         </Box>
       </Stack>
 
@@ -165,4 +168,4 @@ const SignInForm = () => {
   );
 };
 
-export default SignInForm;
+export default SigninForm;

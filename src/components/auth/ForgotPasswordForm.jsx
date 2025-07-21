@@ -7,9 +7,10 @@ import {
   Typography,
   Snackbar,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
@@ -24,6 +25,8 @@ const ForgotPasswordForm = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -36,12 +39,20 @@ const ForgotPasswordForm = () => {
   const onSubmit = async (data) => {
     try {
       setLoading(true);
-      await new Promise((res) => setTimeout(res, 1500)); // Simulate API
-      setSnackbarMessage('Reset link sent to your email!');
+      // Simulate backend request
+      await new Promise((res) => setTimeout(res, 1500));
+      console.log('Password reset email sent to:', data.email);
+
+      setSnackbarMessage('Password reset email sent!');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
-    } catch (err) {
-      setSnackbarMessage('Something went wrong!');
+
+      // Redirect to reset-password page with fake token
+      setTimeout(() => {
+        navigate('/reset-password?token=demo-token');
+      }, 1800);
+    } catch (_err) {
+      setSnackbarMessage('Something went wrong. Please try again.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     } finally {
@@ -91,14 +102,26 @@ const ForgotPasswordForm = () => {
               textTransform: 'none',
               backgroundColor: '#1a1a1a',
               '&:hover': { backgroundColor: '#333' },
+              height: 40,
             }}
           >
-            {loading ? 'Sending...' : 'Send Reset Link'}
+            {loading ? (
+              <CircularProgress size={20} sx={{ color: '#fff' }} />
+            ) : (
+              'Send Reset Link'
+            )}
           </Button>
 
           <Typography variant="body2" textAlign="center">
             Back to{' '}
-            <Link to="/signin" style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}>
+            <Link
+              to="/signin"
+              style={{
+                color: '#2e7d32',
+                fontWeight: 500,
+                textDecoration: 'none',
+              }}
+            >
               Sign in
             </Link>
           </Typography>
@@ -116,10 +139,6 @@ const ForgotPasswordForm = () => {
           severity={snackbarSeverity}
           sx={{
             width: '100%',
-            bgcolor:
-              {snackbarSeverity},
-            color:
-              {snackbarSeverity},
             fontSize: '0.85rem',
             px: 2,
             boxShadow: 1,

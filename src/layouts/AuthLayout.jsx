@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
-const AuthPage = ({ children }) => {
+const AuthLayout = ({ children }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -19,12 +19,7 @@ const AuthPage = ({ children }) => {
         sx={{
           width: isMobile ? 0 : 320,
           transition: 'all 0.4s ease',
-          backgroundColor: isMobile
-            ? 'none'
-            : 'lightgray',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
+          backgroundColor: isMobile ? 'none' : 'lightgray',
           color: '#fff',
           display: isMobile ? 'none' : 'flex',
           alignItems: 'center',
@@ -60,4 +55,4 @@ const AuthPage = ({ children }) => {
   );
 };
 
-export default AuthPage;
+export default AuthLayout;
