@@ -73,7 +73,7 @@ const ResetPasswordForm = () => {
       });
 
       setTimeout(() => {
-        navigate('/signin');
+        navigate('/auth/sign-in');
       }, 2000);
     } catch (_err) {
       setSnackbar({

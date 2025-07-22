@@ -115,7 +115,7 @@ const ForgotPasswordForm = () => {
           <Typography variant="body2" textAlign="center">
             Back to{' '}
             <Link
-              to="/signin"
+              to="/auth/sign-in"
               style={{
                 color: '#2e7d32',
                 fontWeight: 500,

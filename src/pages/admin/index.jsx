@@ -7,7 +7,7 @@ const AdminHome = () => {
   const isLoggedIn = true; // Login simulation is done here
 
   if (!isLoggedIn) {
-    return <Navigate to="/auth/signin" />;
+    return <Navigate to="/auth/sign-in" />;
   }
 
   return (

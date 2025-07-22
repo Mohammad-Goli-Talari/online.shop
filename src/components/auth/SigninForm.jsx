@@ -78,7 +78,7 @@ const SigninForm = () => {
           <Typography variant="h5" fontWeight={700}>Sign In</Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
             Don’t have an account?{' '}
-            <Link to="/signup" style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}>
+            <Link to="/auth/sign-up" style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}>
               Sign up
             </Link>
           </Typography>
@@ -112,7 +112,7 @@ const SigninForm = () => {
         />
 
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Link to="/forgot-password" style={{ fontSize: '0.75rem', color: '#2e7d32', textDecoration: 'none' }}>
+          <Link to="/auth/forgot-password" style={{ fontSize: '0.75rem', color: '#2e7d32', textDecoration: 'none' }}>
             Forgot password?
           </Link>
         </Box>

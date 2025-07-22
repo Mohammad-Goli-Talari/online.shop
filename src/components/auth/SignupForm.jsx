@@ -107,7 +107,7 @@ const SignupForm = () => {
           <Typography variant="body2" sx={{ mt: 1 }}>
             Already have an account?{' '}
             <Link
-              to="/signin"
+              to="/auth/sign-in"
               style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}
             >
               Sign in

@@ -41,7 +41,7 @@ const LoginWithCodeForm = () => {
     setLoading(false);
     reset();
     setTimeout(() => {
-      navigate('/verify-login');
+      navigate('/auth/verify-login');
     }, 1500);
   };
 

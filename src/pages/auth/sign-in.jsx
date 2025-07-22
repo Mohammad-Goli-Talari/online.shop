@@ -1,8 +1,9 @@
 import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 import AuthLayout from '../../layouts/AuthLayout';
 import SigninForm from '../../components/auth/SigninForm';
 
-const SignInPage = () => {
+const SigninPage = () => {
   return (
     <AuthLayout>
       <SigninForm />
@@ -10,4 +11,4 @@ const SignInPage = () => {
   );
 };
 
-export default SignInPage;
+export default SigninPage;
