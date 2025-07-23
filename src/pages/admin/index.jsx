@@ -1,6 +1,6 @@
 // src/pages/admin/index.jsx
 import React from 'react';
-import AdminLayout from './layouts/AdminLayout';
+import AdminLayout from '../../layouts/AdminLayout';
 import { Typography } from '@mui/material';
 import { Navigate } from 'react-router-dom';
 

@@ -50,7 +50,7 @@ const SigninForm = () => {
       setSnackbarOpen(true);
       reset();
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/admin');
       }, 1000);
     } catch {
       setSnackbarSeverity('error');
