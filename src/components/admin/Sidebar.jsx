@@ -1,3 +1,4 @@
+// src/components/admin/Sidebar.jsx
 import React from 'react';
 import {
   Drawer,

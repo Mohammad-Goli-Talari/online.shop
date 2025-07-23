@@ -1,3 +1,4 @@
+// src/components/auth/EmailVerification.jsx
 import React, { useEffect, useState } from 'react';
 import {
   Box,

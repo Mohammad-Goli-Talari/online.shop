@@ -1,3 +1,4 @@
+// src/components/auth/SignupForm.jsx
 import React, { useState } from 'react';
 import {
   Box,
@@ -72,7 +73,7 @@ const SignupForm = () => {
       reset();
       setPasswordValue('');
       localStorage.setItem('signupEmail', data.email);
-      setTimeout(() => navigate('/verify-email'), 1000);
+      setTimeout(() => navigate('/auth/verify-email'), 1000);
     } catch (_err) {
       setSnackbarSeverity('error');
       setSnackbarMessage('Something went wrong!');
@@ -90,6 +91,8 @@ const SignupForm = () => {
       onSubmit={handleSubmit(onSubmit)}
       sx={{
         maxWidth: 460,
+        minWidth: 300,
+        minHeight: 480,
         mx: 'auto',
         mt: 4,
         px: 2,

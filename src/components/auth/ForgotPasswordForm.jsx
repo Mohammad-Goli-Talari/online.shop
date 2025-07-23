@@ -1,3 +1,4 @@
+// src/components/auth/ForgotPasswordForm.jsx
 import React, { useState } from 'react';
 import {
   Box,

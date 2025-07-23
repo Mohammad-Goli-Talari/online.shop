@@ -1,3 +1,4 @@
+// src/pages/auth/forgot-password.jsx
 import React from 'react';
 import AuthLayout from '../../layouts/AuthLayout';
 import ForgotPasswordForm from '../../components/auth/ForgotPasswordForm';
