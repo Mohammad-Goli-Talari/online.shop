@@ -65,8 +65,7 @@ const SigninForm = () => {
     <Box
       sx={{
         maxWidth: 460,
-        minWidth: 300,
-        minHeight: 480,
+        minWidth: 435,
         mx: 'auto',
         mt: 4,
         px: 2,

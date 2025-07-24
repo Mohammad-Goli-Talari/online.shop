@@ -11,7 +11,7 @@ const AuthLayout = ({ children }) => {
     <Box
       sx={{
         display: 'flex',
-        minHeight: '100vh',
+        minHeight: '97.5vh',
         bgcolor: 'background.default',
       }}
     >
