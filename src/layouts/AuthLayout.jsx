@@ -31,7 +31,7 @@ const AuthLayout = ({ children }) => {
         {!isMobile && (
           <Box textAlign="center">
             <Typography variant="h4" fontWeight={800}>
-              Hi, Welcome Back
+              Hi, Welcome Back To Online Shop
             </Typography>
             <Typography variant="body2" sx={{ mt: 1.5 }}>
               To keep connected with us, please login with your personal info
