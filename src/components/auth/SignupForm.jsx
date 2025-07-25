@@ -11,10 +11,12 @@ import {
   Stack,
   TextField,
   Typography,
+  Alert,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import { GitHub, Google, Twitter, Facebook, Visibility, VisibilityOff } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
-import MuiAlert from '@mui/material/Alert';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -23,10 +25,7 @@ const schema = yup.object().shape({
   firstName: yup.string().required('First name is required'),
   lastName: yup.string().required('Last name is required'),
   email: yup.string().email('Invalid email').required('Email is required'),
-  password: yup
-    .string()
-    .required('Password is required')
-    .min(6, 'Password must be at least 6 characters'),
+  password: yup.string().required('Password is required').min(6, 'Password must be at least 6 characters'),
 });
 
 const calculatePasswordStrength = (password) => {
@@ -62,6 +61,9 @@ const SignupForm = () => {
 
   const navigate = useNavigate();
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const onSubmit = async (data) => {
     try {
       setLoading(true);
@@ -74,7 +76,7 @@ const SignupForm = () => {
       setPasswordValue('');
       localStorage.setItem('signupEmail', data.email);
       setTimeout(() => navigate('/auth/verify-email'), 1000);
-    } catch (_err) {
+    } catch {
       setSnackbarSeverity('error');
       setSnackbarMessage('Something went wrong!');
       setSnackbarOpen(true);
@@ -90,11 +92,11 @@ const SignupForm = () => {
       component="form"
       onSubmit={handleSubmit(onSubmit)}
       sx={{
+        width: '100%',
         maxWidth: 460,
-        minWidth: 435,
         mx: 'auto',
         mt: 4,
-        px: 2,
+        px: isMobile ? 1 : 2,
         py: 3,
         boxShadow: 2,
         borderRadius: 2,
@@ -103,21 +105,22 @@ const SignupForm = () => {
     >
       <Stack spacing={2}>
         <Box>
-          <Typography variant="h5" fontWeight={700}>
-            Sign Up
-          </Typography>
+          <Typography variant="h5" fontWeight={700}>Sign Up</Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
             Already have an account?{' '}
-            <Link
-              to="/auth/sign-in"
-              style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}
-            >
+            <Link to="/auth/sign-in" style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}>
               Sign in
             </Link>
           </Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: 1.5,
+          }}
+        >
           <TextField
             label="First Name"
             fullWidth
@@ -163,7 +166,7 @@ const SignupForm = () => {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" aria-label="toggle password visibility">
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>
@@ -200,7 +203,6 @@ const SignupForm = () => {
           size="medium"
           disabled={loading}
           sx={{
-            mt: 0.5,
             textTransform: 'none',
             backgroundColor: '#1a1a1a',
             '&:hover': { backgroundColor: '#333' },
@@ -209,25 +211,13 @@ const SignupForm = () => {
           {loading ? 'Loading...' : 'Sign Up'}
         </Button>
 
-        <Typography
-          variant="caption"
-          textAlign="center"
-          sx={{ fontSize: '0.6rem', lineHeight: 1.4, px: 0.5 }}
-        >
+        <Typography variant="caption" textAlign="center" sx={{ fontSize: '0.6rem', lineHeight: 1.4, px: 0.5 }}>
           By signing up, I agree to{' '}
-          <Typography
-            component="span"
-            color="success.main"
-            sx={{ fontWeight: 500, cursor: 'pointer' }}
-          >
+          <Typography component="span" color="success.main" sx={{ fontWeight: 500, cursor: 'pointer' }}>
             Terms of Service
           </Typography>{' '}
           and{' '}
-          <Typography
-            component="span"
-            color="success.main"
-            sx={{ fontWeight: 500, cursor: 'pointer' }}
-          >
+          <Typography component="span" color="success.main" sx={{ fontWeight: 500, cursor: 'pointer' }}>
             Privacy Policy
           </Typography>
           .
@@ -235,25 +225,17 @@ const SignupForm = () => {
 
         <Divider sx={{ fontSize: '0.65rem', my: 1 }}>OR</Divider>
 
-        <Box display="flex" justifyContent="center" gap={2}>
-          <IconButton
-            sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}
-          >
+        <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
+          <IconButton sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}>
             <Google sx={{ color: '#DB4437', fontSize: 20 }} />
           </IconButton>
-          <IconButton
-            sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}
-          >
+          <IconButton sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}>
             <GitHub sx={{ color: '#000000', fontSize: 20 }} />
           </IconButton>
-          <IconButton
-            sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}
-          >
+          <IconButton sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}>
             <Twitter sx={{ color: '#1DA1F2', fontSize: 20 }} />
           </IconButton>
-          <IconButton
-            sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}
-          >
+          <IconButton sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}>
             <Facebook sx={{ color: '#1d32f2ff', fontSize: 20 }} />
           </IconButton>
         </Box>
@@ -264,9 +246,9 @@ const SignupForm = () => {
         autoHideDuration={4000}
         onClose={() => setSnackbarOpen(false)}
       >
-        <MuiAlert severity={snackbarSeverity} sx={{ width: '100%' }}>
+        <Alert severity={snackbarSeverity} sx={{ width: '100%' }}>
           {snackbarMessage}
-        </MuiAlert>
+        </Alert>
       </Snackbar>
     </Box>
   );

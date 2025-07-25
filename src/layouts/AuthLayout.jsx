@@ -11,8 +11,9 @@ const AuthLayout = ({ children }) => {
     <Box
       sx={{
         display: 'flex',
-        minHeight: '97.5vh',
+        minHeight: '100vh',
         bgcolor: 'background.default',
+        flexDirection: isMobile ? 'column' : 'row',
       }}
     >
       {/* Sidebar */}
@@ -20,12 +21,12 @@ const AuthLayout = ({ children }) => {
         sx={{
           width: isMobile ? 0 : 320,
           transition: 'all 0.4s ease',
-          backgroundColor: isMobile ? 'none' : 'lightgray',
+          backgroundColor: isMobile ? 'transparent' : 'lightgray',
           color: '#fff',
           display: isMobile ? 'none' : 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          px: isMobile ? 0 : 3,
+          px: 3,
         }}
       >
         {!isMobile && (
@@ -43,6 +44,7 @@ const AuthLayout = ({ children }) => {
       {/* Form Section */}
       <Box
         sx={{
+          width: isMobile ? '100%' : 'auto',
           flex: 1,
           display: 'flex',
           alignItems: 'center',

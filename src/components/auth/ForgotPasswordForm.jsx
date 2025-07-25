@@ -15,7 +15,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
-// Validation schema
 const schema = yup.object().shape({
   email: yup.string().email('Enter a valid email').required('Email is required'),
 });
@@ -40,7 +39,6 @@ const ForgotPasswordForm = () => {
   const onSubmit = async (data) => {
     try {
       setLoading(true);
-      // Simulate backend request
       await new Promise((res) => setTimeout(res, 1500));
       console.log('Password reset email sent to:', data.email);
 
@@ -48,7 +46,6 @@ const ForgotPasswordForm = () => {
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
 
-      // Redirect to reset-password page with fake token
       setTimeout(() => {
         navigate('/reset-password?token=demo-token');
       }, 1800);
@@ -64,18 +61,19 @@ const ForgotPasswordForm = () => {
   return (
     <Box
       sx={{
-        maxWidth: 460,
+        maxWidth: 480,
+        width: '100%',
         mx: 'auto',
         mt: 4,
         px: 2,
-        py: 3,
+        py: 4,
         boxShadow: 2,
         borderRadius: 2,
         bgcolor: 'background.paper',
       }}
     >
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack spacing={2}>
+        <Stack spacing={3}>
           <Box>
             <Typography variant="h5" fontWeight={700}>
               Forgot Password

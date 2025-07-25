@@ -3,17 +3,26 @@ import React, { useState } from 'react';
 import {
   Box,
   Button,
+  Divider,
   IconButton,
+  InputAdornment,
   Snackbar,
   Stack,
   TextField,
   Typography,
-  Divider,
   Alert,
-  InputAdornment,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { Facebook, GitHub, Google, Twitter, Visibility, VisibilityOff } from '@mui/icons-material';
+import {
+  Google,
+  GitHub,
+  Twitter,
+  Facebook,
+  Visibility,
+  VisibilityOff,
+} from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -40,10 +49,14 @@ const SigninForm = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   const navigate = useNavigate();
-  
-  const onSubmit = async (_formData) => {
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const onSubmit = async (formData) => {
     try {
       setLoading(true);
+      console.log('Form Submitted:', formData);
       await new Promise((res) => setTimeout(res, 1500));
       setSnackbarSeverity('success');
       setSnackbarMessage('Signed in successfully!');
@@ -63,12 +76,14 @@ const SigninForm = () => {
 
   return (
     <Box
+      component="form"
+      onSubmit={handleSubmit(onSubmit)}
       sx={{
+        width: '100%',
         maxWidth: 460,
-        minWidth: 435,
         mx: 'auto',
         mt: 4,
-        px: 2,
+        px: isMobile ? 1 : 2,
         py: 3,
         boxShadow: 2,
         borderRadius: 2,
@@ -80,7 +95,10 @@ const SigninForm = () => {
           <Typography variant="h5" fontWeight={700}>Sign In</Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
             Don’t have an account?{' '}
-            <Link to="/auth/sign-up" style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}>
+            <Link
+              to="/auth/sign-up"
+              style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}
+            >
               Sign up
             </Link>
           </Typography>
@@ -94,6 +112,7 @@ const SigninForm = () => {
           error={!!errors.email}
           helperText={errors.email?.message}
         />
+
         <TextField
           label="Password"
           type={showPassword ? 'text' : 'password'}
@@ -105,38 +124,41 @@ const SigninForm = () => {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" aria-label="toggle password visibility">
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>
-            )
+            ),
           }}
         />
 
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Link to="/auth/forgot-password" style={{ fontSize: '0.75rem', color: '#2e7d32', textDecoration: 'none' }}>
+          <Link
+            to="/auth/forgot-password"
+            style={{ fontSize: '0.75rem', color: '#2e7d32', textDecoration: 'none' }}
+          >
             Forgot password?
           </Link>
         </Box>
 
         <Button
+          type="submit"
           variant="contained"
           fullWidth
           size="medium"
+          disabled={loading}
           sx={{
             textTransform: 'none',
             backgroundColor: '#1a1a1a',
             '&:hover': { backgroundColor: '#333' },
           }}
-          onClick={handleSubmit(onSubmit)}
-          disabled={loading}
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </Button>
 
         <Divider sx={{ fontSize: '0.65rem', my: 1 }}>OR</Divider>
 
-        <Box display="flex" justifyContent="center" gap={2}>
+        <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
           <IconButton sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}>
             <Google sx={{ color: '#DB4437', fontSize: 20 }} />
           </IconButton>

@@ -6,7 +6,6 @@ import {
   Button,
   Alert,
   CircularProgress,
-  Stack,
 } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -53,14 +52,15 @@ const EmailVerification = () => {
     <Box
       sx={{
         maxWidth: 460,
+        width: '100%',
         mx: 'auto',
-        mt: 8,
-        px: 3,
-        py: 4,
+        mt: { xs: 6, md: 8 },
+        px: { xs: 2, md: 3 },
+        py: { xs: 3, md: 4 },
         textAlign: 'center',
         borderRadius: 2,
         bgcolor: 'background.paper',
-        boxShadow: 3,
+        boxShadow: 2,
       }}
     >
       <Typography variant="h5" fontWeight={600}>

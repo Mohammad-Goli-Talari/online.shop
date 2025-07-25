@@ -1,4 +1,3 @@
-// src/components/auth/ResetPasswordForm.jsx
 import React, { useState } from 'react';
 import {
   Box,
@@ -18,7 +17,6 @@ import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 
-// Validation schema
 const schema = yup.object().shape({
   password: yup
     .string()
@@ -88,18 +86,19 @@ const ResetPasswordForm = () => {
   return (
     <Box
       sx={{
-        maxWidth: 460,
+        maxWidth: 480,
+        width: '100%',
         mx: 'auto',
         mt: 4,
         px: 2,
-        py: 3,
+        py: 4,
         boxShadow: 2,
         borderRadius: 2,
         bgcolor: 'background.paper',
       }}
     >
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Stack spacing={2}>
+        <Stack spacing={3}>
           <Box>
             <Typography variant="h5" fontWeight={700}>
               Reset Password
@@ -128,14 +127,13 @@ const ResetPasswordForm = () => {
             }}
           />
 
-          {/* Password strength meter */}
           <LinearProgress
             variant="determinate"
             value={(passwordStrength / 4) * 100}
             sx={{
               height: 6,
               borderRadius: 4,
-              bgcolor: 'grey.200',
+              backgroundColor: 'grey.200',
               '& .MuiLinearProgress-bar': {
                 backgroundColor:
                   passwordStrength < 2 ? 'error.main' :
@@ -177,6 +175,7 @@ const ResetPasswordForm = () => {
               textTransform: 'none',
               backgroundColor: '#1a1a1a',
               '&:hover': { backgroundColor: '#333' },
+              height: 40,
             }}
           >
             Reset Password
