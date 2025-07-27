@@ -49,7 +49,6 @@ const AuthLayout = ({ children }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          px: 2,
         }}
       >
         {children}

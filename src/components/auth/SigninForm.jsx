@@ -81,6 +81,7 @@ const SigninForm = () => {
       sx={{
         width: '100%',
         maxWidth: 460,
+        minWidth: 320,
         mx: 'auto',
         mt: 4,
         px: isMobile ? 1 : 2,
