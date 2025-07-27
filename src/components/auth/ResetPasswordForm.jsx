@@ -74,7 +74,7 @@ const ResetPasswordForm = () => {
       setTimeout(() => {
         navigate('/auth/sign-in');
       }, 2000);
-    } catch (_err) {
+    } catch (err) {
       setSnackbar({
         open: true,
         message: 'Something went wrong!',
@@ -88,6 +88,7 @@ const ResetPasswordForm = () => {
       sx={{
         maxWidth: 480,
         width: '100%',
+        minWidth: 320,
         mx: 'auto',
         mt: 4,
         px: 2,

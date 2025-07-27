@@ -53,6 +53,7 @@ const EmailVerification = () => {
       sx={{
         maxWidth: 460,
         width: '100%',
+        minWidth: 320,
         mx: 'auto',
         mt: { xs: 6, md: 8 },
         px: { xs: 2, md: 3 },

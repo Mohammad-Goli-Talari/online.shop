@@ -49,7 +49,7 @@ const ForgotPasswordForm = () => {
       setTimeout(() => {
         navigate('/reset-password?token=demo-token');
       }, 1800);
-    } catch (_err) {
+    } catch (err) {
       setSnackbarMessage('Something went wrong. Please try again.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
@@ -63,6 +63,7 @@ const ForgotPasswordForm = () => {
       sx={{
         maxWidth: 480,
         width: '100%',
+        minWidth: 320,
         mx: 'auto',
         mt: 4,
         px: 2,
