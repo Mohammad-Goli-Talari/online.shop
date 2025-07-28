@@ -84,7 +84,7 @@ const SigninForm = () => {
         minWidth: 320,
         mx: 'auto',
         mt: 4,
-        px: isMobile ? 1 : 2,
+        px: { xs: 2, sm: 3 },
         py: 3,
         boxShadow: 2,
         borderRadius: 2,

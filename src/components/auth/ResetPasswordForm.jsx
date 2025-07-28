@@ -1,3 +1,4 @@
+// src/components/auth/ResetPasswordForm.jsx
 import React, { useState } from 'react';
 import {
   Box,
@@ -91,8 +92,8 @@ const ResetPasswordForm = () => {
         minWidth: 320,
         mx: 'auto',
         mt: 4,
-        px: 2,
-        py: 4,
+        px: { xs: 2, sm: 3 },
+        py: 3,
         boxShadow: 2,
         borderRadius: 2,
         bgcolor: 'background.paper',
