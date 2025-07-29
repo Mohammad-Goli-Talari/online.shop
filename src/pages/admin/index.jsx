@@ -3,6 +3,7 @@ import React from 'react';
 import AdminLayout from '../../layouts/AdminLayout';
 import { Typography } from '@mui/material';
 import { Navigate } from 'react-router-dom';
+import ProductListPage from '../../pages/admin/products';
 
 const AdminHome = () => {
   const isLoggedIn = true; // Login simulation is done here
@@ -16,6 +17,7 @@ const AdminHome = () => {
       <Typography variant="h4" fontWeight={600}>
         Welcome to the Admin Dashboard
       </Typography>
+      <ProductListPage />
     </AdminLayout>
   );
 };

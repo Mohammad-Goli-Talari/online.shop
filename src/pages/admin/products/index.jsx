@@ -1,31 +1,29 @@
 // src/pages/admin/products/index.jsx
 import React from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Container, Stack, Typography } from '@mui/material';
 import ProductTable from '../../../components/admin/ProductTable';
 import products from '../../../mock/products';
-import AdminLayout from '../../../layouts/AdminLayout';
 
 const ProductListPage = () => {
   return (
-    <AdminLayout>
-      <Box sx={{ p: 3 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            mb: 2,
-          }}
-        >
-          <Typography variant="h5" fontWeight={700}>
-            Product Management
-          </Typography>
-          <Button variant="contained">Add Product</Button>
-        </Box>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        spacing={2}
+        mb={3}
+      >
+        <Typography variant="h5" fontWeight={600}>
+          Products
+        </Typography>
+        <Button variant="contained" color="primary">
+          Add Product
+        </Button>
+      </Stack>
 
-        <ProductTable products={products} />
-      </Box>
-    </AdminLayout>
+      <ProductTable products={products} />
+    </Container>
   );
 };
 
