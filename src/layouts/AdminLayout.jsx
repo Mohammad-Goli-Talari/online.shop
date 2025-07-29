@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Box, CssBaseline, useMediaQuery, createTheme, ThemeProvider } from '@mui/material';
 import Sidebar from '../components/admin/Sidebar';
 import Topbar from '../components/admin/Topbar';
+import ProductTable from '../components/admin/ProductTable';
 
 const AdminLayout = ({ children }) => {
   const isMobile = useMediaQuery('(max-width:900px)');
