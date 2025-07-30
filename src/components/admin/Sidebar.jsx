@@ -14,7 +14,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const drawerWidth = 240;
 
@@ -28,6 +28,17 @@ const menuItems = [
 
 const Sidebar = ({ open, onClose, variant }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Function to check if the current path matches or is a child of the menu item path
+  const isActivePath = (menuPath) => {
+    if (menuPath === '/admin') {
+      // For dashboard, only match exact path
+      return location.pathname === '/admin';
+    }
+    // For other paths, match if current path starts with the menu path
+    return location.pathname.startsWith(menuPath);
+  };
 
   return (
     <Drawer
@@ -46,12 +57,36 @@ const Sidebar = ({ open, onClose, variant }) => {
       <Toolbar />
       <Box sx={{ overflow: 'auto' }}>
         <List>
-          {menuItems.map((item) => (
-            <ListItemButton key={item.title} onClick={() => navigate(item.path)}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.title} />
-            </ListItemButton>
-          ))}
+          {menuItems.map((item) => {
+            const isActive = isActivePath(item.path);
+            return (
+              <ListItemButton 
+                key={item.title} 
+                onClick={() => navigate(item.path)}
+                selected={isActive}
+                sx={{
+                  '&.Mui-selected': {
+                    backgroundColor: 'primary.main',
+                    color: 'primary.contrastText',
+                    borderRight: '3px solid',
+                    borderRightColor: 'primary.contrastText',
+                    '&:hover': {
+                      backgroundColor: 'primary.dark',
+                    },
+                    '& .MuiListItemIcon-root': {
+                      color: 'primary.contrastText',
+                    },
+                  },
+                  '&:hover:not(.Mui-selected)': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
+              >
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.title} />
+              </ListItemButton>
+            );
+          })}
         </List>
       </Box>
     </Drawer>

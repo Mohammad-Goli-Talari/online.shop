@@ -8,11 +8,14 @@ import ResetPasswordPage from './pages/auth/reset-password';
 import EmailVerificationPage from './pages/auth/verify-email';
 import LoginWithCodeForm from './components/LoginWithCodeForm';
 import AdminHome from './pages/admin';
+import ProductListPage from './pages/admin/products';
+import MockDemo from './pages/MockDemo';
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/auth/sign-in" />} />
+      <Route path="/" element={<Navigate to="/mock-demo" />} />
+      <Route path="/mock-demo" element={<MockDemo />} />
       <Route path="/auth/sign-in" element={<SigninPage />} />
       <Route path="/auth/sign-up" element={<SignupPage />} />
       <Route path="/auth/forgot-password" element={<ForgetPasswordPage />} />
@@ -20,6 +23,7 @@ function App() {
       <Route path="/auth/verify-email" element={<EmailVerificationPage />} />
       <Route path="/auth/login-with-code" element={<AuthLayout><LoginWithCodeForm /></AuthLayout>} />
       <Route path='/admin' element={<AdminHome />} />
+      <Route path='/admin/products' element={<ProductListPage />} />
     </Routes>
   );
 }
