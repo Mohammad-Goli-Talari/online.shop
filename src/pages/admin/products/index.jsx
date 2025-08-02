@@ -1,52 +1,76 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, Button, Container, Stack, Typography } from '@mui/material';
+import { Box, Button, Container, Stack, Typography, CircularProgress, Alert } from '@mui/material';
 import ProductTable from '../../../components/admin/ProductTable';
 import AdminLayout from '../../../layouts/AdminLayout';
+import ProductService from '../../../services/productService';
 import AddProductModal from '../../../components/admin/AddProductModal';
 
 const ProductListPage = () => {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pagination, setPagination] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
   const currentPageRef = useRef(1);
+  const hasInitialized = useRef(false);
 
-  // Mock load products
   const loadProducts = useCallback(async (reset = false) => {
-    setLoading(true);
-    setError(null);
     try {
-      // Simulated API response
-      const mockResponse = {
-        items: [
-          { id: 'p1', name: 'Sample Product 1', sku: 'sample-product-1', price: 99, category: 'cat1' },
-          { id: 'p2', name: 'Sample Product 2', sku: 'sample-product-2', price: 150, category: 'cat2' },
-        ],
-        pagination: { totalItems: 2, hasNext: false, currentPage: 1 },
-      };
+      setLoading(true);
+      setError(null);
+      
+      const page = reset ? 1 : currentPageRef.current;
+      
+      const response = await ProductService.getProducts({ 
+        page, 
+        limit: 20
+      });
+      
       if (reset) {
-        setProducts(mockResponse.items);
+        setProducts(response.items || []);
         currentPageRef.current = 1;
       } else {
-        setProducts((prev) => [...prev, ...mockResponse.items]);
-        currentPageRef.current += 1;
+        setProducts(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const newProducts = (response.items || []).filter(product => !existingIds.has(product.id));
+          return [...prev, ...newProducts];
+        });
       }
-      setPagination(mockResponse.pagination);
-    } catch (e) {
-      setError('Failed to load products');
+      
+      setPagination(response.pagination);
+      
+      if (!reset) {
+        currentPageRef.current = currentPageRef.current + 1;
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to load products');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+    
     loadProducts(true);
   }, [loadProducts]);
 
-  const handleAddProduct = (newProduct) => {
-    setProducts((prev) => [newProduct, ...prev]);
+  const handleLoadMore = async () => {
+    if (pagination && pagination.hasNext && !loading) {
+      await loadProducts(false);
+    }
   };
+
+  const handleEditProduct = () => {
+    // TODO: Navigate to edit page or open edit modal
+  };
+
+  const handleDeleteProduct = () => {
+    // TODO: Show confirmation dialog and delete product
+  };
+
+  const hasMore = pagination ? pagination.hasNext : false;
 
   return (
     <AdminLayout>
@@ -68,19 +92,25 @@ const ProductListPage = () => {
               </Typography>
             )}
           </Box>
-
-          <Button variant="contained" onClick={() => setIsModalOpen(true)}>
+          <Button variant="contained" color="primary" onClick={() => setOpenModal(true)}>
             Add Product
           </Button>
-
-          <AddProductModal
-            open={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onProductAdded={handleAddProduct}
-          />
+          <AddProductModal 
+        open={openModal} 
+        onClose={() => setOpenModal(false)} 
+        onSuccess={loadProducts} 
+        />
         </Stack>
 
-        <ProductTable products={products} loading={loading} error={error} />
+        <ProductTable 
+          products={products}
+          onLoadMore={handleLoadMore}
+          hasMore={hasMore}
+          loading={loading}
+          error={error}
+          onEdit={handleEditProduct}
+          onDelete={handleDeleteProduct}
+        />
       </Container>
     </AdminLayout>
   );

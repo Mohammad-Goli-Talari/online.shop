@@ -1,225 +1,183 @@
-// src/components/admin/ProductForm.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
-  Grid,
+  TextField,
   MenuItem,
   Stack,
-  TextField,
   Typography,
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { useForm, Controller } from 'react-hook-form';
-import { object, string, number } from 'yup';
+import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
+import ProductService from '../../services/productService';
+import CategoryService from '../../services/categoryService';
 
-const schema = object({
-  name: string().required('Product name is required'),
-  description: string().required('Description is required'),
-  price: number()
+const schema = yup.object().shape({
+  name: yup.string().required('Product name is required'),
+  sku: yup.string().required('SKU is required'),
+  price: yup
+    .number()
     .typeError('Price must be a number')
     .positive('Price must be positive')
     .required('Price is required'),
-  category: string().required('Category is required'),
-  image: string().required('Image is required'),
-  sku: string(),
+  category: yup.string().required('Category is required'),
+  description: yup.string(),
+  imageUrl: yup.string().url('Must be a valid URL').nullable(),
 });
 
-const mockCategories = [
-  { id: 'cat1', name: 'Electronics' },
-  { id: 'cat2', name: 'Books' },
-  { id: 'cat3', name: 'Clothing' },
-];
+const ProductForm = ({ onCancel, onSuccess }) => {
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
-const ProductForm = ({
-  onSubmit,
-  loadingSubmit,
-  errorApi,
-  defaultValues = {
-    name: '',
-    description: '',
-    price: '',
-    category: '',
-    image: '',
-    sku: '',
-  },
-  onCancel,
-  setIsDirty,
-}) => {
   const {
-    control,
+    register,
     handleSubmit,
-    formState: { errors, isDirty },
-    setValue,
-    watch,
+    reset,
+    formState: { errors },
   } = useForm({
-    defaultValues,
     resolver: yupResolver(schema),
+    defaultValues: {
+      name: '',
+      sku: '',
+      price: '',
+      category: '',
+      description: '',
+      imageUrl: '',
+    },
   });
 
   useEffect(() => {
-    if (setIsDirty) {
-      setIsDirty(isDirty);
-    }
-  }, [isDirty, setIsDirty]);
-
-  const [imagePreview, setImagePreview] = useState(defaultValues.image || '');
-
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setValue('image', reader.result, { shouldValidate: true });
-      setImagePreview(reader.result);
+    const fetchCategories = async () => {
+      setLoadingCategories(true);
+      try {
+        const response = await CategoryService.getCategories();
+        if (response && Array.isArray(response.data)) {
+          setCategories(response.data);
+        } else if (Array.isArray(response)) {
+          setCategories(response);
+        } else {
+          setCategories([]);
+          console.error('Unexpected categories response format:', response);
+        }
+      } catch (error) {
+        console.error('Error loading categories:', error);
+        setCategories([]);
+      } finally {
+        setLoadingCategories(false);
+      }
     };
-    reader.readAsDataURL(file);
-  };
 
-  const internalSubmit = (data) => {
-    onSubmit(data);
+    fetchCategories();
+  }, []);
+
+  const onSubmit = async (data) => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    setLoadingSubmit(true);
+
+    try {
+      await ProductService.createProduct(data);
+      setSuccessMsg('Product created successfully!');
+      onSuccess?.();
+      reset();
+      onCancel?.();
+    } catch (error) {
+      setErrorMsg(error.message || 'Failed to create product');
+    } finally {
+      setLoadingSubmit(false);
+    }
   };
 
   return (
-    <Box component="form" noValidate onSubmit={handleSubmit(internalSubmit)} sx={{ mt: 2 }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <Controller
-            name="name"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                label="Product Name"
-                fullWidth
-                error={!!errors.name}
-                helperText={errors.name?.message}
-                {...field}
-              />
-            )}
-          />
-        </Grid>
+    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate sx={{ mt: 1 }}>
+      <Stack spacing={2}>
+        {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
+        {successMsg && <Alert severity="success">{successMsg}</Alert>}
 
-        <Grid item xs={12}>
-          <Controller
-            name="description"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                label="Description"
-                fullWidth
-                multiline
-                rows={4}
-                error={!!errors.description}
-                helperText={errors.description?.message}
-                {...field}
-              />
-            )}
-          />
-        </Grid>
+        <TextField
+          label="Product Name"
+          fullWidth
+          {...register('name')}
+          error={!!errors.name}
+          helperText={errors.name?.message}
+        />
 
-        <Grid item xs={12} sm={6}>
-          <Controller
-            name="price"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                label="Price"
-                type="number"
-                fullWidth
-                error={!!errors.price}
-                helperText={errors.price?.message}
-                {...field}
-              />
-            )}
-          />
-        </Grid>
+        <TextField
+          label="SKU"
+          fullWidth
+          {...register('sku')}
+          error={!!errors.sku}
+          helperText={errors.sku?.message}
+        />
 
-        <Grid item xs={12} sm={6}>
-          <Controller
-            name="category"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                select
-                label="Category"
-                fullWidth
-                error={!!errors.category}
-                helperText={errors.category?.message}
-                {...field}
-              >
-                {mockCategories.map((cat) => (
-                  <MenuItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          />
-        </Grid>
+        <TextField
+          label="Price"
+          type="number"
+          fullWidth
+          {...register('price')}
+          error={!!errors.price}
+          helperText={errors.price?.message}
+        />
 
-        <Grid item xs={12} sm={6}>
-          <Controller
-            name="sku"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                label="SKU (optional)"
-                fullWidth
-                error={!!errors.sku}
-                helperText={errors.sku?.message}
-                {...field}
-              />
-            )}
-          />
-        </Grid>
+        {loadingCategories ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+            <CircularProgress size={24} />
+          </Box>
+        ) : (
+          <TextField
+            select
+            label="Category"
+            fullWidth
+            {...register('category')}
+            error={!!errors.category}
+            helperText={errors.category?.message}
+          >
+            {(Array.isArray(categories) ? categories : []).map((category) => (
+              <MenuItem key={category.id} value={category.id}>
+                {category.name}
+              </MenuItem>
+            ))}
+          </TextField>
+        )}
 
-        <Grid item xs={12} sm={6}>
-          <Stack spacing={1}>
-            <Typography variant="body2">Upload Image</Typography>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              style={{ cursor: 'pointer' }}
-            />
-            {errors.image && (
-              <Typography color="error" variant="caption">
-                {errors.image.message}
-              </Typography>
-            )}
-          </Stack>
-          {imagePreview && (
-            <Box mt={1} sx={{ maxHeight: 150, maxWidth: '100%', overflow: 'hidden' }}>
-              <img
-                src={imagePreview}
-                alt="Preview"
-                style={{ maxHeight: 150, maxWidth: '100%', objectFit: 'contain', borderRadius: 4 }}
-              />
-            </Box>
-          )}
-        </Grid>
+        <TextField
+          label="Description"
+          multiline
+          rows={4}
+          fullWidth
+          {...register('description')}
+          error={!!errors.description}
+          helperText={errors.description?.message}
+        />
 
-        <Grid item xs={12} mt={2}>
-          {errorApi && <Alert severity="error" sx={{ mb: 2 }}>{errorApi}</Alert>}
-          <Stack direction="row" spacing={2}>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={loadingSubmit}
-              startIcon={loadingSubmit ? <CircularProgress size={20} /> : null}
-            >
-              {loadingSubmit ? 'Submitting...' : 'Add Product'}
-            </Button>
-            <Button variant="outlined" onClick={onCancel} disabled={loadingSubmit}>
-              Cancel
-            </Button>
-          </Stack>
-        </Grid>
-      </Grid>
+        <TextField
+          label="Image URL"
+          fullWidth
+          {...register('imageUrl')}
+          error={!!errors.imageUrl}
+          helperText={errors.imageUrl?.message}
+        />
+
+        <Stack direction="row" spacing={2} justifyContent="flex-end">
+          <Button variant="outlined" onClick={onCancel} disabled={loadingSubmit}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={loadingSubmit}
+            startIcon={loadingSubmit && <CircularProgress size={16} />}
+          >
+            Add Product
+          </Button>
+        </Stack>
+      </Stack>
     </Box>
   );
 };

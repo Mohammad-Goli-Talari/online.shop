@@ -14,7 +14,7 @@ import MockDemo from './pages/MockDemo';
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/mock-demo" />} />
+      <Route path="/" element={<Navigate to="/admin" />} />
       <Route path="/mock-demo" element={<MockDemo />} />
       <Route path="/auth/sign-in" element={<SigninPage />} />
       <Route path="/auth/sign-up" element={<SignupPage />} />
