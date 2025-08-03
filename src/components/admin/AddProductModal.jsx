@@ -1,4 +1,3 @@
-// components/admin/AddProductModal.jsx
 import React from 'react';
 import {
   Dialog,
@@ -12,6 +11,10 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import ProductForm from './ProductForm';
 
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
 const AddProductModal = ({ open, onClose, onSuccess }) => {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -23,21 +26,27 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
       fullScreen={fullScreen}
       fullWidth
       maxWidth="md"
-      TransitionComponent={Slide}
-      TransitionProps={{ direction: 'up' }}
+      TransitionComponent={Transition}
+      keepMounted
     >
-      <DialogTitle>
+      <DialogTitle sx={{ m: 0, p: 2 }}>
         Add New Product
         <IconButton
+          aria-label="close"
           onClick={onClose}
-          sx={{ position: 'absolute', right: 16, top: 16 }}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
         >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
       <DialogContent dividers>
-        <ProductForm onCancel={onClose} onSuccess={onSuccess} />
+        <ProductForm open={open} onCancel={onClose} onSuccess={onSuccess} />
       </DialogContent>
     </Dialog>
   );

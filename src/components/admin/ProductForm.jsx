@@ -5,15 +5,20 @@ import {
   TextField,
   MenuItem,
   Stack,
-  Typography,
   CircularProgress,
+  Snackbar,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import ProductService from '../../services/productService';
 import CategoryService from '../../services/categoryService';
+import { debounce } from 'lodash';
 
 const schema = yup.object().shape({
   name: yup.string().required('Product name is required'),
@@ -32,14 +37,19 @@ const ProductForm = ({ onCancel, onSuccess }) => {
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [successMsgOpen, setSuccessMsgOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [confirmClose, setConfirmClose] = useState(false);
+  const [isSkuManuallyEdited, setIsSkuManuallyEdited] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    watch,
+    setValue,
+    formState: { errors, isDirty },
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -51,6 +61,28 @@ const ProductForm = ({ onCancel, onSuccess }) => {
       imageUrl: '',
     },
   });
+
+  const name = watch('name');
+  const sku = watch('sku');
+  const imageUrl = watch('imageUrl');
+
+  useEffect(() => {
+    if (!name || isSkuManuallyEdited) return;
+
+    const generateSku = debounce(() => {
+      const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+      const random = Math.floor(1000 + Math.random() * 9000);
+      const newSku = `pro-${slug}-${random}`;
+      setValue('sku', newSku, { shouldValidate: true });
+    }, 400);
+
+    generateSku();
+    return () => generateSku.cancel();
+  }, [name, isSkuManuallyEdited, setValue]);
+
+  useEffect(() => {
+    setPreviewUrl(imageUrl);
+  }, [imageUrl]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -78,14 +110,12 @@ const ProductForm = ({ onCancel, onSuccess }) => {
 
   const onSubmit = async (data) => {
     setErrorMsg('');
-    setSuccessMsg('');
     setLoadingSubmit(true);
-
     try {
       await ProductService.createProduct(data);
-      setSuccessMsg('Product created successfully!');
-      onSuccess?.();
+      setSuccessMsgOpen(true);
       reset();
+      onSuccess?.();
       onCancel?.();
     } catch (error) {
       setErrorMsg(error.message || 'Failed to create product');
@@ -94,91 +124,165 @@ const ProductForm = ({ onCancel, onSuccess }) => {
     }
   };
 
+  const handleCancelClick = () => {
+    if (isDirty) {
+      setConfirmClose(true);
+    } else {
+      onCancel?.();
+    }
+  };
+
+  const handleConfirmClose = () => {
+    setConfirmClose(false);
+    onCancel?.();
+  };
+
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate sx={{ mt: 1 }}>
-      <Stack spacing={2}>
-        {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
-        {successMsg && <Alert severity="success">{successMsg}</Alert>}
+    <>
+      <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate sx={{ mt: 1 }}>
+        <Stack spacing={2}>
+          {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
 
-        <TextField
-          label="Product Name"
-          fullWidth
-          {...register('name')}
-          error={!!errors.name}
-          helperText={errors.name?.message}
-        />
-
-        <TextField
-          label="SKU"
-          fullWidth
-          {...register('sku')}
-          error={!!errors.sku}
-          helperText={errors.sku?.message}
-        />
-
-        <TextField
-          label="Price"
-          type="number"
-          fullWidth
-          {...register('price')}
-          error={!!errors.price}
-          helperText={errors.price?.message}
-        />
-
-        {loadingCategories ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-            <CircularProgress size={24} />
-          </Box>
-        ) : (
           <TextField
-            select
-            label="Category"
+            label="Product Name"
             fullWidth
-            {...register('category')}
-            error={!!errors.category}
-            helperText={errors.category?.message}
-          >
-            {(Array.isArray(categories) ? categories : []).map((category) => (
-              <MenuItem key={category.id} value={category.id}>
-                {category.name}
-              </MenuItem>
-            ))}
-          </TextField>
-        )}
+            {...register('name')}
+            error={!!errors.name}
+            helperText={errors.name?.message}
+          />
 
-        <TextField
-          label="Description"
-          multiline
-          rows={4}
-          fullWidth
-          {...register('description')}
-          error={!!errors.description}
-          helperText={errors.description?.message}
-        />
+          <TextField
+            label="SKU"
+            fullWidth
+            placeholder="Auto-generated SKU will appear here"
+            value={sku || ''}
+            {...register('sku')}
+            error={!!errors.sku}
+            helperText={errors.sku?.message}
+            onChange={(e) => {
+              setIsSkuManuallyEdited(true);
+              setValue('sku', e.target.value);
+            }}
+          />
 
-        <TextField
-          label="Image URL"
-          fullWidth
-          {...register('imageUrl')}
-          error={!!errors.imageUrl}
-          helperText={errors.imageUrl?.message}
-        />
+          <TextField
+            label="Price"
+            type="number"
+            fullWidth
+            {...register('price')}
+            error={!!errors.price}
+            helperText={errors.price?.message}
+          />
 
-        <Stack direction="row" spacing={2} justifyContent="flex-end">
-          <Button variant="outlined" onClick={onCancel} disabled={loadingSubmit}>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={loadingSubmit}
-            startIcon={loadingSubmit && <CircularProgress size={16} />}
-          >
-            Add Product
-          </Button>
+          {loadingCategories ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : (
+            <TextField
+              select
+              label="Category"
+              fullWidth
+              {...register('category')}
+              error={!!errors.category}
+              helperText={errors.category?.message}
+            >
+              {(Array.isArray(categories) ? categories : []).map((category) => (
+                <MenuItem key={category.id} value={category.id}>
+                  {category.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+
+          <TextField
+            label="Description"
+            multiline
+            rows={4}
+            fullWidth
+            {...register('description')}
+            error={!!errors.description}
+            helperText={errors.description?.message}
+          />
+
+          <TextField
+            label="Image URL"
+            fullWidth
+            {...register('imageUrl')}
+            error={!!errors.imageUrl}
+            helperText={errors.imageUrl?.message}
+          />
+
+          {previewUrl && (
+            <Box sx={{ mt: 1, mb: 2 }}>
+              <img
+                src={previewUrl}
+                alt="Preview"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: 200,
+                  borderRadius: 8,
+                  display: 'block',
+                  objectFit: 'contain',
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </Box>
+          )}
+
+          <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Button variant="outlined" onClick={handleCancelClick} disabled={loadingSubmit}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={loadingSubmit}
+              startIcon={loadingSubmit && <CircularProgress size={16} />}
+            >
+              Add Product
+            </Button>
+          </Stack>
         </Stack>
-      </Stack>
-    </Box>
+      </Box>
+
+      <Snackbar
+        open={successMsgOpen}
+        autoHideDuration={3000}
+        onClose={() => setSuccessMsgOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="success" sx={{ width: '100%' }}>
+          Product created successfully!
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!errorMsg}
+        autoHideDuration={5000}
+        onClose={() => setErrorMsg('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="error" sx={{ width: '100%' }}>
+          {errorMsg}
+        </Alert>
+      </Snackbar>
+
+      <Dialog open={confirmClose} onClose={() => setConfirmClose(false)}>
+        <DialogTitle>Discard changes?</DialogTitle>
+        <DialogContent>
+          You have unsaved changes. Are you sure you want to discard them?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmClose(false)}>Cancel</Button>
+          <Button onClick={handleConfirmClose} color="error">
+            Discard
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 
