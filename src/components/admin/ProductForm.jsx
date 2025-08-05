@@ -27,6 +27,7 @@ const schema = yup.object().shape({
     .number()
     .typeError('Price must be a number')
     .positive('Price must be positive')
+    .min(0, 'Price cannot be negative')
     .required('Price is required'),
   category: yup.string().required('Category is required'),
   description: yup.string(),
@@ -65,12 +66,17 @@ const ProductForm = ({ onCancel, onSuccess }) => {
   const name = watch('name');
   const sku = watch('sku');
   const imageUrl = watch('imageUrl');
+  const category = watch('category');
 
   useEffect(() => {
     if (!name || isSkuManuallyEdited) return;
 
     const generateSku = debounce(() => {
-      const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+      const slug = name
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w-]+/g, '');
       const random = Math.floor(1000 + Math.random() * 9000);
       const newSku = `pro-${slug}-${random}`;
       setValue('sku', newSku, { shouldValidate: true });
@@ -89,25 +95,29 @@ const ProductForm = ({ onCancel, onSuccess }) => {
       setLoadingCategories(true);
       try {
         const response = await CategoryService.getCategories();
-        if (response && Array.isArray(response.data)) {
-          setCategories(response.data);
-        } else if (Array.isArray(response)) {
-          setCategories(response);
+        if (response) {
+          if (Array.isArray(response.categories)) {
+            setCategories(response.categories);
+          } else if (Array.isArray(response)) {
+            setCategories(response);
+          } else {
+            console.error('Unexpected categories response format:', response);
+            setCategories([]);
+          }
         } else {
           setCategories([]);
-          console.error('Unexpected categories response format:', response);
         }
       } catch (error) {
-        console.error('Error loading categories:', error);
+        console.error('Failed to fetch categories:', error);
         setCategories([]);
       } finally {
         setLoadingCategories(false);
       }
     };
-
     fetchCategories();
   }, []);
 
+  // ارسال فرم
   const onSubmit = async (data) => {
     setErrorMsg('');
     setLoadingSubmit(true);
@@ -149,6 +159,7 @@ const ProductForm = ({ onCancel, onSuccess }) => {
             {...register('name')}
             error={!!errors.name}
             helperText={errors.name?.message}
+            autoComplete="off"
           />
 
           <TextField
@@ -163,6 +174,7 @@ const ProductForm = ({ onCancel, onSuccess }) => {
               setIsSkuManuallyEdited(true);
               setValue('sku', e.target.value);
             }}
+            autoComplete="off"
           />
 
           <TextField
@@ -172,6 +184,8 @@ const ProductForm = ({ onCancel, onSuccess }) => {
             {...register('price')}
             error={!!errors.price}
             helperText={errors.price?.message}
+            inputProps={{ min: 0, step: '0.01' }}
+            autoComplete="off"
           />
 
           {loadingCategories ? (
@@ -186,10 +200,13 @@ const ProductForm = ({ onCancel, onSuccess }) => {
               {...register('category')}
               error={!!errors.category}
               helperText={errors.category?.message}
+              value={category || ''}
+              onChange={(e) => setValue('category', e.target.value, { shouldValidate: true })}
             >
-              {(Array.isArray(categories) ? categories : []).map((category) => (
-                <MenuItem key={category.id} value={category.id}>
-                  {category.name}
+              <MenuItem value="">Select category</MenuItem>
+              {categories.map((cat) => (
+                <MenuItem key={cat.id || cat._id} value={cat.id || cat._id}>
+                  {cat.name}
                 </MenuItem>
               ))}
             </TextField>
@@ -203,6 +220,7 @@ const ProductForm = ({ onCancel, onSuccess }) => {
             {...register('description')}
             error={!!errors.description}
             helperText={errors.description?.message}
+            autoComplete="off"
           />
 
           <TextField
@@ -211,6 +229,7 @@ const ProductForm = ({ onCancel, onSuccess }) => {
             {...register('imageUrl')}
             error={!!errors.imageUrl}
             helperText={errors.imageUrl?.message}
+            autoComplete="off"
           />
 
           {previewUrl && (
