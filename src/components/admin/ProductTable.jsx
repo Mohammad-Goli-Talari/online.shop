@@ -18,28 +18,26 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
-const ProductTable = ({ 
-  products, 
-  onLoadMore, 
-  hasMore, 
-  loading, 
+const ProductTable = ({
+  products,
+  onLoadMore,
+  hasMore,
+  loading,
   error,
   onEdit,
-  onDelete 
+  onDelete,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const tableRef = useRef(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Infinite scroll handler
   const handleScroll = useCallback(async () => {
     if (!tableRef.current || !hasMore || loading || isLoadingMore) return;
 
     const { scrollTop, scrollHeight, clientHeight } = tableRef.current;
     const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
 
-    // Load more when user scrolls to 80% of the content
     if (scrollPercentage > 0.8) {
       setIsLoadingMore(true);
       try {
@@ -50,7 +48,6 @@ const ProductTable = ({
     }
   }, [hasMore, loading, isLoadingMore, onLoadMore]);
 
-  // Set up scroll listener
   useEffect(() => {
     const currentRef = tableRef.current;
     if (currentRef) {
@@ -63,12 +60,11 @@ const ProductTable = ({
     }
   }, [handleScroll]);
 
-  // Format date helper
   const formatDate = (dateString) => {
+    if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString();
   };
 
-  // Get product primary image
   const getProductImage = (images) => {
     return images && images.length > 0 ? images[0] : null;
   };
@@ -83,12 +79,12 @@ const ProductTable = ({
 
   return (
     <Box sx={{ overflowX: 'auto' }}>
-      <TableContainer 
-        component={Paper} 
+      <TableContainer
+        component={Paper}
         ref={tableRef}
-        sx={{ 
+        sx={{
           maxHeight: '70vh',
-          overflowY: 'auto'
+          overflowY: 'auto',
         }}
       >
         <Table size={isMobile ? 'small' : 'medium'} stickyHeader>
@@ -108,10 +104,10 @@ const ProductTable = ({
           </TableHead>
           <TableBody>
             {products.map((product) => (
-              <TableRow key={product.id} hover>
+              <TableRow key={product.id || product._id} hover>
                 <TableCell>
                   <Typography variant="body2" fontWeight={500}>
-                    #{product.id}
+                    #{product.id || product._id || '-'}
                   </Typography>
                 </TableCell>
                 <TableCell>
@@ -127,18 +123,18 @@ const ProductTable = ({
                 <TableCell>
                   <Box>
                     <Typography variant="body2" fontWeight={500} noWrap>
-                      {product.name}
+                      {product.name || '-'}
                     </Typography>
                     {product.description && (
-                      <Typography 
-                        variant="caption" 
-                        color="text.secondary" 
-                        sx={{ 
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{
                           display: '-webkit-box',
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: 'vertical',
                           overflow: 'hidden',
-                          maxWidth: 200
+                          maxWidth: 200,
                         }}
                       >
                         {product.description}
@@ -148,12 +144,12 @@ const ProductTable = ({
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" fontFamily="monospace">
-                    {product.sku}
+                    {product.sku || '-'}
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Chip 
-                    label={product.category?.name || 'No Category'} 
+                  <Chip
+                    label={product.category?.name || product.categoryName || 'No Category'}
                     size="small"
                     variant="outlined"
                     color="primary"
@@ -161,14 +157,20 @@ const ProductTable = ({
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" fontWeight={500}>
-                    ${product.price.toFixed(2)}
+                    ${typeof product.price === 'number' ? product.price.toFixed(2) : '-'}
                   </Typography>
                 </TableCell>
                 <TableCell>
                   <Chip
-                    label={product.stock}
+                    label={product.stock != null ? product.stock : '-'}
                     size="small"
-                    color={product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'error'}
+                    color={
+                      product.stock > 10
+                        ? 'success'
+                        : product.stock > 0
+                        ? 'warning'
+                        : 'error'
+                    }
                     variant={product.stock === 0 ? 'filled' : 'outlined'}
                   />
                 </TableCell>
@@ -187,16 +189,16 @@ const ProductTable = ({
                 </TableCell>
                 <TableCell align="right">
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    <Button 
-                      size="small" 
-                      variant="outlined" 
+                    <Button
+                      size="small"
+                      variant="outlined"
                       onClick={() => onEdit && onEdit(product)}
                     >
                       Edit
                     </Button>
-                    <Button 
-                      size="small" 
-                      color="error" 
+                    <Button
+                      size="small"
+                      color="error"
                       variant="outlined"
                       onClick={() => onDelete && onDelete(product)}
                     >
@@ -206,7 +208,6 @@ const ProductTable = ({
                 </TableCell>
               </TableRow>
             ))}
-            {/* Loading indicator row */}
             {(loading || isLoadingMore) && (
               <TableRow>
                 <TableCell colSpan={10} align="center" sx={{ py: 3 }}>
@@ -219,7 +220,6 @@ const ProductTable = ({
                 </TableCell>
               </TableRow>
             )}
-            {/* No more data indicator */}
             {!loading && !isLoadingMore && !hasMore && products.length > 0 && (
               <TableRow>
                 <TableCell colSpan={10} align="center" sx={{ py: 2 }}>
@@ -229,7 +229,6 @@ const ProductTable = ({
                 </TableCell>
               </TableRow>
             )}
-            {/* Empty state */}
             {!loading && products.length === 0 && (
               <TableRow>
                 <TableCell colSpan={10} align="center" sx={{ py: 4 }}>

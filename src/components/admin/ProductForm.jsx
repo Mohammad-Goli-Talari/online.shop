@@ -1,4 +1,3 @@
-// src/components/admin/ProductForm.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -9,14 +8,14 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   FormControlLabel,
   Switch,
   Typography,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
@@ -68,8 +67,8 @@ const ProductForm = ({ onCancel, onSuccess }) => {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [successMsgOpen, setSuccessMsgOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [confirmClose, setConfirmClose] = useState(false);
   const [isSkuManuallyEdited, setIsSkuManuallyEdited] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
 
   const {
     register,
@@ -78,9 +77,10 @@ const ProductForm = ({ onCancel, onSuccess }) => {
     watch,
     setValue,
     control,
-    formState: { errors, isDirty },
+    formState: { errors, isDirty, isValid },
   } = useForm({
     resolver: yupResolver(schema),
+    mode: 'onChange', 
     defaultValues: {
       name: '',
       sku: '',
@@ -152,7 +152,6 @@ const ProductForm = ({ onCancel, onSuccess }) => {
     reader.readAsDataURL(file);
   };
 
-  // ارسال فرم
   const onSubmit = async (data) => {
     setErrorMsg('');
     setLoadingSubmit(true);
@@ -177,6 +176,11 @@ const ProductForm = ({ onCancel, onSuccess }) => {
     } finally {
       setLoadingSubmit(false);
     }
+  };
+
+  const handleRemoveImage = (index) => {
+    if (fields.length <= 1) return;
+    remove(index);
   };
 
   const handleCancelClick = () => {
@@ -280,7 +284,6 @@ const ProductForm = ({ onCancel, onSuccess }) => {
             autoComplete="off"
           />
 
-          {/* Images section */}
           <Box>
             <Typography variant="body1" sx={{ mb: 1 }}>
               Images
@@ -296,7 +299,6 @@ const ProductForm = ({ onCancel, onSuccess }) => {
                   autoComplete="off"
                   onChange={(e) => setValue(`images.${index}`, e.target.value, { shouldValidate: true })}
                 />
-                {/* Upload file input */}
                 <Button
                   variant="outlined"
                   component="label"
@@ -314,7 +316,7 @@ const ProductForm = ({ onCancel, onSuccess }) => {
 
                 <IconButton
                   aria-label="delete"
-                  onClick={() => remove(index)}
+                  onClick={() => handleRemoveImage(index)}
                   disabled={fields.length === 1}
                 >
                   <CloseIcon />
@@ -331,7 +333,6 @@ const ProductForm = ({ onCancel, onSuccess }) => {
             </Button>
           </Box>
 
-          {/* پیش‌نمایش تصویر اول */}
           {images?.[0] && (
             <Box sx={{ mt: 1, mb: 2 }}>
               <img
@@ -351,7 +352,6 @@ const ProductForm = ({ onCancel, onSuccess }) => {
             </Box>
           )}
 
-          {/* Is Active field */}
           <FormControlLabel
             control={
               <Switch
@@ -371,7 +371,7 @@ const ProductForm = ({ onCancel, onSuccess }) => {
             <Button
               type="submit"
               variant="contained"
-              disabled={loadingSubmit}
+              disabled={loadingSubmit || !isValid}
               startIcon={loadingSubmit && <CircularProgress size={16} />}
             >
               Add Product
