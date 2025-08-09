@@ -102,7 +102,7 @@ class ApiClient {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
+      
       const response = await fetch(requestUrl, {
         ...config,
         signal: controller.signal

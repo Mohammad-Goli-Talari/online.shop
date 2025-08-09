@@ -98,8 +98,6 @@ const ProductForm = ({ onCancel, onSuccess }) => {
         if (response) {
           if (Array.isArray(response.categories)) {
             setCategories(response.categories);
-          } else if (Array.isArray(response)) {
-            setCategories(response);
           } else {
             console.error('Unexpected categories response format:', response);
             setCategories([]);
