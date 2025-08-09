@@ -1,3 +1,4 @@
+// src/components/admin/ProductForm.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -12,8 +13,14 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  FormControlLabel,
+  Switch,
+  Typography,
+  IconButton,
 } from '@mui/material';
-import { useForm } from 'react-hook-form';
+import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
+import { useForm, useFieldArray } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import ProductService from '../../services/productService';
@@ -21,17 +28,26 @@ import CategoryService from '../../services/categoryService';
 import { debounce } from 'lodash';
 
 const schema = yup.object().shape({
-  name: yup.string().required('Product name is required'),
+  name: yup.string().required('Product name is required').min(3, 'Name must be at least 3 characters'),
   sku: yup.string().required('SKU is required'),
   price: yup
     .number()
     .typeError('Price must be a number')
     .positive('Price must be positive')
-    .min(0, 'Price cannot be negative')
     .required('Price is required'),
+  stock: yup
+    .number()
+    .typeError('Stock must be a number')
+    .integer('Stock must be an integer')
+    .min(0, 'Stock cannot be negative')
+    .required('Stock is required'),
   category: yup.string().required('Category is required'),
-  description: yup.string(),
-  imageUrl: yup.string().url('Must be a valid URL').nullable(),
+  description: yup.string().nullable(),
+  images: yup
+    .array()
+    .of(yup.string().url('Must be a valid URL'))
+    .min(1, 'At least one image is required'),
+  isActive: yup.boolean(),
 });
 
 const ProductForm = ({ onCancel, onSuccess }) => {
@@ -40,7 +56,6 @@ const ProductForm = ({ onCancel, onSuccess }) => {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [successMsgOpen, setSuccessMsgOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [previewUrl, setPreviewUrl] = useState('');
   const [confirmClose, setConfirmClose] = useState(false);
   const [isSkuManuallyEdited, setIsSkuManuallyEdited] = useState(false);
 
@@ -50,6 +65,7 @@ const ProductForm = ({ onCancel, onSuccess }) => {
     reset,
     watch,
     setValue,
+    control,
     formState: { errors, isDirty },
   } = useForm({
     resolver: yupResolver(schema),
@@ -57,15 +73,22 @@ const ProductForm = ({ onCancel, onSuccess }) => {
       name: '',
       sku: '',
       price: '',
+      stock: 0,
       category: '',
       description: '',
-      imageUrl: '',
+      images: [''],
+      isActive: true,
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'images',
   });
 
   const name = watch('name');
   const sku = watch('sku');
-  const imageUrl = watch('imageUrl');
+  const images = watch('images');
   const category = watch('category');
 
   useEffect(() => {
@@ -87,21 +110,12 @@ const ProductForm = ({ onCancel, onSuccess }) => {
   }, [name, isSkuManuallyEdited, setValue]);
 
   useEffect(() => {
-    setPreviewUrl(imageUrl);
-  }, [imageUrl]);
-
-  useEffect(() => {
     const fetchCategories = async () => {
       setLoadingCategories(true);
       try {
         const response = await CategoryService.getCategories();
-        if (response) {
-          if (Array.isArray(response.categories)) {
-            setCategories(response.categories);
-          } else {
-            console.error('Unexpected categories response format:', response);
-            setCategories([]);
-          }
+        if (response && Array.isArray(response.categories)) {
+          setCategories(response.categories);
         } else {
           setCategories([]);
         }
@@ -120,7 +134,17 @@ const ProductForm = ({ onCancel, onSuccess }) => {
     setErrorMsg('');
     setLoadingSubmit(true);
     try {
-      await ProductService.createProduct(data);
+      const payload = {
+        name: data.name,
+        sku: data.sku,
+        price: parseFloat(data.price),
+        stock: parseInt(data.stock, 10),
+        categoryId: parseInt(data.category, 10),
+        description: data.description || null,
+        images: data.images.filter((url) => url.trim() !== ''),
+        isActive: data.isActive,
+      };
+      await ProductService.createProduct(payload);
       setSuccessMsgOpen(true);
       reset();
       onSuccess?.();
@@ -149,6 +173,7 @@ const ProductForm = ({ onCancel, onSuccess }) => {
     <>
       <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate sx={{ mt: 1 }}>
         <Stack spacing={2}>
+
           {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
 
           <TextField
@@ -183,6 +208,17 @@ const ProductForm = ({ onCancel, onSuccess }) => {
             error={!!errors.price}
             helperText={errors.price?.message}
             inputProps={{ min: 0, step: '0.01' }}
+            autoComplete="off"
+          />
+
+          <TextField
+            label="Stock"
+            type="number"
+            fullWidth
+            {...register('stock')}
+            error={!!errors.stock}
+            helperText={errors.stock?.message}
+            inputProps={{ min: 0, step: 1 }}
             autoComplete="off"
           />
 
@@ -221,19 +257,69 @@ const ProductForm = ({ onCancel, onSuccess }) => {
             autoComplete="off"
           />
 
-          <TextField
-            label="Image URL"
-            fullWidth
-            {...register('imageUrl')}
-            error={!!errors.imageUrl}
-            helperText={errors.imageUrl?.message}
-            autoComplete="off"
-          />
+          {/* Images section */}
+          <Box>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              Images
+            </Typography>
+            {fields.map((field, index) => (
+              <Stack key={field.id} direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                <TextField
+                  fullWidth
+                  {...register(`images.${index}`)}
+                  error={!!errors.images?.[index]}
+                  helperText={errors.images?.[index]?.message}
+                  placeholder="Image URL or upload file"
+                  autoComplete="off"
+                  onChange={(e) => setValue(`images.${index}`, e.target.value, { shouldValidate: true })}
+                />
+                <Button
+                  variant="outlined"
+                  component="label"
+                  sx={{ minWidth: 'auto', p: '6px 8px' }}
+                >
+                  Upload
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setValue(`images.${index}`, reader.result, { shouldValidate: true });
+                        };
+                        reader.readAsDataURL(file);
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                </Button>
+                <IconButton
+                  aria-label="delete"
+                  onClick={() => remove(index)}
+                  disabled={fields.length === 1}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Stack>
+            ))}
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={() => append('')}
+            >
+              Add Image
+            </Button>
+          </Box>
 
-          {previewUrl && (
+          {/* Preview first image */}
+          {images?.[0] && (
             <Box sx={{ mt: 1, mb: 2 }}>
               <img
-                src={previewUrl}
+                src={images[0]}
                 alt="Preview"
                 style={{
                   maxWidth: '100%',
@@ -248,6 +334,18 @@ const ProductForm = ({ onCancel, onSuccess }) => {
               />
             </Box>
           )}
+
+          <FormControlLabel
+            control={
+              <Switch
+                {...register('isActive')}
+                defaultChecked
+                color="primary"
+                onChange={(e) => setValue('isActive', e.target.checked, { shouldValidate: true })}
+              />
+            }
+            label="Is Active"
+          />
 
           <Stack direction="row" spacing={2} justifyContent="flex-end">
             <Button variant="outlined" onClick={handleCancelClick} disabled={loadingSubmit}>
