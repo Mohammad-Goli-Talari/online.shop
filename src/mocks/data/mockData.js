@@ -456,6 +456,82 @@ class MockDataStore {
     }));
   };
 
+  // Product CRUD methods
+  createProduct = (productData) => {
+    // Find the category to create the category object
+    const category = this.categories.find(c => c.id === productData.categoryId);
+    if (!category) {
+      throw new Error('Category not found');
+    }
+
+    const newProduct = {
+      id: generateId('product'),
+      name: productData.name,
+      description: productData.description || null,
+      price: productData.price,
+      sku: productData.sku,
+      stock: productData.stock || 0,
+      isActive: productData.isActive !== undefined ? productData.isActive : true,
+      images: productData.images || [],
+      categoryId: productData.categoryId,
+      category: {
+        id: category.id,
+        name: category.name,
+        slug: category.slug
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    this.products.push(newProduct);
+    return newProduct;
+  };
+
+  updateProduct = (productId, productData) => {
+    const index = this.products.findIndex(p => p.id === productId);
+    if (index === -1) throw new Error('Product not found');
+    
+    const currentProduct = this.products[index];
+    let updatedProduct = { ...currentProduct };
+
+    // Update basic fields
+    if (productData.name !== undefined) updatedProduct.name = productData.name;
+    if (productData.description !== undefined) updatedProduct.description = productData.description;
+    if (productData.price !== undefined) updatedProduct.price = productData.price;
+    if (productData.sku !== undefined) updatedProduct.sku = productData.sku;
+    if (productData.stock !== undefined) updatedProduct.stock = productData.stock;
+    if (productData.isActive !== undefined) updatedProduct.isActive = productData.isActive;
+    if (productData.images !== undefined) updatedProduct.images = productData.images;
+
+    // Handle category update
+    if (productData.categoryId !== undefined && productData.categoryId !== currentProduct.categoryId) {
+      const category = this.categories.find(c => c.id === productData.categoryId);
+      if (!category) {
+        throw new Error('Category not found');
+      }
+      updatedProduct.categoryId = productData.categoryId;
+      updatedProduct.category = {
+        id: category.id,
+        name: category.name,
+        slug: category.slug
+      };
+    }
+
+    updatedProduct.updatedAt = new Date().toISOString();
+    
+    this.products[index] = updatedProduct;
+    return updatedProduct;
+  };
+
+  deleteProduct = (productId) => {
+    const index = this.products.findIndex(p => p.id === productId);
+    if (index === -1) throw new Error('Product not found');
+    
+    const deletedProduct = this.products[index];
+    this.products.splice(index, 1);
+    return deletedProduct;
+  };
+
   // Cart methods
   addToCart = (productId, quantity) => {
     const product = this.getProductById(productId);

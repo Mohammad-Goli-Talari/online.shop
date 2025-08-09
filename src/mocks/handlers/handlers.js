@@ -259,6 +259,96 @@ export const handlers = [
     return HttpResponse.json(createApiResponse(searchResponse));
   }),
 
+  // Create new product
+  http.post(`${API_BASE_URL}/products`, async ({ request }) => {
+    await delay(600);
+    
+    try {
+      const productData = await request.json();
+      
+      // Validate required fields
+      const requiredFields = ['name', 'price', 'sku', 'stock', 'categoryId'];
+      const missingFields = requiredFields.filter(field => !productData[field] && productData[field] !== 0);
+      
+      if (missingFields.length > 0) {
+        return createErrorResponse(
+          `Missing required fields: ${missingFields.join(', ')}`, 
+          'VAL_002', 
+          400
+        );
+      }
+
+      // Validate data types
+      if (typeof productData.price !== 'number' || productData.price <= 0) {
+        return createErrorResponse('Price must be a positive number', 'VAL_002', 400);
+      }
+
+      if (typeof productData.stock !== 'number' || productData.stock < 0) {
+        return createErrorResponse('Stock must be a non-negative number', 'VAL_002', 400);
+      }
+
+      const newProduct = mockDataStore.createProduct(productData);
+      
+      return HttpResponse.json(
+        createApiResponse({ product: newProduct }, 'Product created successfully'),
+        { status: 201 }
+      );
+    } catch (error) {
+      console.error('Error creating product:', error);
+      return createErrorResponse('Failed to create product', 'SERVER_ERROR', 500);
+    }
+  }),
+
+  // Update product
+  http.put(`${API_BASE_URL}/products/:id`, async ({ params, request }) => {
+    await delay(500);
+    
+    try {
+      const id = parseInt(params.id);
+      const productData = await request.json();
+      
+      const updatedProduct = mockDataStore.updateProduct(id, productData);
+      
+      return HttpResponse.json(
+        createApiResponse({ product: updatedProduct }, 'Product updated successfully')
+      );
+    } catch (error) {
+      console.error('Error updating product:', error);
+      
+      if (error.message === 'Product not found') {
+        return createErrorResponse('Product not found', 'NOT_FOUND', 404);
+      }
+      
+      return createErrorResponse('Failed to update product', 'SERVER_ERROR', 500);
+    }
+  }),
+
+  // Delete product
+  http.delete(`${API_BASE_URL}/products/:id`, async ({ params }) => {
+    await delay(400);
+    
+    try {
+      const id = parseInt(params.id);
+      
+      const deletedProduct = mockDataStore.deleteProduct(id);
+      
+      return HttpResponse.json(
+        createApiResponse(
+          { product: deletedProduct }, 
+          'Product deleted successfully'
+        )
+      );
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      
+      if (error.message === 'Product not found') {
+        return createErrorResponse('Product not found', 'NOT_FOUND', 404);
+      }
+      
+      return createErrorResponse('Failed to delete product', 'SERVER_ERROR', 500);
+    }
+  }),
+
   // =============================================================================
   // CART ENDPOINTS
   // =============================================================================
