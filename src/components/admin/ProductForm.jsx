@@ -45,7 +45,19 @@ const schema = yup.object().shape({
   description: yup.string().nullable(),
   images: yup
     .array()
-    .of(yup.string().url('Must be a valid URL'))
+    .of(
+      yup
+        .string()
+        .required('Image is required')
+        .test('is-valid-image', 'Must be a valid URL or base64 image', (value) => {
+          if (!value) return false;
+          return (
+            value.startsWith('http://') ||
+            value.startsWith('https://') ||
+            value.startsWith('data:image/')
+          );
+        })
+    )
     .min(1, 'At least one image is required'),
   isActive: yup.boolean(),
 });
@@ -128,6 +140,17 @@ const ProductForm = ({ onCancel, onSuccess }) => {
     };
     fetchCategories();
   }, []);
+
+  const handleFileChange = (e, index) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setValue(`images.${index}`, reader.result, { shouldValidate: true, shouldDirty: true });
+    };
+    reader.readAsDataURL(file);
+  };
 
   // ارسال فرم
   const onSubmit = async (data) => {
@@ -273,29 +296,22 @@ const ProductForm = ({ onCancel, onSuccess }) => {
                   autoComplete="off"
                   onChange={(e) => setValue(`images.${index}`, e.target.value, { shouldValidate: true })}
                 />
+                {/* Upload file input */}
                 <Button
                   variant="outlined"
                   component="label"
-                  sx={{ minWidth: 'auto', p: '6px 8px' }}
+                  size="small"
+                  sx={{ whiteSpace: 'nowrap' }}
                 >
                   Upload
                   <input
                     type="file"
                     accept="image/*"
                     hidden
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                          setValue(`images.${index}`, reader.result, { shouldValidate: true });
-                        };
-                        reader.readAsDataURL(file);
-                        e.target.value = '';
-                      }
-                    }}
+                    onChange={(e) => handleFileChange(e, index)}
                   />
                 </Button>
+
                 <IconButton
                   aria-label="delete"
                   onClick={() => remove(index)}
@@ -315,7 +331,7 @@ const ProductForm = ({ onCancel, onSuccess }) => {
             </Button>
           </Box>
 
-          {/* Preview first image */}
+          {/* پیش‌نمایش تصویر اول */}
           {images?.[0] && (
             <Box sx={{ mt: 1, mb: 2 }}>
               <img
@@ -335,6 +351,7 @@ const ProductForm = ({ onCancel, onSuccess }) => {
             </Box>
           )}
 
+          {/* Is Active field */}
           <FormControlLabel
             control={
               <Switch
