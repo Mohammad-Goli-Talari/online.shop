@@ -130,7 +130,7 @@ const ProductForm = ({ onCancel, onSuccess }) => {
   const description = watch('description');
   const category = watch('category');
 
-  // SKU auto suggestion
+  // SKU auto suggestion (auto-generate) still active via effect
   useEffect(() => {
     if (!name || isSkuManuallyEdited) return;
     const generateSku = debounce(() => {
@@ -233,15 +233,6 @@ const ProductForm = ({ onCancel, onSuccess }) => {
     } finally { setCreatingCategory(false); }
   };
 
-  // suggest SKU button
-  const suggestSku = () => {
-    if (!name) return;
-    const slug = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-    const suggestion = `pro-${slug}-${Math.floor(1000 + Math.random() * 9000)}`;
-    setValue('sku', suggestion, { shouldValidate: true });
-    setIsSkuManuallyEdited(false);
-  };
-
   // preview open/close helpers
   const openPreview = (index = null) => { setCurrentPreviewIndex(index); setPreviewOpen(true); };
   const closePreview = () => { setPreviewOpen(false); setCurrentPreviewIndex(null); };
@@ -261,10 +252,22 @@ const ProductForm = ({ onCancel, onSuccess }) => {
         isActive: data.isActive,
       };
       const created = await ProductService.createProduct(payload);
+
+      // success handling: notify parent/listeners BEFORE resetting the form
       setSuccessMsgOpen(true);
-      reset();
-      // Pass returned created product/object to parent so it can refresh/update list
+
+      // call parent callback so it can refresh list
       onSuccess?.(created);
+
+      // also emit a global event in case the list listens to it (helps pagination/list updates)
+      try {
+        window.dispatchEvent(new CustomEvent('products:created', { detail: created }));
+      } catch (e) {
+        // ignore if environment blocks CustomEvent
+      }
+
+      // then reset and close
+      reset();
       onCancel?.();
     } catch (err) {
       setErrorMsg(err?.message || 'Failed to create product');
@@ -291,20 +294,18 @@ const ProductForm = ({ onCancel, onSuccess }) => {
 
           <TextField label="Product Name" fullWidth {...register('name')} error={!!errors.name} helperText={errors.name?.message} autoComplete="off" />
 
-          <Stack direction="row" spacing={1} alignItems="center">
-            <TextField
-              label="SKU"
-              fullWidth
-              placeholder="Auto-generated SKU will appear here"
-              value={sku || ''}
-              {...register('sku')}
-              error={!!errors.sku}
-              helperText={errors.sku?.message}
-              onChange={(e) => { setIsSkuManuallyEdited(true); setValue('sku', e.target.value); }}
-              autoComplete="off"
-            />
-            <Button size="small" variant="outlined" onClick={suggestSku} sx={{ whiteSpace: 'nowrap' }}>Suggest SKU</Button>
-          </Stack>
+          {/* SKU field: button SUGGEST removed */}
+          <TextField
+            label="SKU"
+            fullWidth
+            placeholder="Auto-generated SKU will appear here"
+            value={sku || ''}
+            {...register('sku')}
+            error={!!errors.sku}
+            helperText={errors.sku?.message}
+            onChange={(e) => { setIsSkuManuallyEdited(true); setValue('sku', e.target.value); }}
+            autoComplete="off"
+          />
 
           <TextField label="Price" type="number" fullWidth {...register('price')} error={!!errors.price} helperText={errors.price?.message} inputProps={{ min: 0, step: '0.01' }} autoComplete="off" />
 
@@ -373,9 +374,7 @@ const ProductForm = ({ onCancel, onSuccess }) => {
                   <input type="file" accept="image/*" hidden onChange={(e) => handleFileInputChange(e, index)} />
                 </Button>
 
-                <IconButton aria-label={`preview-image-${index}`} size="small" onClick={() => openPreview(index)} sx={{ ml: 0.5 }}>
-                  <VisibilityIcon fontSize="small" />
-                </IconButton>
+                {/* preview-icon next to upload removed (as requested) */}
 
                 <IconButton aria-label={`delete-image-${index}`} size="small" onClick={() => handleRemoveImage(index)} disabled={fields.length === 0} sx={{ ml: 0.5 }}>
                   <CloseIcon fontSize="small" />
