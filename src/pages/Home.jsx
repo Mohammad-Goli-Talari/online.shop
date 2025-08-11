@@ -8,7 +8,7 @@ import CustomerLayout from '../layouts/CustomerLayout';
 import ProductGrid from '../components/customer/ProductGrid';
 import CategoryFilter from '../components/customer/CategoryFilter';
 import ProductService from '../services/productService';
-import CartService from '../services/CartService';
+import CartService from '../services/cartService';
 
 /**
  * The main Home page component for customers.
