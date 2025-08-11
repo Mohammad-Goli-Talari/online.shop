@@ -1,5 +1,4 @@
 // src/components/customer/CategoryFilter.jsx
-
 import React, { useState, useEffect } from 'react';
 import { List, ListItem, ListItemButton, ListItemText, Typography, CircularProgress, Box, Alert } from '@mui/material';
 import CategoryService from '../../services/categoryService';
