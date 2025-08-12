@@ -7,13 +7,11 @@ import { FilterList } from '@mui/icons-material';
 import CustomerLayout from '../layouts/CustomerLayout';
 import ProductGrid from '../components/customer/ProductGrid';
 import CategoryFilter from '../components/customer/CategoryFilter';
+
 import ProductService from '../services/productService';
+import CategoryService from '../services/categoryService';
 import CartService from '../services/cartService';
 
-/**
- * The main Home page component for customers.
- * It manages state for products, filters, pagination, and user feedback.
- */
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +26,7 @@ const Home = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
+  // Fetch products depending on filters and page
   useEffect(() => {
     let isMounted = true;
 
@@ -40,15 +39,24 @@ const Home = () => {
       setError(null);
 
       try {
-        const response = await ProductService.getProducts({ ...filters, page, limit: 12 });
-        
+        let response;
+        if (filters.categoryId) {
+          // Get products by category
+          response = await CategoryService.getProductsByCategory(filters.categoryId, { page, limit: 12 });
+        } else {
+          // Get all products
+          response = await ProductService.getProducts({ ...filters, page, limit: 12 });
+        }
+
         if (!isMounted) return;
 
-        const productsData = Array.isArray(response) ? response : response?.data || [];
+        // Adjust depending on your API response structure
+        // Expecting: { items: [...], pagination: {...} }
+        const productsData = response?.items || [];
         const paginationInfo = response?.pagination;
 
         setProducts(prev => (page === 1 ? productsData : [...prev, ...productsData]));
-        
+
         if (paginationInfo) {
           setHasMore(paginationInfo.totalPages > page);
         } else {
@@ -59,7 +67,6 @@ const Home = () => {
         setError('Failed to fetch products. Please try again later.');
         console.error(err);
       } finally {
-        // --- FIX: Correctly handle the finally block ---
         if (isMounted) {
           setLoading(false);
           setIsPaginating(false);
@@ -68,25 +75,24 @@ const Home = () => {
     };
 
     fetchProducts();
-    
+
     return () => {
       isMounted = false;
     };
   }, [filters, page]);
 
+  // Reset page when filters change
   useEffect(() => {
-    if (filters.search !== '' || filters.categoryId !== null) {
-      setPage(1);
-      setHasMore(true);
-    }
+    setPage(1);
+    setHasMore(true);
   }, [filters]);
 
   const observer = useRef();
   const lastProductElementRef = useCallback(node => {
     if (loading || isPaginating || !hasMore) return;
-    
+
     if (observer.current) observer.current.disconnect();
-    
+
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) {
         setPage(prevPage => prevPage + 1);
@@ -101,10 +107,10 @@ const Home = () => {
   };
 
   const handleCategorySelect = (categoryId) => {
-    setFilters(prev => ({ ...prev, search: '', categoryId: categoryId }));
+    setFilters(prev => ({ ...prev, search: '', categoryId }));
     if (isMobile) setFilterDrawerOpen(false);
   };
-  
+
   const handleAddToCart = async (productId, quantity) => {
     try {
       await CartService.addToCart(productId, quantity);
@@ -140,10 +146,10 @@ const Home = () => {
         ) : (
           <Grid item md={3}>{categoryFilterComponent}</Grid>
         )}
-        
+
         <Grid item xs={12} md={9}>
           <ProductGrid products={products} loading={loading} error={error} onAddToCart={handleAddToCart} />
-          
+
           <div ref={lastProductElementRef} />
 
           {isPaginating && (
@@ -155,7 +161,7 @@ const Home = () => {
           )}
         </Grid>
       </Grid>
-      
+
       <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={closeSnackbar} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
         <Alert onClose={closeSnackbar} severity={snackbar.severity} sx={{ width: '100%' }} variant="filled">
           {snackbar.message}
