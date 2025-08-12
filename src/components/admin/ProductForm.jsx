@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// src/components/admin/ProductForm.jsx
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Grid, TextField, FormControl, InputLabel, Select, FormControlLabel,
   Switch, Box, Typography, FormHelperText, IconButton, Paper,
@@ -20,7 +21,6 @@ const ProductForm = ({
   images = [],
   onImageRemove,
   onImageDrop,
-  // Props for inline category creation
   showAddCategory,
   onToggleAddCategory,
   newCategoryName,
@@ -30,8 +30,16 @@ const ProductForm = ({
 }) => {
   const theme = useTheme();
   const [isDragging, setIsDragging] = useState(false);
+  const nameInputRef = useRef(null);
 
-  // --- Manual Drag-and-Drop Handlers ---
+  useEffect(() => {
+    if (activeStep === 0 && nameInputRef.current) {
+      setTimeout(() => {
+        nameInputRef.current.focus();
+      }, 200);
+    }
+  }, [activeStep]);
+
   const handleDragEnter = (e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
   const handleDragLeave = (e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); };
   const handleDragOver = (e) => { e.preventDefault(); e.stopPropagation(); };
@@ -52,21 +60,22 @@ const ProductForm = ({
 
   const renderStepContent = (step) => {
     switch (step) {
-      case 0: // Core Details
+      case 0:
         return (
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <TextField
                 {...register('name', {
                   required: 'Product name is required',
-                  minLength: { value: 3, message: 'Name must be at least 3 characters' }
+                  minLength: { value: 3, message: 'Name must be at least 3 characters' },
                 })}
                 label="Product Name"
                 fullWidth
                 required
-                autoFocus
+                inputRef={nameInputRef}
                 error={!!errors.name}
                 helperText={errors.name?.message}
+                autoComplete="off"
               />
             </Grid>
             <Grid item xs={12}>
@@ -96,9 +105,10 @@ const ProductForm = ({
                       onChange={onNewCategoryNameChange}
                       size="small"
                       fullWidth
+                      autoComplete="off"
                     />
                     <Button variant="contained" onClick={onCreateCategory} disabled={isCreatingCategory}>
-                      {isCreatingCategory ? <CircularProgress size={20}/> : 'Save'}
+                      {isCreatingCategory ? <CircularProgress size={20} /> : 'Save'}
                     </Button>
                   </Box>
                 </Collapse>
@@ -113,15 +123,16 @@ const ProductForm = ({
                 error={!!errors.sku}
                 helperText={errors.sku?.message}
                 onChange={(e) => {
-                  register('sku').onChange(e); // Propagate change to react-hook-form
-                  onSkuManualEdit();          // Notify parent of manual edit
+                  register('sku').onChange(e);
+                  onSkuManualEdit();
                 }}
                 InputLabelProps={{ shrink: !!watchedSku }}
+                autoComplete="off"
               />
             </Grid>
           </Grid>
         );
-      case 1: // Pricing & Inventory
+      case 1:
         return (
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
@@ -138,6 +149,7 @@ const ProductForm = ({
                 InputProps={{ startAdornment: <Typography sx={{ mr: 1 }}>$</Typography> }}
                 error={!!errors.price}
                 helperText={errors.price?.message}
+                autoComplete="off"
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -154,11 +166,12 @@ const ProductForm = ({
                 error={!!errors.stock}
                 helperText={errors.stock?.message}
                 InputLabelProps={{ shrink: watchedStock != null && watchedStock !== '' }}
+                autoComplete="off"
               />
             </Grid>
           </Grid>
         );
-      case 2: // Media
+      case 2:
         return (
           <Grid container spacing={3}>
             <Grid item xs={12}>
@@ -175,7 +188,11 @@ const ProductForm = ({
                   borderRadius: 1,
                   textAlign: 'center',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease-in-out'
+                  transition: 'all 0.2s ease-in-out',
+                  minHeight: 120,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
                 }}
               >
                 <input id="file-upload-input" type="file" multiple accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
@@ -207,11 +224,11 @@ const ProductForm = ({
               )}
             </Grid>
             <Grid item xs={12}>
-              <TextField {...register('description')} label="Description" multiline rows={4} fullWidth />
+              <TextField {...register('description')} label="Description" multiline rows={4} fullWidth autoComplete="off" />
             </Grid>
           </Grid>
         );
-      case 3: // Finalize
+      case 3:
         return (
           <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
             <Typography variant="h6" gutterBottom>Review and Finalize</Typography>

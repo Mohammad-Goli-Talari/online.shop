@@ -1,9 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
+// src/components/admin/AddProductModal.jsx
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import {
-  Dialog, DialogTitle, DialogContent, IconButton, Alert, useMediaQuery, Box,
-  Typography, MenuItem, Button, CircularProgress,
-  Stepper, Step, StepLabel, DialogActions
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+  Alert,
+  useMediaQuery,
+  Box,
+  Typography,
+  MenuItem,
+  Button,
+  CircularProgress,
+  Stepper,
+  Step,
+  StepLabel,
+  DialogActions,
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 
@@ -12,7 +25,6 @@ import ProductPreview from './ProductPreview';
 import ProductService from '../../services/productService';
 import CategoryService from '../../services/categoryService';
 
-// Helper function for Image Compression using Canvas API
 const compressImage = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -26,19 +38,32 @@ const compressImage = (file) => {
         const MAX_HEIGHT = 1280;
         let width = img.width;
         let height = img.height;
-        if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } }
-        else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
-          } else {
-            reject(new Error('Canvas to Blob conversion failed'));
-          }
-        }, 'image/jpeg', 0.85);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+            } else {
+              reject(new Error('Canvas to Blob conversion failed'));
+            }
+          },
+          'image/jpeg',
+          0.85
+        );
       };
       img.onerror = reject;
     };
@@ -46,15 +71,14 @@ const compressImage = (file) => {
   });
 };
 
-// Professional SKU generation function that supports Persian
 const generateSku = (text) => {
   if (!text) return '';
   return text
     .toString()
     .trim()
-    .replace(/[^\u0600-\u06FF\w\s-]/g, '') // Keep Persian, word chars, whitespace, and hyphens
-    .replace(/[\s_]+/g, '-') // Replace spaces and underscores with a single hyphen
-    .replace(/--+/g, '-') // Replace multiple hyphens with a single one
+    .replace(/[^\u0600-\u06FF\w\s-]/g, '') 
+    .replace(/[\s_]+/g, '-')
+    .replace(/--+/g, '-')
     .toUpperCase();
 };
 
@@ -74,12 +98,30 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
 
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
+  const dialogContentRef = useRef(null);
+
   const {
-    register, handleSubmit, control, reset, setValue, clearErrors, watch, trigger,
+    register,
+    handleSubmit,
+    control,
+    reset,
+    setValue,
+    clearErrors,
+    watch,
+    trigger,
     formState: { errors, isSubmitting, isDirty },
   } = useForm({
     mode: 'onChange',
-    defaultValues: { name: '', description: '', price: '', sku: '', stock: '', categoryId: '', isActive: true, images: [] }
+    defaultValues: {
+      name: '',
+      description: '',
+      price: '',
+      sku: '',
+      stock: '',
+      categoryId: '',
+      isActive: true,
+      images: [],
+    },
   });
 
   const watchedValues = watch();
@@ -87,7 +129,6 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
   const watchedSku = watch('sku');
   const watchedStock = watch('stock');
 
-  // SKU auto-generation logic
   useEffect(() => {
     if (watchedName && !isSkuManuallyEdited) {
       const generatedSku = generateSku(watchedName);
@@ -113,37 +154,45 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
     }
   }, [open, fetchCategories]);
 
-  // Robust image validation registration
   useEffect(() => {
     register('images', {
-      validate: (value) => (value && value.length > 0) || 'At least one image is required.'
+      validate: (value) => (value && value.length > 0) || 'At least one image is required.',
     });
   }, [register]);
 
-  const handleImageDrop = useCallback(async (acceptedFiles) => {
-    clearErrors('images');
-    setApiError(null);
-    const validImageFiles = acceptedFiles.filter(file => {
-      if (!file.type.startsWith('image/')) { setApiError(`File "${file.name}" is not a valid image.`); return false; }
-      if (file.size > 5 * 1024 * 1024) { setApiError(`Image "${file.name}" is too large (max 5MB).`); return false; }
-      return true;
-    });
-
-    const compressedFiles = await Promise.all(
-      validImageFiles.map(async file => {
-        try {
-          const compressedFile = await compressImage(file);
-          return { file: compressedFile, preview: URL.createObjectURL(compressedFile) };
-        } catch {
-          return { file, preview: URL.createObjectURL(file) };
+  const handleImageDrop = useCallback(
+    async (acceptedFiles) => {
+      clearErrors('images');
+      setApiError(null);
+      const validImageFiles = acceptedFiles.filter((file) => {
+        if (!file.type.startsWith('image/')) {
+          setApiError(`File "${file.name}" is not a valid image.`);
+          return false;
         }
-      })
-    );
-    const updatedImages = [...imageFiles, ...compressedFiles];
-    setImageFiles(updatedImages);
-    setValue('images', updatedImages, { shouldValidate: true, shouldDirty: true });
-    trigger('images');
-  }, [imageFiles, setValue, clearErrors, trigger]);
+        if (file.size > 5 * 1024 * 1024) {
+          setApiError(`Image "${file.name}" is too large (max 5MB).`);
+          return false;
+        }
+        return true;
+      });
+
+      const compressedFiles = await Promise.all(
+        validImageFiles.map(async (file) => {
+          try {
+            const compressedFile = await compressImage(file);
+            return { file: compressedFile, preview: URL.createObjectURL(compressedFile) };
+          } catch {
+            return { file, preview: URL.createObjectURL(file) };
+          }
+        })
+      );
+      const updatedImages = [...imageFiles, ...compressedFiles];
+      setImageFiles(updatedImages);
+      setValue('images', updatedImages, { shouldValidate: true, shouldDirty: true });
+      trigger('images');
+    },
+    [imageFiles, setValue, clearErrors, trigger]
+  );
 
   const handleImageRemove = (index) => {
     const updatedImages = imageFiles.filter((_, i) => i !== index);
@@ -153,7 +202,8 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
   };
 
   const handleClose = (force = false) => {
-    if (!force && isDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?')) return;
+    if (!force && isDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?'))
+      return;
     reset();
     setActiveStep(0);
     setIsSkuManuallyEdited(false);
@@ -165,11 +215,7 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
   };
 
   const handleNext = async () => {
-    const fieldsPerStep = [
-      ['name', 'categoryId', 'sku'],
-      ['price', 'stock'],
-      ['images'],
-    ];
+    const fieldsPerStep = [['name', 'categoryId', 'sku'], ['price', 'stock'], ['images']];
     const fieldsToValidate = fieldsPerStep[activeStep];
     const isValid = fieldsToValidate ? await trigger(fieldsToValidate) : true;
     if (isValid) {
@@ -202,31 +248,48 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
     setIsSkuManuallyEdited(true);
   };
 
+  // Focus management on active step change to help mobile UX
+  useEffect(() => {
+    if (dialogContentRef.current) {
+      const formFieldSelector = [
+        '[name="name"]',
+        '[name="price"]',
+        '[name="images"]',
+      ][activeStep] || null;
+      if (formFieldSelector) {
+        const el = dialogContentRef.current.querySelector(formFieldSelector);
+        if (el && typeof el.focus === 'function') {
+          setTimeout(() => el.focus(), 200);
+        }
+      }
+    }
+  }, [activeStep]);
+
   const onSubmit = async (data) => {
     setApiError(null);
-    
-    // Create the new product object for the UI immediately (Optimistic Update).
+
     const optimisticProduct = {
       ...data,
-      id: `temp-${Date.now()}`, // Temporary unique ID for the key prop
-      images: imageFiles.map(img => img.preview), // Use the real blob URL for display
-      category: categories.find(c => c.id === data.categoryId) || { name: 'N/A' },
+      id: `temp-${Date.now()}`,
+      images: imageFiles.map((img) => img.preview),
+      category: categories.find((c) => c.id === data.categoryId) || { name: 'N/A' },
       createdAt: new Date().toISOString(),
     };
 
     onSuccess(optimisticProduct);
     handleClose(true);
 
-    // In the background, send the actual request to the API.
     try {
       const apiPayload = {
         ...data,
-        images: imageFiles.map(img => `https://via.placeholder.com/600x400.png?text=${encodeURIComponent(img.file.name)}`),
+        images: imageFiles.map(
+          (img) => `https://via.placeholder.com/600x400.png?text=${encodeURIComponent(img.file.name)}`
+        ),
       };
       await ProductService.createProduct(apiPayload);
     } catch (error) {
-      console.error("Failed to save product to the server:", error);
-      alert("Error: Could not save the new product. Please refresh the page and try again.");
+      console.error('Failed to save product to the server:', error);
+      alert('Error: Could not save the new product. Please refresh the page and try again.');
     }
   };
 
@@ -234,10 +297,14 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
     <MenuItem key="loading" value="" disabled={loadingCategories}>
       <em>{loadingCategories ? 'Loading...' : 'Select a category'}</em>
     </MenuItem>,
-    ...categories.map((cat) => <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>),
+    ...categories.map((cat) => (
+      <MenuItem key={cat.id} value={cat.id}>
+        {cat.name}
+      </MenuItem>
+    )),
   ];
 
-  const categoryName = categories.find(c => c.id === watchedValues.categoryId)?.name;
+  const categoryName = categories.find((c) => c.id === watchedValues.categoryId)?.name;
 
   return (
     <Dialog
@@ -246,25 +313,51 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
       fullScreen={isMobile}
       maxWidth="md"
       fullWidth
-      sx={{ '& .MuiDialog-paper': { display: 'flex', flexDirection: 'column', height: isMobile ? '100%' : 'auto', maxHeight: '90vh' } }}
+      scroll="paper"
+      sx={{
+        '& .MuiDialog-paper': {
+          display: 'flex',
+          flexDirection: 'column',
+          height: isMobile ? '100%' : '650px',
+          maxHeight: isMobile ? '100%' : '90vh',
+        },
+      }}
     >
       <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">{showPreview ? 'Product Preview' : 'Add a New Product'}</Typography>
-          <IconButton edge="end" color="inherit" onClick={() => handleClose()}><CloseIcon /></IconButton>
+          <IconButton edge="end" color="inherit" onClick={() => handleClose()}>
+            <CloseIcon />
+          </IconButton>
         </Box>
       </DialogTitle>
-      <DialogContent sx={{ flexGrow: 1, overflowY: 'auto', p: isMobile ? 2 : 3 }}>
-        {apiError && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setApiError(null)}>{apiError}</Alert>}
-        
+      <DialogContent
+        ref={dialogContentRef}
+        sx={{
+          flexGrow: 1,
+          overflowY: 'auto',
+          p: isMobile ? 2 : 3,
+          minHeight: isMobile ? 'calc(100% - 112px)' : 'auto',
+        }}
+      >
+        {apiError && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setApiError(null)}>
+            {apiError}
+          </Alert>
+        )}
+
         {showPreview ? (
           <ProductPreview formData={watchedValues} images={imageFiles} categoryName={categoryName} />
         ) : (
           <>
             <Stepper activeStep={activeStep} alternativeLabel={isMobile} sx={{ mb: 4 }}>
-              {steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
+              {steps.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+              ))}
             </Stepper>
-            
+
             <form id="add-product-form" onSubmit={handleSubmit(onSubmit)}>
               <ProductForm
                 activeStep={activeStep}
@@ -291,10 +384,14 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
       </DialogContent>
       <DialogActions sx={{ p: isMobile ? 2 : 3, borderTop: 1, borderColor: 'divider' }}>
         {showPreview ? (
-          <Button variant="outlined" onClick={() => setShowPreview(false)}>Back to Form</Button>
+          <Button variant="outlined" onClick={() => setShowPreview(false)}>
+            Back to Form
+          </Button>
         ) : (
           <>
-            <Button disabled={activeStep === 0 || isSubmitting} onClick={handleBack}>Back</Button>
+            <Button disabled={activeStep === 0 || isSubmitting} onClick={handleBack}>
+              Back
+            </Button>
             <Box sx={{ flex: '1 1 auto' }} />
             {activeStep === steps.length - 1 ? (
               <>
@@ -302,11 +399,13 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
                   Preview
                 </Button>
                 <Button variant="contained" color="primary" type="submit" form="add-product-form" disabled={isSubmitting}>
-                  {isSubmitting ? <CircularProgress size={24} color="inherit"/> : 'Create Product'}
+                  {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Create Product'}
                 </Button>
               </>
             ) : (
-              <Button variant="contained" onClick={handleNext}>Next</Button>
+              <Button variant="contained" onClick={handleNext}>
+                Next
+              </Button>
             )}
           </>
         )}

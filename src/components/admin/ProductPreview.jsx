@@ -1,3 +1,4 @@
+// src/components/admin/ProductPreview.jsx
 import React from 'react';
 import {
   Box, Typography, Card, CardContent, CardMedia, Grid, Chip, ImageList, ImageListItem,
@@ -8,7 +9,7 @@ const ProductPreview = ({ formData, images = [], categoryName = 'N/A' }) => {
   const primaryImage = images.length > 0 ? images[0].preview : 'https://via.placeholder.com/600x400.png?text=No+Image';
 
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" sx={{ maxWidth: '100%' }}>
       <CardContent>
         <Typography variant="h5" gutterBottom>
           Product Preview
@@ -19,25 +20,30 @@ const ProductPreview = ({ formData, images = [], categoryName = 'N/A' }) => {
               component="img"
               image={primaryImage}
               alt="Primary product image"
-              sx={{ borderRadius: 2, maxHeight: 300, objectFit: 'cover' }}
+              sx={{ borderRadius: 2, maxHeight: 300, objectFit: 'cover', width: '100%' }}
             />
             {images.length > 1 && (
-              <ImageList sx={{ width: '100%', mt: 1 }} cols={4} rowHeight={80}>
+              <ImageList sx={{ width: '100%', mt: 1 }} cols={4} rowHeight={80} gap={8}>
                 {images.slice(1).map((image, index) => (
                   <ImageListItem key={index}>
-                    <img src={image.preview} alt={`preview ${index}`} loading="lazy" style={{ borderRadius: '4px', height: '100%', objectFit: 'cover' }} />
+                    <img
+                      src={image.preview}
+                      alt={`preview ${index + 1}`}
+                      loading="lazy"
+                      style={{ borderRadius: 4, height: '100%', objectFit: 'cover', width: '100%' }}
+                    />
                   </ImageListItem>
                 ))}
               </ImageList>
             )}
           </Grid>
           <Grid item xs={12} md={7}>
-            <Typography variant="h4" component="h1" fontWeight={600}>
+            <Typography variant="h4" component="h1" fontWeight={600} gutterBottom>
               {formData.name || 'Product Name'}
             </Typography>
-            <Box display="flex" alignItems="center" my={1} gap={2}>
+            <Box display="flex" alignItems="center" my={1} gap={2} flexWrap="wrap">
               <Chip label={categoryName} color="primary" variant="outlined" />
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ userSelect: 'text' }}>
                 SKU: {formData.sku || 'SKU-123'}
               </Typography>
             </Box>
@@ -52,16 +58,18 @@ const ProductPreview = ({ formData, images = [], categoryName = 'N/A' }) => {
                 {formData.description || 'No description provided.'}
               </Typography>
             </Box>
-            <Box display="flex" gap={3} mt={3}>
+            <Box display="flex" gap={3} mt={3} flexWrap="wrap">
               <Chip
                 label={`${formData.stock || 0} in stock`}
                 color={formData.stock > 0 ? 'success' : 'error'}
-                variant="filled" size="small"
+                variant="filled"
+                size="small"
               />
               <Chip
                 icon={formData.isActive ? <CheckCircle /> : <Cancel />}
                 label={formData.isActive ? 'Active' : 'Inactive'}
-                color={formData.isActive ? 'success' : 'default'} size="small"
+                color={formData.isActive ? 'success' : 'default'}
+                size="small"
               />
             </Box>
           </Grid>
