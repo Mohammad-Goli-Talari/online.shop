@@ -46,6 +46,18 @@ const compressImage = (file) => {
   });
 };
 
+// Professional SKU generation function that supports Persian
+const generateSku = (text) => {
+  if (!text) return '';
+  return text
+    .toString()
+    .trim()
+    .replace(/[^\u0600-\u06FF\w\s-]/g, '') // Keep Persian, word chars, whitespace, and hyphens
+    .replace(/[\s_]+/g, '-') // Replace spaces and underscores with a single hyphen
+    .replace(/--+/g, '-') // Replace multiple hyphens with a single one
+    .toUpperCase();
+};
+
 const steps = ['Core Details', 'Pricing & Inventory', 'Media', 'Finalize'];
 
 const AddProductModal = ({ open, onClose, onSuccess }) => {
@@ -73,11 +85,12 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
   const watchedValues = watch();
   const watchedName = watch('name');
   const watchedSku = watch('sku');
+  const watchedStock = watch('stock');
 
   // SKU auto-generation logic
   useEffect(() => {
     if (watchedName && !isSkuManuallyEdited) {
-      const generatedSku = watchedName.toUpperCase().replace(/\s+/g, '-').slice(0, 20);
+      const generatedSku = generateSku(watchedName);
       setValue('sku', generatedSku, { shouldValidate: true });
     }
   }, [watchedName, isSkuManuallyEdited, setValue]);
@@ -191,14 +204,29 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
 
   const onSubmit = async (data) => {
     setApiError(null);
-    const placeholderImageUrls = imageFiles.map(img => `https://via.placeholder.com/600x400.png?text=${encodeURIComponent(img.file.name)}`);
-    const productData = { ...data, images: placeholderImageUrls };
+    
+    // Create the new product object for the UI immediately (Optimistic Update).
+    const optimisticProduct = {
+      ...data,
+      id: `temp-${Date.now()}`, // Temporary unique ID for the key prop
+      images: imageFiles.map(img => img.preview), // Use the real blob URL for display
+      category: categories.find(c => c.id === data.categoryId) || { name: 'N/A' },
+      createdAt: new Date().toISOString(),
+    };
+
+    onSuccess(optimisticProduct);
+    handleClose(true);
+
+    // In the background, send the actual request to the API.
     try {
-      await ProductService.createProduct(productData);
-      onSuccess(true);
-      handleClose(true);
+      const apiPayload = {
+        ...data,
+        images: imageFiles.map(img => `https://via.placeholder.com/600x400.png?text=${encodeURIComponent(img.file.name)}`),
+      };
+      await ProductService.createProduct(apiPayload);
     } catch (error) {
-      setApiError(error.message || 'An unexpected error occurred.');
+      console.error("Failed to save product to the server:", error);
+      alert("Error: Could not save the new product. Please refresh the page and try again.");
     }
   };
 
@@ -212,14 +240,21 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
   const categoryName = categories.find(c => c.id === watchedValues.categoryId)?.name;
 
   return (
-    <Dialog open={open} onClose={() => handleClose()} fullScreen={isMobile} maxWidth="md" fullWidth>
-      <DialogTitle>
+    <Dialog
+      open={open}
+      onClose={() => handleClose()}
+      fullScreen={isMobile}
+      maxWidth="md"
+      fullWidth
+      sx={{ '& .MuiDialog-paper': { display: 'flex', flexDirection: 'column', height: isMobile ? '100%' : 'auto', maxHeight: '90vh' } }}
+    >
+      <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">{showPreview ? 'Product Preview' : 'Add a New Product'}</Typography>
           <IconButton edge="end" color="inherit" onClick={() => handleClose()}><CloseIcon /></IconButton>
         </Box>
       </DialogTitle>
-      <DialogContent sx={{ p: isMobile ? 2 : 3 }}>
+      <DialogContent sx={{ flexGrow: 1, overflowY: 'auto', p: isMobile ? 2 : 3 }}>
         {apiError && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setApiError(null)}>{apiError}</Alert>}
         
         {showPreview ? (
@@ -238,11 +273,11 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
                 control={control}
                 onSkuManualEdit={handleSkuManualEdit}
                 watchedSku={watchedSku}
+                watchedStock={watchedStock}
                 categoryOptions={categoryOptions}
                 images={imageFiles}
                 onImageRemove={handleImageRemove}
                 onImageDrop={handleImageDrop}
-                // Props for inline category creation
                 showAddCategory={showAddCategory}
                 onToggleAddCategory={() => setShowAddCategory(!showAddCategory)}
                 newCategoryName={newCategoryName}
@@ -254,7 +289,7 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
           </>
         )}
       </DialogContent>
-      <DialogActions sx={{ p: 3, borderTop: 1, borderColor: 'divider' }}>
+      <DialogActions sx={{ p: isMobile ? 2 : 3, borderTop: 1, borderColor: 'divider' }}>
         {showPreview ? (
           <Button variant="outlined" onClick={() => setShowPreview(false)}>Back to Form</Button>
         ) : (

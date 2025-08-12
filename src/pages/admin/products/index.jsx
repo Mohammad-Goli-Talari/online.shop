@@ -9,42 +9,24 @@ const ProductListPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState(null);
+  // --- FIX: Removed unused 'pagination' state ---
+  // const [pagination, setPagination] = useState(null); 
   const [openModal, setOpenModal] = useState(false);
-  const currentPageRef = useRef(1);
   const hasInitialized = useRef(false);
 
-  const loadProducts = useCallback(async (reset = false) => {
-    // Only show main loader on initial/full reset
-    if (reset) {
-      setLoading(true);
-      currentPageRef.current = 1;
-    }
+  // Load initial products just once
+  const loadInitialProducts = useCallback(async () => {
+    setLoading(true);
     setError(null);
-    
     try {
-      const page = currentPageRef.current;
-      const response = await ProductService.getProducts({ 
-        page, 
-        limit: 20
-      });
-      
-      if (reset) {
-        setProducts(response.items || []);
-      } else {
-        setProducts(prev => {
-          const existingIds = new Set(prev.map(p => p.id));
-          const newProducts = (response.items || []).filter(product => !existingIds.has(product.id));
-          return [...prev, ...newProducts];
-        });
-      }
-      
-      setPagination(response.pagination);
-      
-      // Safer page increment: only if there's a next page
-      if (response.pagination && response.pagination.hasNext) {
-        currentPageRef.current += 1;
-      }
+      // Fetch initial data, assuming mock API returns everything
+      const response = await ProductService.getProducts({ limit: 9999 });
+      const items = response.items || [];
+      // Initial sort by date to show newest first
+      items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setProducts(items);
+      // --- FIX: Removed unused setter call ---
+      // setPagination(response.pagination);
     } catch (err) {
       setError(err.message || 'Failed to load products');
     } finally {
@@ -55,28 +37,21 @@ const ProductListPage = () => {
   useEffect(() => {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
-    
-    loadProducts(true);
-  }, [loadProducts]);
+    loadInitialProducts();
+  }, [loadInitialProducts]);
 
-  const handleLoadMore = async () => {
-    if (pagination && pagination.hasNext && !loading) {
-      // Pass 'false' to indicate it's not a reset
-      await loadProducts(false);
-    }
+  // Optimistic Update Logic: Instantly adds the new product to the UI
+  const handleProductAdded = (newProductData) => {
+    setProducts(prevProducts => [newProductData, ...prevProducts]);
   };
 
   const handleEditProduct = (product) => {
-    // TODO: Navigate to edit page or open edit modal
     console.log('Editing product:', product.id);
   };
 
   const handleDeleteProduct = (product) => {
-    // TODO: Show confirmation dialog and delete product
     console.log('Deleting product:', product.id);
   };
-
-  const hasMore = pagination ? pagination.hasNext : false;
 
   return (
     <AdminLayout>
@@ -89,12 +64,10 @@ const ProductListPage = () => {
           mb={3}
         >
           <Box>
-            <Typography variant="h5" fontWeight={600}>
-              Products
-            </Typography>
-            {pagination && (
+            <Typography variant="h5" fontWeight={600}>Products</Typography>
+            {products && (
               <Typography variant="body2" color="text.secondary">
-                Showing {products.length} of {pagination.totalItems} products
+                {products.length} products found
               </Typography>
             )}
           </Box>
@@ -105,22 +78,19 @@ const ProductListPage = () => {
 
         <ProductTable 
           products={products}
-          onLoadMore={handleLoadMore}
-          hasMore={hasMore}
-          // Better loading UX: only show full-table loader on initial load
-          loading={loading && products.length === 0}
+          onLoadMore={() => {}} // No-op for mock, as all data is loaded
+          hasMore={false}       // No-op for mock
+          loading={loading}
           error={error}
           onEdit={handleEditProduct}
           onDelete={handleDeleteProduct}
         />
       </Container>
       
-      {/* Modal is outside the main layout Stack for cleaner structure */}
       <AddProductModal 
         open={openModal} 
         onClose={() => setOpenModal(false)} 
-        // CRITICAL FIX: Ensure the list is reset on success
-        onSuccess={() => loadProducts(true)} 
+        onSuccess={handleProductAdded} 
       />
     </AdminLayout>
   );

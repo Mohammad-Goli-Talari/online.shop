@@ -15,6 +15,7 @@ const ProductForm = ({
   control,
   onSkuManualEdit,
   watchedSku,
+  watchedStock,
   categoryOptions = [],
   images = [],
   onImageRemove,
@@ -56,7 +57,10 @@ const ProductForm = ({
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <TextField
-                {...register('name')}
+                {...register('name', {
+                  required: 'Product name is required',
+                  minLength: { value: 3, message: 'Name must be at least 3 characters' }
+                })}
                 label="Product Name"
                 fullWidth
                 required
@@ -149,6 +153,7 @@ const ProductForm = ({
                 required
                 error={!!errors.stock}
                 helperText={errors.stock?.message}
+                InputLabelProps={{ shrink: watchedStock != null && watchedStock !== '' }}
               />
             </Grid>
           </Grid>
@@ -157,38 +162,52 @@ const ProductForm = ({
         return (
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <TextField {...register('description')} label="Description" multiline rows={4} fullWidth />
-            </Grid>
-            <Grid item xs={12}>
               <Typography variant="subtitle1" gutterBottom component="div">Images</Typography>
               <Box
-                onDrop={handleDrop} onDragOver={handleDragOver} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
                 sx={{
                   border: `2px dashed ${errors.images ? theme.palette.error.main : (isDragging ? theme.palette.primary.main : 'grey.400')}`,
                   backgroundColor: isDragging ? theme.palette.action.hover : 'transparent',
-                  padding: 4, borderRadius: 1, textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s ease-in-out'
+                  padding: 4,
+                  borderRadius: 1,
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease-in-out'
                 }}
               >
                 <input id="file-upload-input" type="file" multiple accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
-                <label htmlFor="file-upload-input" style={{ cursor: 'pointer' }}>
+                <label htmlFor="file-upload-input" style={{ cursor: 'pointer', width: '100%', display: 'block' }}>
                   <CloudUploadIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
-                  <Typography>{isDragging ? "Drop the images here..." : "Drag 'n' drop images here, or click to select"}</Typography>
+                  <Typography variant="body2">{isDragging ? "Drop here..." : "Drag & drop images here, or click to upload"}</Typography>
                 </label>
               </Box>
               {errors.images && <FormHelperText error sx={{ ml: 2 }}>{errors.images.message}</FormHelperText>}
               {images.length > 0 && (
-                <Box display="flex" flexWrap="wrap" gap={2} mt={2}>
+                <Box display="flex" flexWrap="wrap" gap={1.5} mt={2}>
                   {images.map((image, index) => (
-                    <Paper key={index} elevation={2} sx={{ position: 'relative', width: 100, height: 100, overflow: 'hidden' }}>
+                    <Paper key={index} elevation={2} sx={{ position: 'relative', width: 80, height: 80, overflow: 'hidden' }}>
                       <img src={image.preview} alt={image.file.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       <IconButton
-                        size="small" onClick={() => onImageRemove(index)}
-                        sx={{ position: 'absolute', top: 4, right: 4, backgroundColor: 'rgba(0,0,0,0.5)', color: 'white', '&:hover': { backgroundColor: 'rgba(0,0,0,0.8)' } }}
-                      ><DeleteIcon fontSize="small" /></IconButton>
+                        size="small"
+                        onClick={() => onImageRemove(index)}
+                        sx={{
+                          position: 'absolute', top: 2, right: 2,
+                          backgroundColor: 'rgba(0,0,0,0.5)', color: 'white',
+                          '&:hover': { backgroundColor: 'rgba(0,0,0,0.8)' }
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
                     </Paper>
                   ))}
                 </Box>
               )}
+            </Grid>
+            <Grid item xs={12}>
+              <TextField {...register('description')} label="Description" multiline rows={4} fullWidth />
             </Grid>
           </Grid>
         );
@@ -208,7 +227,7 @@ const ProductForm = ({
     }
   };
 
-  return <Box sx={{ mt: 3, minHeight: 320 }}>{renderStepContent(activeStep)}</Box>;
+  return <Box>{renderStepContent(activeStep)}</Box>;
 };
 
 export default ProductForm;
