@@ -1,7 +1,16 @@
 // src/components/customer/ProductGrid.jsx
+// ProductGrid: Displays products in a responsive grid layout with filtering, loading, error, and empty states.
+// Props:
+//   - products: Array of product objects
+//   - loading: Boolean for loading state
+//   - error: Error message string
+//   - onAddToCart: Function(productId, quantity)
+//   - selectedCategoryId: Selected category for filtering
+//
+// Note: Pagination/infinite scroll is not implemented yet. See TODO below.
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography, Alert } from '@mui/material';
 import ProductCard from './ProductCard';
 
 const ProductGrid = ({ products, loading, error, onAddToCart, selectedCategoryId }) => {
@@ -28,7 +37,7 @@ const ProductGrid = ({ products, loading, error, onAddToCart, selectedCategoryId
   if (error) {
     return (
       <Box textAlign="center" my={4}>
-        <Typography color="error">{error}</Typography>
+        <Alert severity="error" sx={{ maxWidth: 400, mx: 'auto' }}>{error}</Alert>
       </Box>
     );
   }
@@ -36,11 +45,21 @@ const ProductGrid = ({ products, loading, error, onAddToCart, selectedCategoryId
   if (filteredProducts.length === 0) {
     return (
       <Box textAlign="center" my={4}>
-        <Typography>No products found.</Typography>
+        <Box sx={{ mb: 2 }}>
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
+            alt="No products found"
+            width={80}
+            height={80}
+            style={{ opacity: 0.5 }}
+          />
+        </Box>
+        <Typography variant="h6" color="text.secondary">No products found.</Typography>
       </Box>
     );
   }
 
+  // TODO: Implement pagination or infinite scroll for large product lists
   return (
     <Box sx={{ width: '100%' }}>
       <Box
@@ -59,7 +78,7 @@ const ProductGrid = ({ products, loading, error, onAddToCart, selectedCategoryId
         }}
       >
         {filteredProducts.map(product => (
-          <Box key={product.id} role="listitem">
+          <Box key={product.id} role="listitem" tabIndex={0}>
             <ProductCard product={product} onAddToCart={onAddToCart} />
           </Box>
         ))}

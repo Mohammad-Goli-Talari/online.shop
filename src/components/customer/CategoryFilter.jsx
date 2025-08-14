@@ -1,4 +1,6 @@
 // src/components/customer/CategoryFilter.jsx
+// CategoryFilter: Displays product categories as selectable chips for filtering products.
+// Fetches categories from CategoryService or uses provided prop. Handles loading, error, and selection states.
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Typography, CircularProgress, Box, Alert, Chip } from '@mui/material';
@@ -22,7 +24,8 @@ const CategoryFilter = ({ onCategorySelect, categories: categoriesProp }) => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  // Use null for 'All' selection for consistency
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -61,7 +64,7 @@ const CategoryFilter = ({ onCategorySelect, categories: categoriesProp }) => {
   }, [categoriesProp]);
 
   const handleSelect = (categoryId) => {
-    setSelectedCategory(categoryId ?? 'all');
+    setSelectedCategory(categoryId ?? null);
     onCategorySelect(categoryId ?? null);
   };
 
@@ -87,19 +90,23 @@ const CategoryFilter = ({ onCategorySelect, categories: categoriesProp }) => {
         Categories
       </Typography>
       <Box
+        aria-label="Product Categories"
         sx={{
           display: 'flex',
           flexWrap: 'wrap',
           gap: 1,
-          overflowX: 'auto',
+          overflowX: { xs: 'scroll', sm: 'auto' },
           py: 1,
-          '&::-webkit-scrollbar': { display: 'none' }
+          // Hide scrollbar visually but keep it accessible
+          '&::-webkit-scrollbar': { display: 'none' },
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
         }}
       >
         <Chip
           label="All"
           clickable
-          color={selectedCategory === 'all' ? 'primary' : 'default'}
+          color={selectedCategory === null ? 'primary' : 'default'}
           onClick={() => handleSelect(null)}
         />
         {categories.map(category => (

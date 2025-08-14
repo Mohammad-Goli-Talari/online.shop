@@ -1,5 +1,10 @@
 // src/components/customer/ProductCard.jsx
-import React, { useState } from 'react';
+// ProductCard: Displays product details in a responsive MUI card with add-to-cart functionality, stock status, and error feedback.
+// Props:
+//   - product: Product object (see API schema)
+//   - onAddToCart: function(productId, quantity)
+import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import {
   Card,
   CardMedia,
@@ -10,6 +15,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  Snackbar,
 } from '@mui/material';
 import { AddShoppingCart, Inventory } from '@mui/icons-material';
 
@@ -19,20 +25,34 @@ const formatCurrency = price =>
 const ProductCard = ({ product, onAddToCart }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState(null);
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [snackbarMsg, setSnackbarMsg] = useState('');
 
   const handleAddToCartClick = async () => {
     if (!product?.id || isAdding) return;
     setIsAdding(true);
     setError(null);
-
+    setSnackbarMsg('');
     try {
       await onAddToCart(product.id, 1);
+      setSnackbarMsg('Added to cart!');
+      setShowSnackbar(true);
     } catch (err) {
       setError(err.message || 'Failed to add product to cart.');
+      setSnackbarMsg('Failed to add product to cart.');
+      setShowSnackbar(true);
     } finally {
       setIsAdding(false);
     }
   };
+
+  // Auto-dismiss error after 3 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const hasStock = product?.stock > 0;
   const productName = product?.name || 'Unnamed Product';
@@ -56,6 +76,7 @@ const ProductCard = ({ product, onAddToCart }) => {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
+        minHeight: 370,
         transition: 'box-shadow 0.3s',
         '&:hover': { boxShadow: 6 },
       }}
@@ -66,7 +87,7 @@ const ProductCard = ({ product, onAddToCart }) => {
           component="img"
           height={180}
           image={productImage}
-          alt={productName}
+          alt={`Image of ${productName} (${categoryName})`}
           sx={{ objectFit: 'cover' }}
         />
         <Chip
@@ -146,8 +167,34 @@ const ProductCard = ({ product, onAddToCart }) => {
           {error}
         </Typography>
       )}
+
+      <Snackbar
+        open={showSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setShowSnackbar(false)}
+        message={snackbarMsg}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </Card>
   );
+};
+
+ProductCard.propTypes = {
+  product: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    name: PropTypes.string,
+    description: PropTypes.string,
+    price: PropTypes.number,
+    stock: PropTypes.number,
+    images: PropTypes.array,
+    image: PropTypes.string,
+    imageUrl: PropTypes.string,
+    category: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.shape({ name: PropTypes.string })
+    ]),
+  }).isRequired,
+  onAddToCart: PropTypes.func.isRequired,
 };
 
 export default ProductCard;

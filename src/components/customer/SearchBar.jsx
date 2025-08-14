@@ -1,5 +1,9 @@
 // src/components/customer/SearchBar.jsx
+// SearchBar: Product search input with debounce, clear, and accessibility features.
+// Props:
+//   - onSearch: function(query)
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { TextField, InputAdornment, IconButton } from '@mui/material';
 import { Search, Clear } from '@mui/icons-material';
 
@@ -41,17 +45,34 @@ const SearchBar = ({ onSearch }) => {
       value={query}
       onChange={handleInputChange}
       onKeyDown={handleKeyDown}
+      inputProps={{
+        'aria-label': 'Search products',
+        autoComplete: 'off',
+        maxLength: 100,
+      }}
       InputProps={{
         startAdornment: (
           <InputAdornment position="start">
-            <IconButton onClick={() => onSearch(query.trim())} edge="start" aria-label="search" size="small">
+            <IconButton
+              onClick={() => onSearch(query.trim())}
+              edge="start"
+              aria-label="search"
+              size="small"
+              tabIndex={0}
+            >
               <Search />
             </IconButton>
           </InputAdornment>
         ),
         endAdornment: query && (
           <InputAdornment position="end">
-            <IconButton onClick={handleClear} aria-label="clear search" size="small" edge="end">
+            <IconButton
+              onClick={handleClear}
+              aria-label="clear search"
+              size="small"
+              edge="end"
+              tabIndex={0}
+            >
               <Clear />
             </IconButton>
           </InputAdornment>
@@ -60,6 +81,10 @@ const SearchBar = ({ onSearch }) => {
       }}
     />
   );
+};
+
+SearchBar.propTypes = {
+  onSearch: PropTypes.func.isRequired,
 };
 
 export default SearchBar;
