@@ -39,14 +39,12 @@ const ProductCard = ({ product, onAddToCart }) => {
   const productDesc = product?.description || '';
   const productPrice = product?.price ?? 0;
 
-  // Image handling
   const productImage =
     product?.images?.[0] ||
     product?.image ||
     product?.imageUrl ||
     'https://via.placeholder.com/300x200?text=No+Image';
 
-  // Category handling
   const categoryName =
     typeof product?.category === 'string'
       ? product.category
@@ -55,9 +53,9 @@ const ProductCard = ({ product, onAddToCart }) => {
   return (
     <Card
       sx={{
-        height: '100%',
         display: 'flex',
         flexDirection: 'column',
+        height: '100%',
         transition: 'box-shadow 0.3s',
         '&:hover': { boxShadow: 6 },
       }}
@@ -66,7 +64,7 @@ const ProductCard = ({ product, onAddToCart }) => {
       <Box sx={{ position: 'relative' }}>
         <CardMedia
           component="img"
-          height="200"
+          height={180}
           image={productImage}
           alt={productName}
           sx={{ objectFit: 'cover' }}
@@ -84,7 +82,8 @@ const ProductCard = ({ product, onAddToCart }) => {
           aria-label={`Category: ${categoryName}`}
         />
       </Box>
-      <CardContent sx={{ flexGrow: 1 }}>
+
+      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         <Typography
           gutterBottom
           variant="h6"
@@ -97,12 +96,18 @@ const ProductCard = ({ product, onAddToCart }) => {
         <Typography
           variant="body2"
           color="text.secondary"
-          sx={{ height: 40, overflow: 'hidden' }}
+          sx={{
+            display: '-webkit-box',
+            WebkitLineClamp: 2,   // فقط 2 خط متن
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            mb: 1,
+          }}
         >
           {productDesc}
         </Typography>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
-          <Typography variant="h5" color="primary.main" sx={{ fontWeight: 'bold' }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mt="auto">
+          <Typography variant="h6" color="primary.main" sx={{ fontWeight: 'bold' }}>
             {formatCurrency(productPrice)}
           </Typography>
           <Chip
@@ -114,6 +119,7 @@ const ProductCard = ({ product, onAddToCart }) => {
           />
         </Box>
       </CardContent>
+
       <CardActions sx={{ justifyContent: 'center', p: 2 }}>
         <Button
           variant="contained"
@@ -123,10 +129,12 @@ const ProductCard = ({ product, onAddToCart }) => {
           onClick={handleAddToCartClick}
           disabled={!hasStock || isAdding}
           aria-label={`Add ${productName} to cart`}
+          fullWidth
         >
           {isAdding ? 'Adding...' : 'Add to Cart'}
         </Button>
       </CardActions>
+
       {error && (
         <Typography
           variant="body2"

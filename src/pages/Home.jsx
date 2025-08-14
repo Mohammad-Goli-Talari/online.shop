@@ -179,7 +179,7 @@ const Home = () => {
           </Grid>
         )}
 
-        <Grid item xs={12} md={9} lg={9}>
+        <Grid item xs={12} md={9}>
           <ProductGrid
             products={products}
             loading={loading}

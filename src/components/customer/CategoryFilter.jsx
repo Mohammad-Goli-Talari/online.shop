@@ -1,16 +1,7 @@
 // src/components/customer/CategoryFilter.jsx
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import {
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Typography,
-  CircularProgress,
-  Box,
-  Alert,
-} from '@mui/material';
+import { Typography, CircularProgress, Box, Alert, Chip } from '@mui/material';
 import CategoryService from '../../services/categoryService';
 
 const isNumericString = (v) => typeof v === 'string' && /^\d+$/.test(v);
@@ -41,14 +32,12 @@ const CategoryFilter = ({ onCategorySelect, categories: categoriesProp }) => {
         setLoading(true);
         setError(null);
 
-        // If parent provided categories, use them and skip fetching
         if (Array.isArray(categoriesProp) && categoriesProp.length > 0) {
           if (!isMounted) return;
           setCategories(normalizeCategories(categoriesProp));
           return;
         }
 
-        // Fallback: fetch from service
         const response = await CategoryService.getCategories();
         if (!isMounted) return;
 
@@ -68,28 +57,25 @@ const CategoryFilter = ({ onCategorySelect, categories: categoriesProp }) => {
     };
 
     load();
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [categoriesProp]);
 
-  const handleSelect = (event) => {
-    const value = event.target.value;
-    setSelectedCategory(value);
-    onCategorySelect(value === 'all' ? null : value);
+  const handleSelect = (categoryId) => {
+    setSelectedCategory(categoryId ?? 'all');
+    onCategorySelect(categoryId ?? null);
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" my={4} role="status" aria-live="polite" aria-busy="true">
-        <CircularProgress aria-label="Loading categories" />
+      <Box display="flex" justifyContent="center" my={4}>
+        <CircularProgress size={24} />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Alert severity="error" role="alert" sx={{ my: 2 }}>
+      <Alert severity="error" sx={{ my: 2 }}>
         {error}
       </Alert>
     );
@@ -100,18 +86,31 @@ const CategoryFilter = ({ onCategorySelect, categories: categoriesProp }) => {
       <Typography variant="h6" gutterBottom>
         Categories
       </Typography>
-      <Box sx={{ minWidth: 200 }}>
-        <select
-          value={selectedCategory}
-          onChange={handleSelect}
-          style={{ width: '100%', padding: '8px', fontSize: '1rem' }}
-          aria-label="Category filter dropdown"
-        >
-          <option value="all">All</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>{category.name}</option>
-          ))}
-        </select>
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 1,
+          overflowX: 'auto',
+          py: 1,
+          '&::-webkit-scrollbar': { display: 'none' }
+        }}
+      >
+        <Chip
+          label="All"
+          clickable
+          color={selectedCategory === 'all' ? 'primary' : 'default'}
+          onClick={() => handleSelect(null)}
+        />
+        {categories.map(category => (
+          <Chip
+            key={category.id}
+            label={category.name}
+            clickable
+            color={selectedCategory === category.id ? 'primary' : 'default'}
+            onClick={() => handleSelect(category.id)}
+          />
+        ))}
       </Box>
     </Box>
   );
@@ -119,7 +118,7 @@ const CategoryFilter = ({ onCategorySelect, categories: categoriesProp }) => {
 
 CategoryFilter.propTypes = {
   onCategorySelect: PropTypes.func.isRequired,
-  categories: PropTypes.array, // optional: when provided, no fetching will occur
+  categories: PropTypes.array,
 };
 
 export default CategoryFilter;

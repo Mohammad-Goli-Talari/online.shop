@@ -1,7 +1,7 @@
 // src/components/customer/ProductGrid.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Grid, Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import ProductCard from './ProductCard';
 
 const ProductGrid = ({ products, loading, error, onAddToCart, selectedCategoryId }) => {
@@ -43,43 +43,27 @@ const ProductGrid = ({ products, loading, error, onAddToCart, selectedCategoryId
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Grid
-        container
-        spacing={2}
+      <Box
         aria-label="Product grid"
-        sx={{ width: '100%', m: 0, display: 'flex !important', flexWrap: 'wrap !important' }}
+        role="list"
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'repeat(1, minmax(0, 1fr))',
+            sm: 'repeat(2, minmax(0, 1fr))',
+            md: 'repeat(4, minmax(0, 1fr))',
+            lg: 'repeat(5, minmax(0, 1fr))',
+            xl: 'repeat(6, minmax(0, 1fr))',
+          },
+          gap: 2,
+        }}
       >
         {filteredProducts.map(product => (
-          <Grid
-            item
-            key={product.id}
-            xs={12}
-            sm={6}
-            md={3}
-            lg={2.4}
-            xl={2}
-            sx={{
-              flexGrow: 0,
-              flexBasis: {
-                xs: '100%',
-                sm: '50%',
-                md: '25%',
-                lg: '20%',
-                xl: '16.6667%'
-              },
-              maxWidth: {
-                xs: '100%',
-                sm: '50%',
-                md: '25%',
-                lg: '20%',
-                xl: '16.6667%'
-              }
-            }}
-          >
+          <Box key={product.id} role="listitem">
             <ProductCard product={product} onAddToCart={onAddToCart} />
-          </Grid>
+          </Box>
         ))}
-      </Grid>
+      </Box>
     </Box>
   );
 };
