@@ -194,7 +194,10 @@ export const handlers = [
       sku: p.sku,
       stock: p.stock,
       images: p.images,
-      category: p.category
+      category: p.category,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+      isActive: p.isActive
     }));
     
     const paginatedResponse = createPaginatedResponse(productSummaries, page, limit);

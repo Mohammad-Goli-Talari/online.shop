@@ -62,7 +62,16 @@ const ProductTable = ({
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString();
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return '-';
+      }
+      return date.toLocaleDateString();
+    } catch {
+      return '-';
+    }
   };
 
   const getProductImage = (images) => {
