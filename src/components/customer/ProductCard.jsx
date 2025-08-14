@@ -14,7 +14,7 @@ import {
 import { AddShoppingCart, Inventory } from '@mui/icons-material';
 
 const formatCurrency = price =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price || 0);
 
 const ProductCard = ({ product, onAddToCart }) => {
   const [isAdding, setIsAdding] = useState(false);
@@ -22,7 +22,6 @@ const ProductCard = ({ product, onAddToCart }) => {
 
   const handleAddToCartClick = async () => {
     if (!product?.id || isAdding) return;
-
     setIsAdding(true);
     setError(null);
 
@@ -35,7 +34,23 @@ const ProductCard = ({ product, onAddToCart }) => {
     }
   };
 
-  const hasStock = product.stock > 0;
+  const hasStock = product?.stock > 0;
+  const productName = product?.name || 'Unnamed Product';
+  const productDesc = product?.description || '';
+  const productPrice = product?.price ?? 0;
+
+  // Image handling
+  const productImage =
+    product?.images?.[0] ||
+    product?.image ||
+    product?.imageUrl ||
+    'https://via.placeholder.com/300x200?text=No+Image';
+
+  // Category handling
+  const categoryName =
+    typeof product?.category === 'string'
+      ? product.category
+      : product?.category?.name || 'Uncategorized';
 
   return (
     <Card
@@ -46,21 +61,27 @@ const ProductCard = ({ product, onAddToCart }) => {
         transition: 'box-shadow 0.3s',
         '&:hover': { boxShadow: 6 },
       }}
-      aria-label={`Product: ${product.name}`}
+      aria-label={`Product: ${productName}`}
     >
       <Box sx={{ position: 'relative' }}>
         <CardMedia
           component="img"
           height="200"
-          image={product.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'}
-          alt={product.name}
+          image={productImage}
+          alt={productName}
           sx={{ objectFit: 'cover' }}
         />
         <Chip
-          label={product.category?.name || 'Uncategorized'}
+          label={categoryName}
           size="small"
-          sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'rgba(0,0,0,0.6)', color: 'white' }}
-          aria-label={`Category: ${product.category?.name || 'Uncategorized'}`}
+          sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            bgcolor: 'rgba(0,0,0,0.6)',
+            color: 'white',
+          }}
+          aria-label={`Category: ${categoryName}`}
         />
       </Box>
       <CardContent sx={{ flexGrow: 1 }}>
@@ -69,22 +90,20 @@ const ProductCard = ({ product, onAddToCart }) => {
           variant="h6"
           component="div"
           noWrap
-          title={product.name}
-          aria-label={`Product name: ${product.name}`}
+          title={productName}
         >
-          {product.name}
+          {productName}
         </Typography>
         <Typography
           variant="body2"
           color="text.secondary"
           sx={{ height: 40, overflow: 'hidden' }}
-          aria-label={`Description: ${product.description}`}
         >
-          {product.description}
+          {productDesc}
         </Typography>
         <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
           <Typography variant="h5" color="primary.main" sx={{ fontWeight: 'bold' }}>
-            {formatCurrency(product.price)}
+            {formatCurrency(productPrice)}
           </Typography>
           <Chip
             icon={<Inventory fontSize="small" />}
@@ -92,18 +111,18 @@ const ProductCard = ({ product, onAddToCart }) => {
             color={hasStock ? 'success' : 'error'}
             variant="outlined"
             size="small"
-            aria-label={hasStock ? 'In Stock' : 'Out of Stock'}
           />
         </Box>
       </CardContent>
       <CardActions sx={{ justifyContent: 'center', p: 2 }}>
         <Button
-          fullWidth
           variant="contained"
-          startIcon={isAdding ? <CircularProgress size={20} color="inherit" /> : <AddShoppingCart />}
+          startIcon={
+            isAdding ? <CircularProgress size={20} color="inherit" /> : <AddShoppingCart />
+          }
           onClick={handleAddToCartClick}
           disabled={!hasStock || isAdding}
-          aria-label={isAdding ? 'Adding to cart' : 'Add to cart'}
+          aria-label={`Add ${productName} to cart`}
         >
           {isAdding ? 'Adding...' : 'Add to Cart'}
         </Button>
@@ -115,7 +134,6 @@ const ProductCard = ({ product, onAddToCart }) => {
           textAlign="center"
           sx={{ px: 2, pb: 1 }}
           role="alert"
-          aria-live="assertive"
         >
           {error}
         </Typography>

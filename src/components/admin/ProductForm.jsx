@@ -173,60 +173,57 @@ const ProductForm = ({
         );
       case 2:
         return (
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" gutterBottom component="div">Images</Typography>
-              <Box
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                sx={{
-                  border: `2px dashed ${errors.images ? theme.palette.error.main : (isDragging ? theme.palette.primary.main : 'grey.400')}`,
-                  backgroundColor: isDragging ? theme.palette.action.hover : 'transparent',
-                  padding: 4,
-                  borderRadius: 1,
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease-in-out',
-                  minHeight: 120,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                }}
-              >
-                <input id="file-upload-input" type="file" multiple accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
-                <label htmlFor="file-upload-input" style={{ cursor: 'pointer', width: '100%', display: 'block' }}>
-                  <CloudUploadIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
-                  <Typography variant="body2">{isDragging ? "Drop here..." : "Drag & drop images here, or click to upload"}</Typography>
-                </label>
+          <Box>
+            <Typography variant="subtitle1" gutterBottom component="div">Images</Typography>
+            <Box
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              sx={{
+                border: `2px dashed ${errors.images ? theme.palette.error.main : (isDragging ? theme.palette.primary.main : 'grey.400')}`,
+                backgroundColor: isDragging ? theme.palette.action.hover : 'transparent',
+                padding: 4,
+                borderRadius: 1,
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease-in-out',
+                minHeight: 120,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                mb: 3,
+              }}
+            >
+              <input id="file-upload-input" type="file" multiple accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
+              <label htmlFor="file-upload-input" style={{ cursor: 'pointer', width: '100%', display: 'block' }}>
+                <CloudUploadIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
+                <Typography variant="body2">{isDragging ? "Drop here..." : "Drag & drop images here, or click to upload"}</Typography>
+              </label>
+            </Box>
+            {errors.images && <FormHelperText error sx={{ ml: 2 }}>{errors.images.message}</FormHelperText>}
+            {images.length > 0 && (
+              <Box display="flex" flexWrap="wrap" gap={1.5} mb={3}>
+                {images.map((image, index) => (
+                  <Paper key={index} elevation={2} sx={{ position: 'relative', width: 80, height: 80, overflow: 'hidden' }}>
+                    <img src={image.preview} alt={image.file.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <IconButton
+                      size="small"
+                      onClick={() => onImageRemove(index)}
+                      sx={{
+                        position: 'absolute', top: 2, right: 2,
+                        backgroundColor: 'rgba(0,0,0,0.5)', color: 'white',
+                        '&:hover': { backgroundColor: 'rgba(0,0,0,0.8)' }
+                      }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Paper>
+                ))}
               </Box>
-              {errors.images && <FormHelperText error sx={{ ml: 2 }}>{errors.images.message}</FormHelperText>}
-              {images.length > 0 && (
-                <Box display="flex" flexWrap="wrap" gap={1.5} mt={2}>
-                  {images.map((image, index) => (
-                    <Paper key={index} elevation={2} sx={{ position: 'relative', width: 80, height: 80, overflow: 'hidden' }}>
-                      <img src={image.preview} alt={image.file.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <IconButton
-                        size="small"
-                        onClick={() => onImageRemove(index)}
-                        sx={{
-                          position: 'absolute', top: 2, right: 2,
-                          backgroundColor: 'rgba(0,0,0,0.5)', color: 'white',
-                          '&:hover': { backgroundColor: 'rgba(0,0,0,0.8)' }
-                        }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Paper>
-                  ))}
-                </Box>
-              )}
-            </Grid>
-            <Grid item xs={12}>
-              <TextField {...register('description')} label="Description" multiline rows={4} fullWidth autoComplete="off" />
-            </Grid>
-          </Grid>
+            )}
+            <TextField {...register('description')} label="Description" multiline rows={4} fullWidth autoComplete="off" />
+          </Box>
         );
       case 3:
         return (

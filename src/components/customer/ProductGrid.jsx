@@ -1,50 +1,101 @@
 // src/components/customer/ProductGrid.jsx
 import React from 'react';
-import { Grid, Box, Typography, CircularProgress, Alert } from '@mui/material';
+import PropTypes from 'prop-types';
+import { Grid, Box, CircularProgress, Typography } from '@mui/material';
 import ProductCard from './ProductCard';
 
-const ProductGrid = ({ products, loading, error, onAddToCart }) => {
-  if (loading) {
+const ProductGrid = ({ products, loading, error, onAddToCart, selectedCategoryId }) => {
+  const filteredProducts = selectedCategoryId
+    ? products.filter(p => {
+        const prodCatId =
+          p.categoryId ??
+          p.category_id ??
+          p.catId ??
+          p.category?.id ??
+          p.category;
+        return String(prodCatId) === String(selectedCategoryId);
+      })
+    : products;
+
+  if (loading && filteredProducts.length === 0) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" sx={{ minHeight: '50vh' }} role="status" aria-live="polite">
-        <CircularProgress size={60} aria-label="Loading products" />
+      <Box display="flex" justifyContent="center" my={4}>
+        <CircularProgress />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Alert severity="error" role="alert" sx={{ my: 2 }}>
-        {error}
-      </Alert>
+      <Box textAlign="center" my={4}>
+        <Typography color="error">{error}</Typography>
+      </Box>
     );
   }
 
-  if (!products || products.length === 0) {
+  if (filteredProducts.length === 0) {
     return (
-      <Box
-        textAlign="center"
-        my={5}
-        sx={{ minHeight: '50vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-        role="region"
-        aria-live="polite"
-        aria-label="No products found"
-      >
-        <Typography variant="h6">No products found.</Typography>
-        <Typography color="text.secondary">Try adjusting your search or filters.</Typography>
+      <Box textAlign="center" my={4}>
+        <Typography>No products found.</Typography>
       </Box>
     );
   }
 
   return (
-    <Grid container spacing={3} aria-label="Product grid">
-      {products.map((product) => (
-        <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
-          <ProductCard product={product} onAddToCart={onAddToCart} />
-        </Grid>
-      ))}
-    </Grid>
+    <Box sx={{ width: '100%' }}>
+      <Grid
+        container
+        spacing={2}
+        aria-label="Product grid"
+        sx={{ width: '100%', m: 0, display: 'flex !important', flexWrap: 'wrap !important' }}
+      >
+        {filteredProducts.map(product => (
+          <Grid
+            item
+            key={product.id}
+            xs={12}
+            sm={6}
+            md={3}
+            lg={2.4}
+            xl={2}
+            sx={{
+              flexGrow: 0,
+              flexBasis: {
+                xs: '100%',
+                sm: '50%',
+                md: '25%',
+                lg: '20%',
+                xl: '16.6667%'
+              },
+              maxWidth: {
+                xs: '100%',
+                sm: '50%',
+                md: '25%',
+                lg: '20%',
+                xl: '16.6667%'
+              }
+            }}
+          >
+            <ProductCard product={product} onAddToCart={onAddToCart} />
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
   );
+};
+
+ProductGrid.propTypes = {
+  products: PropTypes.array.isRequired,
+  loading: PropTypes.bool,
+  error: PropTypes.string,
+  onAddToCart: PropTypes.func.isRequired,
+  selectedCategoryId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+};
+
+ProductGrid.defaultProps = {
+  loading: false,
+  error: null,
+  selectedCategoryId: null,
 };
 
 export default ProductGrid;
