@@ -25,6 +25,7 @@ import ProductPreview from './ProductPreview';
 import ProductService from '../../services/productService';
 import CategoryService from '../../services/categoryService';
 
+// Keep PNG's transparency; otherwise JPEG with quality
 const compressImage = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -53,16 +54,22 @@ const compressImage = (file) => {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
+
+        const isPng = file.type === 'image/png';
+        const mime = isPng ? 'image/png' : 'image/jpeg';
+        const quality = isPng ? undefined : 0.85;
+
         canvas.toBlob(
           (blob) => {
             if (blob) {
-              resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+              const name = file.name.replace(/\.(png|jpg|jpeg|webp|gif)$/i, isPng ? '.png' : '.jpg');
+              resolve(new File([blob], name, { type: mime, lastModified: Date.now() }));
             } else {
               reject(new Error('Canvas to Blob conversion failed'));
             }
           },
-          'image/jpeg',
-          0.85
+          mime,
+          quality
         );
       };
       img.onerror = reject;
@@ -76,7 +83,7 @@ const generateSku = (text) => {
   return text
     .toString()
     .trim()
-    .replace(/[^\u0600-\u06FF\w\s-]/g, '') 
+    .replace(/[^\u0600-\u06FF\w\s-]/g, '')
     .replace(/[\s_]+/g, '-')
     .replace(/--+/g, '-')
     .toUpperCase();
@@ -84,12 +91,12 @@ const generateSku = (text) => {
 
 const steps = ['Core Details', 'Pricing & Inventory', 'Media', 'Finalize'];
 
-const AddProductModal = ({ open, onClose, onSuccess }) => {
+const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [apiError, setApiError] = useState(null);
-  const [imageFiles, setImageFiles] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]); // [{file?, preview, isUrl?}]
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
@@ -97,7 +104,6 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
   const [isSkuManuallyEdited, setIsSkuManuallyEdited] = useState(false);
 
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
-
   const dialogContentRef = useRef(null);
 
   const {
@@ -129,8 +135,9 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
   const watchedSku = watch('sku');
   const watchedStock = watch('stock');
 
+  // SKU auto-suggest (not override manual)
   useEffect(() => {
-    if (watchedName && !isSkuManuallyEdited) {
+    if (!isSkuManuallyEdited && watchedName && watchedName.trim()) {
       const generatedSku = generateSku(watchedName);
       setValue('sku', generatedSku, { shouldValidate: true });
     }
@@ -140,18 +147,24 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
     setLoadingCategories(true);
     try {
       const response = await CategoryService.getCategories();
-      setCategories(response.categories || []);
-    } catch {
-      setApiError('Could not load categories.');
+      const list =
+        response?.categories ||
+        response?.items ||
+        response?.data ||
+        (Array.isArray(response) ? response : []) ||
+        [];
+      setCategories(list);
+    } catch (err) {
+      const message = err?.response?.data?.message || err?.message || 'Could not load categories.';
+      setApiError(message);
+      setCategories([]);
     } finally {
       setLoadingCategories(false);
     }
   }, []);
 
   useEffect(() => {
-    if (open) {
-      fetchCategories();
-    }
+    if (open) fetchCategories();
   }, [open, fetchCategories]);
 
   useEffect(() => {
@@ -160,10 +173,27 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
     });
   }, [register]);
 
+  const revokeIfObjectURL = (item) => {
+    try {
+      if (item?.file && item?.preview && item.preview.startsWith('blob:')) {
+        URL.revokeObjectURL(item.preview);
+      }
+    } catch {
+      // Safe to ignore: URL might already be revoked or invalid
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      imageFiles.forEach(revokeIfObjectURL);
+    };
+  }, [imageFiles]);
+
   const handleImageDrop = useCallback(
     async (acceptedFiles) => {
       clearErrors('images');
       setApiError(null);
+
       const validImageFiles = acceptedFiles.filter((file) => {
         if (!file.type.startsWith('image/')) {
           setApiError(`File "${file.name}" is not a valid image.`);
@@ -182,10 +212,12 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
             const compressedFile = await compressImage(file);
             return { file: compressedFile, preview: URL.createObjectURL(compressedFile) };
           } catch {
+            // fallback with original file
             return { file, preview: URL.createObjectURL(file) };
           }
         })
       );
+
       const updatedImages = [...imageFiles, ...compressedFiles];
       setImageFiles(updatedImages);
       setValue('images', updatedImages, { shouldValidate: true, shouldDirty: true });
@@ -194,7 +226,31 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
     [imageFiles, setValue, clearErrors, trigger]
   );
 
+  const handleAddImageUrl = useCallback(
+    (url) => {
+      clearErrors('images');
+      setApiError(null);
+      try {
+        const u = new URL(url);
+        // rudimentary image url check
+        if (!/\.(png|jpe?g|webp|gif|bmp|svg)(\?.*)?$/i.test(u.pathname)) {
+          // still allow, many CDNs serve without extension
+        }
+        const item = { isUrl: true, preview: url, file: null };
+        const updatedImages = [...imageFiles, item];
+        setImageFiles(updatedImages);
+        setValue('images', updatedImages, { shouldValidate: true, shouldDirty: true });
+        trigger('images');
+      } catch {
+        setApiError('Invalid image URL.');
+      }
+    },
+    [imageFiles, setValue, clearErrors, trigger]
+  );
+
   const handleImageRemove = (index) => {
+    const toRemove = imageFiles[index];
+    revokeIfObjectURL(toRemove);
     const updatedImages = imageFiles.filter((_, i) => i !== index);
     setImageFiles(updatedImages);
     setValue('images', updatedImages, { shouldValidate: true, shouldDirty: true });
@@ -202,8 +258,9 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
   };
 
   const handleClose = (force = false) => {
-    if (!force && isDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?'))
-      return;
+    if (!force && isDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?')) return;
+    // cleanup object urls
+    imageFiles.forEach(revokeIfObjectURL);
     reset();
     setActiveStep(0);
     setIsSkuManuallyEdited(false);
@@ -214,12 +271,21 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
     onClose();
   };
 
+  const scrollFirstErrorIntoView = () => {
+    const firstErrorKey = Object.keys(errors)[0];
+    if (!firstErrorKey) return;
+    const el = dialogContentRef.current?.querySelector(`[name="${firstErrorKey}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   const handleNext = async () => {
     const fieldsPerStep = [['name', 'categoryId', 'sku'], ['price', 'stock'], ['images']];
     const fieldsToValidate = fieldsPerStep[activeStep];
     const isValid = fieldsToValidate ? await trigger(fieldsToValidate) : true;
     if (isValid) {
       setActiveStep((prev) => prev + 1);
+    } else {
+      scrollFirstErrorIntoView();
     }
   };
 
@@ -232,13 +298,17 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
     if (!newCategoryName.trim()) return;
     setIsCreatingCategory(true);
     try {
-      const newCategory = await CategoryService.createCategory({ name: newCategoryName });
+      const newCategory = await CategoryService.createCategory({ name: newCategoryName.trim() });
       await fetchCategories();
-      setValue('categoryId', newCategory.id, { shouldValidate: true, shouldDirty: true });
+      const newId = newCategory?.id || newCategory?.data?.id || newCategory?.item?.id;
+      if (newId) {
+        setValue('categoryId', newId, { shouldValidate: true, shouldDirty: true });
+      }
       setNewCategoryName('');
       setShowAddCategory(false);
     } catch (error) {
-      setApiError(error.message || 'Failed to create category.');
+      const message = error?.response?.data?.message || error?.message || 'Failed to create category.';
+      setApiError(message);
     } finally {
       setIsCreatingCategory(false);
     }
@@ -251,11 +321,7 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
   // Focus management on active step change to help mobile UX
   useEffect(() => {
     if (dialogContentRef.current) {
-      const formFieldSelector = [
-        '[name="name"]',
-        '[name="price"]',
-        '[name="images"]',
-      ][activeStep] || null;
+      const formFieldSelector = ['[name="name"]', '[name="price"]', '#file-upload-input'][activeStep] || null;
       if (formFieldSelector) {
         const el = dialogContentRef.current.querySelector(formFieldSelector);
         if (el && typeof el.focus === 'function') {
@@ -268,28 +334,52 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
   const onSubmit = async (data) => {
     setApiError(null);
 
+    const category = categories.find((c) => c.id === data.categoryId) || { name: 'N/A' };
+
     const optimisticProduct = {
       ...data,
       id: `temp-${Date.now()}`,
       images: imageFiles.map((img) => img.preview),
-      category: categories.find((c) => c.id === data.categoryId) || { name: 'N/A' },
+      category,
       createdAt: new Date().toISOString(),
     };
 
-    onSuccess(optimisticProduct);
+    // Optimistic add
+    onSuccess?.(optimisticProduct);
+
+    // Close UI immediately (optional UX choice); if you prefer keep open until success, remove this line
     handleClose(true);
 
     try {
-      const apiPayload = {
-        ...data,
-        images: imageFiles.map(
-          (img) => `https://via.placeholder.com/600x400.png?text=${encodeURIComponent(img.file.name)}`
-        ),
+      // Prepare payload (send URL images now; files will be uploaded via upload endpoint)
+      const urlImages = imageFiles.filter((i) => i.isUrl && i.preview).map((i) => i.preview);
+
+      const payload = {
+        name: data.name.trim(),
+        description: data.description || '',
+        price: Number(data.price),
+        sku: data.sku.trim(),
+        stock: Number.isFinite(data.stock) ? Number(data.stock) : 0,
+        categoryId: data.categoryId,
+        isActive: !!data.isActive,
+        ...(urlImages.length ? { images: urlImages } : {}),
       };
-      await ProductService.createProduct(apiPayload);
+
+      const created = await ProductService.createProduct(payload);
+      const createdId = created?.id || created?.data?.id || created?.item?.id;
+
+      // Upload file images if any
+      const fileImages = imageFiles.filter((i) => i.file).map((i) => i.file);
+      if (createdId && fileImages.length) {
+        await ProductService.uploadProductImages(createdId, fileImages);
+      }
+
+      // Inform parent to refresh from server
+      onCreated?.(createdId || null);
     } catch (error) {
       console.error('Failed to save product to the server:', error);
-      alert('Error: Could not save the new product. Please refresh the page and try again.');
+      const message = error?.response?.data?.message || error?.message || 'Error: Could not save the new product.';
+      alert(message);
     }
   };
 
@@ -305,6 +395,16 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
   ];
 
   const categoryName = categories.find((c) => c.id === watchedValues.categoryId)?.name;
+
+  const handlePreviewClick = async () => {
+    // Validate all fields before preview (safer)
+    const ok = await trigger(['name', 'categoryId', 'sku', 'price', 'stock', 'images']);
+    if (!ok) {
+      scrollFirstErrorIntoView();
+      return;
+    }
+    setShowPreview(true);
+  };
 
   return (
     <Dialog
@@ -331,6 +431,7 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
           </IconButton>
         </Box>
       </DialogTitle>
+
       <DialogContent
         ref={dialogContentRef}
         sx={{
@@ -371,6 +472,7 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
                 images={imageFiles}
                 onImageRemove={handleImageRemove}
                 onImageDrop={handleImageDrop}
+                onAddImageUrl={handleAddImageUrl}
                 showAddCategory={showAddCategory}
                 onToggleAddCategory={() => setShowAddCategory(!showAddCategory)}
                 newCategoryName={newCategoryName}
@@ -382,6 +484,7 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
           </>
         )}
       </DialogContent>
+
       <DialogActions sx={{ p: isMobile ? 2 : 3, borderTop: 1, borderColor: 'divider' }}>
         {showPreview ? (
           <Button variant="outlined" onClick={() => setShowPreview(false)}>
@@ -395,7 +498,7 @@ const AddProductModal = ({ open, onClose, onSuccess }) => {
             <Box sx={{ flex: '1 1 auto' }} />
             {activeStep === steps.length - 1 ? (
               <>
-                <Button variant="outlined" onClick={() => setShowPreview(true)} disabled={isSubmitting}>
+                <Button variant="outlined" onClick={handlePreviewClick} disabled={isSubmitting}>
                   Preview
                 </Button>
                 <Button variant="contained" color="primary" type="submit" form="add-product-form" disabled={isSubmitting}>

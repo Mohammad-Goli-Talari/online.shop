@@ -1,10 +1,10 @@
 // src/pages/admin/products/index.jsx
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Button, Container, Stack, Typography } from '@mui/material';
-import ProductTable from '../../../components/admin/ProductTable';
 import AdminLayout from '../../../layouts/AdminLayout';
-import ProductService from '../../../services/productService';
+import ProductTable from '../../../components/admin/ProductTable';
 import AddProductModal from '../../../components/admin/AddProductModal';
+import ProductService from '../../../services/productService';
 
 const ProductListPage = () => {
   const [products, setProducts] = useState([]);
@@ -13,13 +13,13 @@ const ProductListPage = () => {
   const [openModal, setOpenModal] = useState(false);
   const hasInitialized = useRef(false);
 
-  // Load initial products only once
-  const loadInitialProducts = useCallback(async () => {
+  // Load products from server once
+  const loadProducts = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await ProductService.getProducts({ limit: 9999 });
-      const items = response.items || [];
+      const res = await ProductService.getProducts({ limit: 9999 });
+      const items = res.items || [];
       items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setProducts(items);
     } catch (err) {
@@ -27,28 +27,34 @@ const ProductListPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     if (!hasInitialized.current) {
       hasInitialized.current = true;
-      loadInitialProducts();
+      loadProducts();
     }
-  }, [loadInitialProducts]);
+  }, []);
 
-  // Optimistic update: add new product instantly
-  const handleProductAdded = (newProductData) => {
-    setProducts(prev => [newProductData, ...prev]);
+  // Handler when a product is successfully created
+  const handleProductAdded = (createdProduct) => {
+    // Add the product returned by server to the top of the list
+    setProducts(prev => [createdProduct, ...prev]);
   };
 
   const handleEditProduct = (product) => {
-    // TODO: Implement Edit functionality if needed
-    console.log('Editing product:', product.id);
+    console.log('Edit product:', product.id);
   };
 
-  const handleDeleteProduct = (product) => {
-    // TODO: Implement Delete functionality if needed
-    console.log('Deleting product:', product.id);
+  const handleDeleteProduct = async (product) => {
+    if (!window.confirm(`Are you sure you want to delete "${product.name}"?`)) return;
+    try {
+      await ProductService.deleteProduct(product.id);
+      setProducts(prev => prev.filter(p => p.id !== product.id));
+    } catch (err) {
+      alert('Failed to delete product');
+      console.error(err);
+    }
   };
 
   return (
@@ -62,34 +68,30 @@ const ProductListPage = () => {
           mb={3}
         >
           <Box>
-            <Typography variant="h5" fontWeight={600}>
-              Products
-            </Typography>
+            <Typography variant="h5" fontWeight={600}>Products</Typography>
             <Typography variant="body2" color="text.secondary">
               {products.length} product{products.length !== 1 ? 's' : ''} found
             </Typography>
           </Box>
-          <Button variant="contained" color="primary" onClick={() => setOpenModal(true)}>
-            Add Product
-          </Button>
+          <Button variant="contained" onClick={() => setOpenModal(true)}>Add Product</Button>
         </Stack>
 
         <ProductTable
           products={products}
-          onLoadMore={() => {}}
-          hasMore={false}
-          loading={loading}
-          error={error}
           onEdit={handleEditProduct}
           onDelete={handleDeleteProduct}
+          loading={loading}
+          error={error}
+          hasMore={false}
+          onLoadMore={() => {}}
+        />
+
+        <AddProductModal
+          open={openModal}
+          onClose={() => setOpenModal(false)}
+          onSuccess={handleProductAdded}
         />
       </Container>
-
-      <AddProductModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        onSuccess={handleProductAdded}
-      />
     </AdminLayout>
   );
 };

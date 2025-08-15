@@ -3,11 +3,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Grid, TextField, FormControl, InputLabel, Select, FormControlLabel,
   Switch, Box, Typography, FormHelperText, IconButton, Paper,
-  Button, Collapse, CircularProgress,
+  Button, Collapse, CircularProgress, InputAdornment,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { Controller } from 'react-hook-form';
-import { CloudUpload as CloudUploadIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { CloudUpload as CloudUploadIcon, Delete as DeleteIcon, Add as AddIcon, Link as LinkIcon } from '@mui/icons-material';
 
 const ProductForm = ({
   activeStep,
@@ -21,6 +22,7 @@ const ProductForm = ({
   images = [],
   onImageRemove,
   onImageDrop,
+  onAddImageUrl,
   showAddCategory,
   onToggleAddCategory,
   newCategoryName,
@@ -29,8 +31,11 @@ const ProductForm = ({
   isCreatingCategory,
 }) => {
   const theme = useTheme();
+  const isXs = useMediaQuery(theme.breakpoints.down('sm'));
   const [isDragging, setIsDragging] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
   const nameInputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (activeStep === 0 && nameInputRef.current) {
@@ -55,6 +60,8 @@ const ProductForm = ({
   const handleFileSelect = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       onImageDrop(Array.from(e.target.files));
+      // reset input so same files can be re-picked if needed
+      e.target.value = '';
     }
   };
 
@@ -78,6 +85,7 @@ const ProductForm = ({
                 autoComplete="off"
               />
             </Grid>
+
             <Grid item xs={12}>
               <FormControl fullWidth required error={!!errors.categoryId}>
                 <InputLabel id="category-select-label">Category</InputLabel>
@@ -93,6 +101,7 @@ const ProductForm = ({
                 />
                 {errors.categoryId && <FormHelperText>{errors.categoryId.message}</FormHelperText>}
               </FormControl>
+
               <Box mt={1}>
                 <Button size="small" startIcon={<AddIcon />} onClick={onToggleAddCategory}>
                   {showAddCategory ? 'Cancel' : 'Add New Category'}
@@ -107,31 +116,38 @@ const ProductForm = ({
                       fullWidth
                       autoComplete="off"
                     />
-                    <Button variant="contained" onClick={onCreateCategory} disabled={isCreatingCategory}>
+                    <Button variant="contained" onClick={onCreateCategory} disabled={isCreatingCategory || !newCategoryName.trim()}>
                       {isCreatingCategory ? <CircularProgress size={20} /> : 'Save'}
                     </Button>
                   </Box>
                 </Collapse>
               </Box>
             </Grid>
+
             <Grid item xs={12}>
-              <TextField
-                {...register('sku', { required: 'SKU is required' })}
-                label="SKU (Stock Keeping Unit)"
-                fullWidth
-                required
-                error={!!errors.sku}
-                helperText={errors.sku?.message}
-                onChange={(e) => {
-                  register('sku').onChange(e);
-                  onSkuManualEdit();
-                }}
-                InputLabelProps={{ shrink: !!watchedSku }}
-                autoComplete="off"
-              />
+              {(() => {
+                const skuField = register('sku', { required: 'SKU is required' });
+                return (
+                  <TextField
+                    {...skuField}
+                    label="SKU (Stock Keeping Unit)"
+                    fullWidth
+                    required
+                    error={!!errors.sku}
+                    helperText={errors.sku?.message}
+                    onChange={(e) => {
+                      onSkuManualEdit();
+                      skuField.onChange(e);
+                    }}
+                    InputLabelProps={{ shrink: !!watchedSku }}
+                    autoComplete="off"
+                  />
+                );
+              })()}
             </Grid>
           </Grid>
         );
+
       case 1:
         return (
           <Grid container spacing={3}>
@@ -140,13 +156,19 @@ const ProductForm = ({
                 {...register('price', {
                   required: 'Price is required',
                   valueAsNumber: true,
-                  validate: (value) => value > 0 || 'Price must be a positive number',
+                  validate: (value) => {
+                    if (isNaN(value)) return 'Price is required';
+                    if (value <= 0) return 'Price must be positive';
+                    return true;
+                  },
                 })}
                 label="Price"
                 type="number"
                 fullWidth
                 required
-                InputProps={{ startAdornment: <Typography sx={{ mr: 1 }}>$</Typography> }}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                }}
                 error={!!errors.price}
                 helperText={errors.price?.message}
                 autoComplete="off"
@@ -157,7 +179,11 @@ const ProductForm = ({
                 {...register('stock', {
                   required: 'Stock is required',
                   valueAsNumber: true,
-                  validate: (value) => Number.isInteger(value) && value >= 0 || 'Stock must be a non-negative integer',
+                  validate: (value) => {
+                    if (isNaN(value)) return 'Stock is required';
+                    if (!Number.isInteger(value) || value < 0) return 'Stock must be a non-negative integer';
+                    return true;
+                  },
                 })}
                 label="Stock"
                 type="number"
@@ -171,11 +197,15 @@ const ProductForm = ({
             </Grid>
           </Grid>
         );
+
       case 2:
         return (
           <Box>
             <Typography variant="subtitle1" gutterBottom component="div">Images</Typography>
+
+            {/* Dropzone */}
             <Box
+              onClick={() => fileInputRef.current?.click()}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragEnter={handleDragEnter}
@@ -195,18 +225,56 @@ const ProductForm = ({
                 mb: 3,
               }}
             >
-              <input id="file-upload-input" type="file" multiple accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
-              <label htmlFor="file-upload-input" style={{ cursor: 'pointer', width: '100%', display: 'block' }}>
-                <CloudUploadIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
-                <Typography variant="body2">{isDragging ? "Drop here..." : "Drag & drop images here, or click to upload"}</Typography>
-              </label>
+              <input
+                id="file-upload-input"
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+              />
+              <CloudUploadIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
+              <Typography variant="body2">
+                {isDragging ? "Drop here..." : "Drag & drop images here, or click to upload"}
+              </Typography>
             </Box>
-            {errors.images && <FormHelperText error sx={{ ml: 2 }}>{errors.images.message}</FormHelperText>}
+
+            {/* Add by URL */}
+            <Box display="flex" gap={1} mb={2} flexDirection={isXs ? 'column' : 'row'}>
+              <TextField
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                label="Image URL"
+                placeholder="https://cdn.example.com/image.jpg"
+                fullWidth
+                InputProps={{ startAdornment: <InputAdornment position="start"><LinkIcon fontSize="small" /></InputAdornment> }}
+              />
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  if (imageUrl.trim()) {
+                    onAddImageUrl(imageUrl.trim());
+                    setImageUrl('');
+                  }
+                }}
+              >
+                Add URL
+              </Button>
+            </Box>
+
+            {errors.images && <FormHelperText error sx={{ ml: 0, mb: 1 }}>{errors.images.message}</FormHelperText>}
+
             {images.length > 0 && (
               <Box display="flex" flexWrap="wrap" gap={1.5} mb={3}>
                 {images.map((image, index) => (
                   <Paper key={index} elevation={2} sx={{ position: 'relative', width: 80, height: 80, overflow: 'hidden' }}>
-                    <img src={image.preview} alt={image.file.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img
+                      src={image.preview}
+                      alt={image.file?.name || `image-${index + 1}`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      loading="lazy"
+                    />
                     <IconButton
                       size="small"
                       onClick={() => onImageRemove(index)}
@@ -215,6 +283,7 @@ const ProductForm = ({
                         backgroundColor: 'rgba(0,0,0,0.5)', color: 'white',
                         '&:hover': { backgroundColor: 'rgba(0,0,0,0.8)' }
                       }}
+                      aria-label="remove image"
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
@@ -222,16 +291,33 @@ const ProductForm = ({
                 ))}
               </Box>
             )}
-            <TextField {...register('description')} label="Description" multiline rows={4} fullWidth autoComplete="off" />
+
+            <TextField
+              {...register('description')}
+              label="Description"
+              multiline
+              rows={4}
+              fullWidth
+              autoComplete="off"
+            />
           </Box>
         );
+
       case 3:
         return (
           <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
             <Typography variant="h6" gutterBottom>Review and Finalize</Typography>
-            <Typography color="text.secondary" mb={3}>You're almost done! You can preview the product or create it directly.</Typography>
+            <Typography color="text.secondary" mb={3}>
+              You're almost done! You can preview the product or create it directly.
+            </Typography>
             <FormControlLabel
-              control={<Controller name="isActive" control={control} render={({ field }) => <Switch {...field} checked={!!field.value} onChange={field.onChange} />} />}
+              control={
+                <Controller
+                  name="isActive"
+                  control={control}
+                  render={({ field }) => <Switch {...field} checked={!!field.value} onChange={field.onChange} />}
+                />
+              }
               label="Set product as active on creation"
             />
           </Box>

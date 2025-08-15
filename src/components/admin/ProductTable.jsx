@@ -1,3 +1,4 @@
+// src/components/admin/ProductTable.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Table,
