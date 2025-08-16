@@ -1,14 +1,13 @@
 // src/components/admin/ProductForm.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import {
   Grid, TextField, FormControl, InputLabel, Select, FormControlLabel,
-  Switch, Box, Typography, FormHelperText, IconButton, Paper,
-  Button, Collapse, CircularProgress, InputAdornment,
+  Switch, Box, Typography, FormHelperText, IconButton, Button,
+  Collapse, CircularProgress, InputAdornment,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import useMediaQuery from '@mui/material/useMediaQuery';
 import { Controller } from 'react-hook-form';
-import { CloudUpload as CloudUploadIcon, Delete as DeleteIcon, Add as AddIcon, Link as LinkIcon } from '@mui/icons-material';
+import { CameraAltOutlined as CameraIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 
 const ProductForm = ({
   activeStep,
@@ -16,13 +15,11 @@ const ProductForm = ({
   errors,
   control,
   onSkuManualEdit,
-  watchedSku,
-  watchedStock,
+  watchedValues,
   categoryOptions = [],
   images = [],
   onImageRemove,
   onImageDrop,
-  onAddImageUrl,
   showAddCategory,
   onToggleAddCategory,
   newCategoryName,
@@ -31,19 +28,10 @@ const ProductForm = ({
   isCreatingCategory,
 }) => {
   const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down('sm'));
-  const [isDragging, setIsDragging] = useState(false);
-  const [imageUrl, setImageUrl] = useState('');
-  const nameInputRef = useRef(null);
+  const [isDragging, setIsDragging] = React.useState(false);
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    if (activeStep === 0 && nameInputRef.current) {
-      setTimeout(() => {
-        nameInputRef.current.focus();
-      }, 200);
-    }
-  }, [activeStep]);
+  const watchedDescription = watchedValues?.description || '';
 
   const handleDragEnter = (e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
   const handleDragLeave = (e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); };
@@ -60,14 +48,13 @@ const ProductForm = ({
   const handleFileSelect = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       onImageDrop(Array.from(e.target.files));
-      // reset input so same files can be re-picked if needed
       e.target.value = '';
     }
   };
 
   const renderStepContent = (step) => {
     switch (step) {
-      case 0:
+      case 0: // Product Details
         return (
           <Grid container spacing={3}>
             <Grid item xs={12}>
@@ -79,7 +66,6 @@ const ProductForm = ({
                 label="Product Name"
                 fullWidth
                 required
-                inputRef={nameInputRef}
                 error={!!errors.name}
                 helperText={errors.name?.message}
                 autoComplete="off"
@@ -101,7 +87,6 @@ const ProductForm = ({
                 />
                 {errors.categoryId && <FormHelperText>{errors.categoryId.message}</FormHelperText>}
               </FormControl>
-
               <Box mt={1}>
                 <Button size="small" startIcon={<AddIcon />} onClick={onToggleAddCategory}>
                   {showAddCategory ? 'Cancel' : 'Add New Category'}
@@ -139,16 +124,133 @@ const ProductForm = ({
                       onSkuManualEdit();
                       skuField.onChange(e);
                     }}
-                    InputLabelProps={{ shrink: !!watchedSku }}
+                    InputLabelProps={{ shrink: !!watchedValues?.sku }}
                     autoComplete="off"
                   />
                 );
               })()}
             </Grid>
+             <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Controller
+                      name="isActive"
+                      control={control}
+                      render={({ field }) => <Switch {...field} checked={!!field.value} />}
+                    />
+                  }
+                  label="Set product as active on creation"
+                />
+             </Grid>
           </Grid>
         );
 
-      case 1:
+      case 1: // Images & Description
+        return (
+          <Grid container spacing={4}>
+            {/* Left Column: Image Upload */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="h6" gutterBottom>Upload Product Images</Typography>
+              <Box
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                sx={{
+                  border: `2px dashed ${errors.images ? theme.palette.error.main : (isDragging ? theme.palette.primary.main : 'grey.300')}`,
+                  backgroundColor: isDragging ? theme.palette.action.hover : 'grey.50',
+                  p: 3,
+                  borderRadius: 2,
+                  textAlign: 'center',
+                  transition: 'background-color 0.2s ease-in-out',
+                  mb: 2,
+                }}
+              >
+                <input
+                  id="file-upload-input"
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  style={{ display: 'none' }}
+                />
+                <Box
+                  sx={{
+                    width: 56, height: 56, borderRadius: '50%',
+                    backgroundColor: 'grey.200',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    mx: 'auto', mb: 1,
+                  }}
+                >
+                  <CameraIcon sx={{ fontSize: 32, color: 'text.secondary' }} />
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Drag and drop images here or click to upload
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={() => fileInputRef.current?.click()}
+                sx={{mb: 2, textTransform: 'none', fontSize: '1rem'}}
+              >
+                Browse Files
+              </Button>
+              {errors.images && <FormHelperText error sx={{ ml: 0, mb: 1 }}>{errors.images.message}</FormHelperText>}
+              {images.length > 0 && (
+                <Box display="flex" flexWrap="wrap" gap={1.5}>
+                  {images.map((image, index) => (
+                    <Box key={index} sx={{ position: 'relative', width: 80, height: 80, overflow: 'hidden', borderRadius: 1, boxShadow: 1 }}>
+                      <img
+                        src={image.preview}
+                        alt={image.file?.name || `image-${index + 1}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        loading="lazy"
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => onImageRemove(index)}
+                        sx={{
+                          position: 'absolute', top: 2, right: 2,
+                          backgroundColor: 'rgba(0,0,0,0.6)', color: 'white',
+                          '&:hover': { backgroundColor: 'rgba(0,0,0,0.9)' }
+                        }}
+                        aria-label="remove image"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Grid>
+
+            {/* Right Column: Description */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="h6" gutterBottom>Product Description</Typography>
+              <TextField
+                {...register('description', {
+                  maxLength: { value: 500, message: 'Description cannot exceed 500 characters' }
+                })}
+                placeholder="Describe your product in detail, highlighting its features, benefits, and specifications."
+                multiline
+                rows={8}
+                fullWidth
+                error={!!errors.description}
+                helperText={errors.description ? errors.description.message : `${watchedDescription.length} / 500 characters`}
+                autoComplete="off"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'grey.50',
+                  }
+                }}
+              />
+            </Grid>
+          </Grid>
+        );
+
+      case 2: // Pricing & Inventory
         return (
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
@@ -156,11 +258,7 @@ const ProductForm = ({
                 {...register('price', {
                   required: 'Price is required',
                   valueAsNumber: true,
-                  validate: (value) => {
-                    if (isNaN(value)) return 'Price is required';
-                    if (value <= 0) return 'Price must be positive';
-                    return true;
-                  },
+                  validate: (value) => value > 0 || 'Price must be positive',
                 })}
                 label="Price"
                 type="number"
@@ -179,11 +277,7 @@ const ProductForm = ({
                 {...register('stock', {
                   required: 'Stock is required',
                   valueAsNumber: true,
-                  validate: (value) => {
-                    if (isNaN(value)) return 'Stock is required';
-                    if (!Number.isInteger(value) || value < 0) return 'Stock must be a non-negative integer';
-                    return true;
-                  },
+                  validate: (value) => (Number.isInteger(value) && value >= 0) || 'Stock must be a non-negative integer',
                 })}
                 label="Stock"
                 type="number"
@@ -191,136 +285,11 @@ const ProductForm = ({
                 required
                 error={!!errors.stock}
                 helperText={errors.stock?.message}
-                InputLabelProps={{ shrink: watchedStock != null && watchedStock !== '' }}
+                InputLabelProps={{ shrink: watchedValues?.stock != null && watchedValues?.stock !== '' }}
                 autoComplete="off"
               />
             </Grid>
           </Grid>
-        );
-
-      case 2:
-        return (
-          <Box>
-            <Typography variant="subtitle1" gutterBottom component="div">Images</Typography>
-
-            {/* Dropzone */}
-            <Box
-              onClick={() => fileInputRef.current?.click()}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              sx={{
-                border: `2px dashed ${errors.images ? theme.palette.error.main : (isDragging ? theme.palette.primary.main : 'grey.400')}`,
-                backgroundColor: isDragging ? theme.palette.action.hover : 'transparent',
-                padding: 4,
-                borderRadius: 1,
-                textAlign: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease-in-out',
-                minHeight: 120,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                mb: 3,
-              }}
-            >
-              <input
-                id="file-upload-input"
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleFileSelect}
-                style={{ display: 'none' }}
-              />
-              <CloudUploadIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
-              <Typography variant="body2">
-                {isDragging ? "Drop here..." : "Drag & drop images here, or click to upload"}
-              </Typography>
-            </Box>
-
-            {/* Add by URL */}
-            <Box display="flex" gap={1} mb={2} flexDirection={isXs ? 'column' : 'row'}>
-              <TextField
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                label="Image URL"
-                placeholder="https://cdn.example.com/image.jpg"
-                fullWidth
-                InputProps={{ startAdornment: <InputAdornment position="start"><LinkIcon fontSize="small" /></InputAdornment> }}
-              />
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  if (imageUrl.trim()) {
-                    onAddImageUrl(imageUrl.trim());
-                    setImageUrl('');
-                  }
-                }}
-              >
-                Add URL
-              </Button>
-            </Box>
-
-            {errors.images && <FormHelperText error sx={{ ml: 0, mb: 1 }}>{errors.images.message}</FormHelperText>}
-
-            {images.length > 0 && (
-              <Box display="flex" flexWrap="wrap" gap={1.5} mb={3}>
-                {images.map((image, index) => (
-                  <Paper key={index} elevation={2} sx={{ position: 'relative', width: 80, height: 80, overflow: 'hidden' }}>
-                    <img
-                      src={image.preview}
-                      alt={image.file?.name || `image-${index + 1}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      loading="lazy"
-                    />
-                    <IconButton
-                      size="small"
-                      onClick={() => onImageRemove(index)}
-                      sx={{
-                        position: 'absolute', top: 2, right: 2,
-                        backgroundColor: 'rgba(0,0,0,0.5)', color: 'white',
-                        '&:hover': { backgroundColor: 'rgba(0,0,0,0.8)' }
-                      }}
-                      aria-label="remove image"
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Paper>
-                ))}
-              </Box>
-            )}
-
-            <TextField
-              {...register('description')}
-              label="Description"
-              multiline
-              rows={4}
-              fullWidth
-              autoComplete="off"
-            />
-          </Box>
-        );
-
-      case 3:
-        return (
-          <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <Typography variant="h6" gutterBottom>Review and Finalize</Typography>
-            <Typography color="text.secondary" mb={3}>
-              You're almost done! You can preview the product or create it directly.
-            </Typography>
-            <FormControlLabel
-              control={
-                <Controller
-                  name="isActive"
-                  control={control}
-                  render={({ field }) => <Switch {...field} checked={!!field.value} onChange={field.onChange} />}
-                />
-              }
-              label="Set product as active on creation"
-            />
-          </Box>
         );
       default:
         return 'Unknown step';

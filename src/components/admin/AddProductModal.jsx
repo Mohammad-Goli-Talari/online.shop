@@ -13,19 +13,16 @@ import {
   MenuItem,
   Button,
   CircularProgress,
-  Stepper,
-  Step,
-  StepLabel,
   DialogActions,
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 
 import ProductForm from './ProductForm';
-import ProductPreview from './ProductPreview';
+import ProductPreview from './ProductPreview'; // Import the new component
 import ProductService from '../../services/productService';
 import CategoryService from '../../services/categoryService';
 
-// Keep PNG's transparency; otherwise JPEG with quality
+// ... (compressImage and generateSku functions remain unchanged)
 const compressImage = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -54,11 +51,9 @@ const compressImage = (file) => {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-
         const isPng = file.type === 'image/png';
         const mime = isPng ? 'image/png' : 'image/jpeg';
         const quality = isPng ? undefined : 0.85;
-
         canvas.toBlob(
           (blob) => {
             if (blob) {
@@ -89,19 +84,20 @@ const generateSku = (text) => {
     .toUpperCase();
 };
 
-const steps = ['Core Details', 'Pricing & Inventory', 'Media', 'Finalize'];
+
+const steps = ['Product Details', 'Images & Description', 'Pricing & Inventory'];
 
 const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [apiError, setApiError] = useState(null);
-  const [imageFiles, setImageFiles] = useState([]); // [{file?, preview, isUrl?}]
+  const [imageFiles, setImageFiles] = useState([]);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   const [isSkuManuallyEdited, setIsSkuManuallyEdited] = useState(false);
+  const [showPreview, setShowPreview] = useState(false); // New state for preview
 
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
   const dialogContentRef = useRef(null);
@@ -132,10 +128,8 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
 
   const watchedValues = watch();
   const watchedName = watch('name');
-  const watchedSku = watch('sku');
-  const watchedStock = watch('stock');
 
-  // SKU auto-suggest (not override manual)
+  // ... (All useEffects and handler functions up to handleClose remain the same)
   useEffect(() => {
     if (!isSkuManuallyEdited && watchedName && watchedName.trim()) {
       const generatedSku = generateSku(watchedName);
@@ -172,14 +166,14 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
       validate: (value) => (value && value.length > 0) || 'At least one image is required.',
     });
   }, [register]);
-
+  
   const revokeIfObjectURL = (item) => {
     try {
       if (item?.file && item?.preview && item.preview.startsWith('blob:')) {
         URL.revokeObjectURL(item.preview);
       }
     } catch {
-      // Safe to ignore: URL might already be revoked or invalid
+      // Safe to ignore
     }
   };
 
@@ -193,7 +187,6 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
     async (acceptedFiles) => {
       clearErrors('images');
       setApiError(null);
-
       const validImageFiles = acceptedFiles.filter((file) => {
         if (!file.type.startsWith('image/')) {
           setApiError(`File "${file.name}" is not a valid image.`);
@@ -205,19 +198,16 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
         }
         return true;
       });
-
       const compressedFiles = await Promise.all(
         validImageFiles.map(async (file) => {
           try {
             const compressedFile = await compressImage(file);
             return { file: compressedFile, preview: URL.createObjectURL(compressedFile) };
           } catch {
-            // fallback with original file
             return { file, preview: URL.createObjectURL(file) };
           }
         })
       );
-
       const updatedImages = [...imageFiles, ...compressedFiles];
       setImageFiles(updatedImages);
       setValue('images', updatedImages, { shouldValidate: true, shouldDirty: true });
@@ -225,29 +215,7 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
     },
     [imageFiles, setValue, clearErrors, trigger]
   );
-
-  const handleAddImageUrl = useCallback(
-    (url) => {
-      clearErrors('images');
-      setApiError(null);
-      try {
-        const u = new URL(url);
-        // rudimentary image url check
-        if (!/\.(png|jpe?g|webp|gif|bmp|svg)(\?.*)?$/i.test(u.pathname)) {
-          // still allow, many CDNs serve without extension
-        }
-        const item = { isUrl: true, preview: url, file: null };
-        const updatedImages = [...imageFiles, item];
-        setImageFiles(updatedImages);
-        setValue('images', updatedImages, { shouldValidate: true, shouldDirty: true });
-        trigger('images');
-      } catch {
-        setApiError('Invalid image URL.');
-      }
-    },
-    [imageFiles, setValue, clearErrors, trigger]
-  );
-
+  
   const handleImageRemove = (index) => {
     const toRemove = imageFiles[index];
     revokeIfObjectURL(toRemove);
@@ -259,7 +227,6 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
 
   const handleClose = (force = false) => {
     if (!force && isDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?')) return;
-    // cleanup object urls
     imageFiles.forEach(revokeIfObjectURL);
     reset();
     setActiveStep(0);
@@ -267,7 +234,7 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
     setImageFiles([]);
     setApiError(null);
     setShowAddCategory(false);
-    setShowPreview(false);
+    setShowPreview(false); // Reset preview state on close
     onClose();
   };
 
@@ -279,21 +246,27 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
   };
 
   const handleNext = async () => {
-    const fieldsPerStep = [['name', 'categoryId', 'sku'], ['price', 'stock'], ['images']];
+    const fieldsPerStep = [
+      ['name', 'categoryId', 'sku'],
+      ['images', 'description'],
+      ['price', 'stock'],
+    ];
     const fieldsToValidate = fieldsPerStep[activeStep];
     const isValid = fieldsToValidate ? await trigger(fieldsToValidate) : true;
     if (isValid) {
-      setActiveStep((prev) => prev + 1);
+      if (activeStep < steps.length - 1) {
+        setActiveStep((prev) => prev + 1);
+      }
     } else {
       scrollFirstErrorIntoView();
     }
   };
 
   const handleBack = () => {
-    setShowPreview(false);
+    setShowPreview(false); // Go back to form if in preview
     setActiveStep((prev) => prev - 1);
   };
-
+  
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) return;
     setIsCreatingCategory(true);
@@ -313,29 +286,21 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
       setIsCreatingCategory(false);
     }
   };
-
+  
   const handleSkuManualEdit = () => {
     setIsSkuManuallyEdited(true);
   };
 
-  // Focus management on active step change to help mobile UX
-  useEffect(() => {
-    if (dialogContentRef.current) {
-      const formFieldSelector = ['[name="name"]', '[name="price"]', '#file-upload-input'][activeStep] || null;
-      if (formFieldSelector) {
-        const el = dialogContentRef.current.querySelector(formFieldSelector);
-        if (el && typeof el.focus === 'function') {
-          setTimeout(() => el.focus(), 200);
-        }
-      }
-    }
-  }, [activeStep]);
-
   const onSubmit = async (data) => {
+    // Final validation before submitting
+    const isAllValid = await trigger();
+    if (!isAllValid) {
+        scrollFirstErrorIntoView();
+        setShowPreview(false); // Go back to the form to show errors
+        return;
+    }
     setApiError(null);
-
     const category = categories.find((c) => c.id === data.categoryId) || { name: 'N/A' };
-
     const optimisticProduct = {
       ...data,
       id: `temp-${Date.now()}`,
@@ -343,20 +308,14 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
       category,
       createdAt: new Date().toISOString(),
     };
-
-    // Optimistic add
     onSuccess?.(optimisticProduct);
-
-    // Close UI immediately (optional UX choice); if you prefer keep open until success, remove this line
     handleClose(true);
 
     try {
-      // Prepare payload (send URL images now; files will be uploaded via upload endpoint)
       const urlImages = imageFiles.filter((i) => i.isUrl && i.preview).map((i) => i.preview);
-
       const payload = {
         name: data.name.trim(),
-        description: data.description || '',
+        description: data.description || null,
         price: Number(data.price),
         sku: data.sku.trim(),
         stock: Number.isFinite(data.stock) ? Number(data.stock) : 0,
@@ -364,22 +323,26 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
         isActive: !!data.isActive,
         ...(urlImages.length ? { images: urlImages } : {}),
       };
-
       const created = await ProductService.createProduct(payload);
       const createdId = created?.id || created?.data?.id || created?.item?.id;
-
-      // Upload file images if any
       const fileImages = imageFiles.filter((i) => i.file).map((i) => i.file);
       if (createdId && fileImages.length) {
         await ProductService.uploadProductImages(createdId, fileImages);
       }
-
-      // Inform parent to refresh from server
       onCreated?.(createdId || null);
     } catch (error) {
       console.error('Failed to save product to the server:', error);
       const message = error?.response?.data?.message || error?.message || 'Error: Could not save the new product.';
       alert(message);
+    }
+  };
+
+  const handlePreviewClick = async () => {
+    const isAllValid = await trigger();
+    if (isAllValid) {
+      setShowPreview(true);
+    } else {
+      scrollFirstErrorIntoView();
     }
   };
 
@@ -396,16 +359,6 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
 
   const categoryName = categories.find((c) => c.id === watchedValues.categoryId)?.name;
 
-  const handlePreviewClick = async () => {
-    // Validate all fields before preview (safer)
-    const ok = await trigger(['name', 'categoryId', 'sku', 'price', 'stock', 'images']);
-    if (!ok) {
-      scrollFirstErrorIntoView();
-      return;
-    }
-    setShowPreview(true);
-  };
-
   return (
     <Dialog
       open={open}
@@ -420,26 +373,24 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
           flexDirection: 'column',
           height: isMobile ? '100%' : '650px',
           maxHeight: isMobile ? '100%' : '90vh',
+          borderRadius: isMobile ? 0 : 3,
         },
       }}
     >
-      <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6">{showPreview ? 'Product Preview' : 'Add a New Product'}</Typography>
-          <IconButton edge="end" color="inherit" onClick={() => handleClose()}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
+      <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider', textAlign: 'center', pt: 3, pb: 2 }}>
+        <Typography variant="h6" component="div">{showPreview ? 'Product Preview' : 'Add New Product'}</Typography>
+        <IconButton
+          aria-label="close"
+          onClick={() => handleClose()}
+          sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
 
       <DialogContent
         ref={dialogContentRef}
-        sx={{
-          flexGrow: 1,
-          overflowY: 'auto',
-          p: isMobile ? 2 : 3,
-          minHeight: isMobile ? 'calc(100% - 112px)' : 'auto',
-        }}
+        sx={{ flexGrow: 1, overflowY: 'auto', p: isMobile ? 2 : 4, backgroundColor: showPreview ? 'grey.50' : 'transparent' }}
       >
         {apiError && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setApiError(null)}>
@@ -448,17 +399,20 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
         )}
 
         {showPreview ? (
-          <ProductPreview formData={watchedValues} images={imageFiles} categoryName={categoryName} />
+          <ProductPreview
+            formData={watchedValues}
+            images={imageFiles}
+            categoryName={categoryName}
+          />
         ) : (
           <>
-            <Stepper activeStep={activeStep} alternativeLabel={isMobile} sx={{ mb: 4 }}>
-              {steps.map((label) => (
-                <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
-                </Step>
+            <Box display="flex" justifyContent="center" mb={4} flexWrap="wrap" gap={1}>
+              {steps.map((label, index) => (
+                <Button key={label} variant={activeStep === index ? 'contained' : 'text'} /* ...styles */ >
+                  {label}
+                </Button>
               ))}
-            </Stepper>
-
+            </Box>
             <form id="add-product-form" onSubmit={handleSubmit(onSubmit)}>
               <ProductForm
                 activeStep={activeStep}
@@ -466,13 +420,11 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
                 errors={errors}
                 control={control}
                 onSkuManualEdit={handleSkuManualEdit}
-                watchedSku={watchedSku}
-                watchedStock={watchedStock}
+                watchedValues={watchedValues}
                 categoryOptions={categoryOptions}
                 images={imageFiles}
                 onImageRemove={handleImageRemove}
                 onImageDrop={handleImageDrop}
-                onAddImageUrl={handleAddImageUrl}
                 showAddCategory={showAddCategory}
                 onToggleAddCategory={() => setShowAddCategory(!showAddCategory)}
                 newCategoryName={newCategoryName}
@@ -487,27 +439,33 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
 
       <DialogActions sx={{ p: isMobile ? 2 : 3, borderTop: 1, borderColor: 'divider' }}>
         {showPreview ? (
-          <Button variant="outlined" onClick={() => setShowPreview(false)}>
-            Back to Form
-          </Button>
+          <>
+            <Button variant="outlined" onClick={() => setShowPreview(false)}>
+              Back to Edit
+            </Button>
+            <Box sx={{ flexGrow: 1 }} />
+            <Button variant="contained" type="submit" form="add-product-form" disabled={isSubmitting}>
+              {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Create Product'}
+            </Button>
+          </>
         ) : (
           <>
-            <Button disabled={activeStep === 0 || isSubmitting} onClick={handleBack}>
-              Back
+            <Button variant="text" disabled={activeStep === 0 || isSubmitting} onClick={handleBack}>
+              Previous Step
             </Button>
-            <Box sx={{ flex: '1 1 auto' }} />
+            <Box sx={{ flexGrow: 1 }} />
             {activeStep === steps.length - 1 ? (
               <>
                 <Button variant="outlined" onClick={handlePreviewClick} disabled={isSubmitting}>
                   Preview
                 </Button>
-                <Button variant="contained" color="primary" type="submit" form="add-product-form" disabled={isSubmitting}>
+                <Button variant="contained" type="submit" form="add-product-form" disabled={isSubmitting} sx={{ ml: 1 }}>
                   {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Create Product'}
                 </Button>
               </>
             ) : (
               <Button variant="contained" onClick={handleNext}>
-                Next
+                Next Step
               </Button>
             )}
           </>
