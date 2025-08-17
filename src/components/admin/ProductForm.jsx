@@ -54,9 +54,10 @@ const ProductForm = ({
 
   const renderStepContent = (step) => {
     switch (step) {
-      case 0: // Product Details
+      case 0: // Product Details (No changes)
         return (
           <Grid container spacing={3}>
+            {/* ... content for step 0 remains unchanged ... */}
             <Grid item xs={12}>
               <TextField
                 {...register('name', {
@@ -71,7 +72,6 @@ const ProductForm = ({
                 autoComplete="off"
               />
             </Grid>
-
             <Grid item xs={12}>
               <FormControl fullWidth required error={!!errors.categoryId}>
                 <InputLabel id="category-select-label">Category</InputLabel>
@@ -108,7 +108,6 @@ const ProductForm = ({
                 </Collapse>
               </Box>
             </Grid>
-
             <Grid item xs={12}>
               {(() => {
                 const skuField = register('sku', { required: 'SKU is required' });
@@ -145,7 +144,7 @@ const ProductForm = ({
           </Grid>
         );
 
-      case 1: // Images & Description
+      case 1: // Images & Description (Updated)
         return (
           <Grid container spacing={4}>
             {/* Left Column: Image Upload */}
@@ -159,12 +158,19 @@ const ProductForm = ({
                 sx={{
                   border: `2px dashed ${errors.images ? theme.palette.error.main : (isDragging ? theme.palette.primary.main : 'grey.300')}`,
                   backgroundColor: isDragging ? theme.palette.action.hover : 'grey.50',
-                  p: 3,
+                  p: 2,
                   borderRadius: 2,
                   textAlign: 'center',
-                  transition: 'background-color 0.2s ease-in-out',
-                  mb: 2,
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: 120,
+                  mb: 1
                 }}
+                onClick={() => fileInputRef.current?.click()}
               >
                 <input
                   id="file-upload-input"
@@ -175,55 +181,57 @@ const ProductForm = ({
                   onChange={handleFileSelect}
                   style={{ display: 'none' }}
                 />
-                <Box
+                 <Box
                   sx={{
-                    width: 56, height: 56, borderRadius: '50%',
+                    width: 48, height: 48, borderRadius: '50%',
                     backgroundColor: 'grey.200',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     mx: 'auto', mb: 1,
                   }}
                 >
-                  <CameraIcon sx={{ fontSize: 32, color: 'text.secondary' }} />
+                  <CameraIcon sx={{ fontSize: 28, color: 'text.secondary' }} />
                 </Box>
                 <Typography variant="body2" color="text.secondary">
                   Drag and drop images here or click to upload
                 </Typography>
               </Box>
+
               <Button
                 variant="contained"
                 fullWidth
                 onClick={() => fileInputRef.current?.click()}
-                sx={{mb: 2, textTransform: 'none', fontSize: '1rem'}}
+                sx={{mb: 2, textTransform: 'none', fontSize: '1rem', py: 1}}
               >
                 Browse Files
               </Button>
-              {errors.images && <FormHelperText error sx={{ ml: 0, mb: 1 }}>{errors.images.message}</FormHelperText>}
-              {images.length > 0 && (
-                <Box display="flex" flexWrap="wrap" gap={1.5}>
+              
+              <Grid container spacing={1.5}>
                   {images.map((image, index) => (
-                    <Box key={index} sx={{ position: 'relative', width: 80, height: 80, overflow: 'hidden', borderRadius: 1, boxShadow: 1 }}>
-                      <img
-                        src={image.preview}
-                        alt={image.file?.name || `image-${index + 1}`}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        loading="lazy"
-                      />
-                      <IconButton
-                        size="small"
-                        onClick={() => onImageRemove(index)}
-                        sx={{
-                          position: 'absolute', top: 2, right: 2,
-                          backgroundColor: 'rgba(0,0,0,0.6)', color: 'white',
-                          '&:hover': { backgroundColor: 'rgba(0,0,0,0.9)' }
-                        }}
-                        aria-label="remove image"
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
+                    <Grid item xs={6} sm={4} md={6} key={index}>
+                      <Box sx={{ position: 'relative', width: '100%', paddingTop: '100%', overflow: 'hidden', borderRadius: 2, boxShadow: 1, backgroundColor: 'grey.100' }}>
+                        <img
+                          src={image.preview}
+                          alt={image.file?.name || `image-${index + 1}`}
+                          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                          loading="lazy"
+                        />
+                        <IconButton
+                          size="small"
+                          onClick={(e) => { e.stopPropagation(); onImageRemove(index); }}
+                          sx={{
+                            position: 'absolute', top: 4, right: 4,
+                            backgroundColor: 'rgba(255,255,255,0.8)', color: 'black',
+                            '&:hover': { backgroundColor: 'white' }
+                          }}
+                          aria-label="remove image"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </Grid>
                   ))}
-                </Box>
-              )}
+              </Grid>
+              {errors.images && <FormHelperText error sx={{ mt: 1 }}>{errors.images.message}</FormHelperText>}
             </Grid>
 
             {/* Right Column: Description */}
@@ -235,14 +243,22 @@ const ProductForm = ({
                 })}
                 placeholder="Describe your product in detail, highlighting its features, benefits, and specifications."
                 multiline
-                rows={8}
+                // <<< THE FIX: Reduced rows to prevent scrolling in the modal >>>
+                rows={7}
                 fullWidth
+                variant="outlined"
                 error={!!errors.description}
                 helperText={errors.description ? errors.description.message : `${watchedDescription.length} / 500 characters`}
                 autoComplete="off"
                 sx={{
+                  height: '100%', 
                   '& .MuiOutlinedInput-root': {
+                    height: '100%',
+                    alignItems: 'flex-start',
                     backgroundColor: 'grey.50',
+                    '& fieldset': {
+                        borderColor: 'grey.300',
+                    },
                   }
                 }}
               />
@@ -250,10 +266,11 @@ const ProductForm = ({
           </Grid>
         );
 
-      case 2: // Pricing & Inventory
+      case 2: // Pricing & Inventory (No changes)
         return (
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+           {/* ... content for step 2 remains unchanged ... */}
+           <Grid item xs={12} md={6}>
               <TextField
                 {...register('price', {
                   required: 'Price is required',

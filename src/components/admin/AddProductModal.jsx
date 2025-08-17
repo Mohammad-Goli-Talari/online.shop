@@ -18,7 +18,7 @@ import {
 import { Close as CloseIcon } from '@mui/icons-material';
 
 import ProductForm from './ProductForm';
-import ProductPreview from './ProductPreview'; // Import the new component
+import ProductPreview from './ProductPreview';
 import ProductService from '../../services/productService';
 import CategoryService from '../../services/categoryService';
 
@@ -84,10 +84,10 @@ const generateSku = (text) => {
     .toUpperCase();
 };
 
-
 const steps = ['Product Details', 'Images & Description', 'Pricing & Inventory'];
 
 const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
+  // ... (all state and hooks remain unchanged)
   const [activeStep, setActiveStep] = useState(0);
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
@@ -97,7 +97,7 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [isSkuManuallyEdited, setIsSkuManuallyEdited] = useState(false);
-  const [showPreview, setShowPreview] = useState(false); // New state for preview
+  const [showPreview, setShowPreview] = useState(false);
 
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
   const dialogContentRef = useRef(null);
@@ -129,7 +129,7 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
   const watchedValues = watch();
   const watchedName = watch('name');
 
-  // ... (All useEffects and handler functions up to handleClose remain the same)
+  // ... (all handler functions and useEffects remain unchanged)
   useEffect(() => {
     if (!isSkuManuallyEdited && watchedName && watchedName.trim()) {
       const generatedSku = generateSku(watchedName);
@@ -166,7 +166,7 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
       validate: (value) => (value && value.length > 0) || 'At least one image is required.',
     });
   }, [register]);
-  
+
   const revokeIfObjectURL = (item) => {
     try {
       if (item?.file && item?.preview && item.preview.startsWith('blob:')) {
@@ -215,7 +215,7 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
     },
     [imageFiles, setValue, clearErrors, trigger]
   );
-  
+
   const handleImageRemove = (index) => {
     const toRemove = imageFiles[index];
     revokeIfObjectURL(toRemove);
@@ -234,7 +234,7 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
     setImageFiles([]);
     setApiError(null);
     setShowAddCategory(false);
-    setShowPreview(false); // Reset preview state on close
+    setShowPreview(false);
     onClose();
   };
 
@@ -263,10 +263,10 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
   };
 
   const handleBack = () => {
-    setShowPreview(false); // Go back to form if in preview
+    setShowPreview(false);
     setActiveStep((prev) => prev - 1);
   };
-  
+
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) return;
     setIsCreatingCategory(true);
@@ -286,17 +286,16 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
       setIsCreatingCategory(false);
     }
   };
-  
+
   const handleSkuManualEdit = () => {
     setIsSkuManuallyEdited(true);
   };
 
   const onSubmit = async (data) => {
-    // Final validation before submitting
     const isAllValid = await trigger();
     if (!isAllValid) {
         scrollFirstErrorIntoView();
-        setShowPreview(false); // Go back to the form to show errors
+        setShowPreview(false);
         return;
     }
     setApiError(null);
@@ -364,21 +363,22 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
       open={open}
       onClose={() => handleClose()}
       fullScreen={isMobile}
-      maxWidth="md"
+      maxWidth="sm"
       fullWidth
       scroll="paper"
       sx={{
         '& .MuiDialog-paper': {
           display: 'flex',
           flexDirection: 'column',
-          height: isMobile ? '100%' : '650px',
-          maxHeight: isMobile ? '100%' : '90vh',
-          borderRadius: isMobile ? 0 : 3,
+          height: isMobile ? '100%' : 'auto',
+          maxHeight: isMobile ? '100%' : '95vh', // Increased slightly if needed
+          borderRadius: isMobile ? 0 : 4,
+          maxWidth: isMobile ? '100%' : '700px',
         },
       }}
     >
-      <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider', textAlign: 'center', pt: 3, pb: 2 }}>
-        <Typography variant="h6" component="div">{showPreview ? 'Product Preview' : 'Add New Product'}</Typography>
+      <DialogTitle sx={{ textAlign: 'center', pt: 3, pb: 1 }}>
+        <Typography variant="h5" component="div" fontWeight="bold">{showPreview ? 'Product Preview' : 'Add New Product'}</Typography>
         <IconButton
           aria-label="close"
           onClick={() => handleClose()}
@@ -388,32 +388,52 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
         </IconButton>
       </DialogTitle>
 
-      <DialogContent
-        ref={dialogContentRef}
-        sx={{ flexGrow: 1, overflowY: 'auto', p: isMobile ? 2 : 4, backgroundColor: showPreview ? 'grey.50' : 'transparent' }}
-      >
-        {apiError && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setApiError(null)}>
-            {apiError}
-          </Alert>
-        )}
+      <form id="add-product-form" onSubmit={handleSubmit(onSubmit)}>
+        <DialogContent
+          ref={dialogContentRef}
+          sx={{
+            p: isMobile ? 2 : 4,
+            backgroundColor: showPreview ? 'grey.50' : 'transparent',
+            // <<< FIX 2: Adjusted minHeight to better fit the content without scrolling
+            minHeight: '400px',
+          }}
+        >
+          {apiError && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setApiError(null)}>
+              {apiError}
+            </Alert>
+          )}
 
-        {showPreview ? (
-          <ProductPreview
-            formData={watchedValues}
-            images={imageFiles}
-            categoryName={categoryName}
-          />
-        ) : (
-          <>
-            <Box display="flex" justifyContent="center" mb={4} flexWrap="wrap" gap={1}>
-              {steps.map((label, index) => (
-                <Button key={label} variant={activeStep === index ? 'contained' : 'text'} /* ...styles */ >
-                  {label}
-                </Button>
-              ))}
-            </Box>
-            <form id="add-product-form" onSubmit={handleSubmit(onSubmit)}>
+          {showPreview ? (
+            <ProductPreview
+              formData={watchedValues}
+              images={imageFiles}
+              categoryName={categoryName}
+            />
+          ) : (
+            <>
+              <Box display="flex" justifyContent="center" mb={4} p={0.5} sx={{ borderRadius: '25px', backgroundColor: 'grey.200', maxWidth: 500, mx: 'auto' }}>
+                {steps.map((label, index) => (
+                  <Button
+                    key={label}
+                    variant={activeStep === index ? 'contained' : 'text'}
+                    onClick={() => setActiveStep(index)}
+                    sx={{
+                      flex: 1,
+                      borderRadius: '20px',
+                      textTransform: 'none',
+                      // <<< FIX 3: Set a constant font weight to prevent height jumps
+                      fontWeight: 500,
+                      color: activeStep === index ? 'white' : 'text.secondary',
+                      boxShadow: activeStep === index ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                      '&.MuiButton-contained': { backgroundColor: 'primary.main' },
+                      '&.MuiButton-text': { backgroundColor: 'transparent' }
+                    }}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </Box>
               <ProductForm
                 activeStep={activeStep}
                 register={register}
@@ -432,45 +452,45 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
                 onCreateCategory={handleCreateCategory}
                 isCreatingCategory={isCreatingCategory}
               />
-            </form>
-          </>
-        )}
-      </DialogContent>
+            </>
+          )}
+        </DialogContent>
 
-      <DialogActions sx={{ p: isMobile ? 2 : 3, borderTop: 1, borderColor: 'divider' }}>
-        {showPreview ? (
-          <>
-            <Button variant="outlined" onClick={() => setShowPreview(false)}>
-              Back to Edit
-            </Button>
-            <Box sx={{ flexGrow: 1 }} />
-            <Button variant="contained" type="submit" form="add-product-form" disabled={isSubmitting}>
-              {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Create Product'}
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button variant="text" disabled={activeStep === 0 || isSubmitting} onClick={handleBack}>
-              Previous Step
-            </Button>
-            <Box sx={{ flexGrow: 1 }} />
-            {activeStep === steps.length - 1 ? (
-              <>
-                <Button variant="outlined" onClick={handlePreviewClick} disabled={isSubmitting}>
-                  Preview
-                </Button>
-                <Button variant="contained" type="submit" form="add-product-form" disabled={isSubmitting} sx={{ ml: 1 }}>
-                  {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Create Product'}
-                </Button>
-              </>
-            ) : (
-              <Button variant="contained" onClick={handleNext}>
-                Next Step
+        <DialogActions sx={{ p: isMobile ? 2 : 3, borderTop: 1, borderColor: 'divider' }}>
+          {showPreview ? (
+            <>
+              <Button variant="outlined" onClick={() => setShowPreview(false)}>
+                Back to Edit
               </Button>
-            )}
-          </>
-        )}
-      </DialogActions>
+              <Box sx={{ flexGrow: 1 }} />
+              <Button variant="contained" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Create Product'}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Box sx={{ flexGrow: 1 }} />
+              <Button variant="text" disabled={activeStep === 0 || isSubmitting} onClick={handleBack} sx={{mr: 1}}>
+                Previous Step
+              </Button>
+              {activeStep === steps.length - 1 ? (
+                <>
+                  <Button variant="outlined" onClick={handlePreviewClick} disabled={isSubmitting} sx={{mr: 1}}>
+                    Preview
+                  </Button>
+                  <Button variant="contained" type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Create Product'}
+                  </Button>
+                </>
+              ) : (
+                <Button variant="contained" onClick={handleNext}>
+                  Next Step
+                </Button>
+              )}
+            </>
+          )}
+        </DialogActions>
+      </form>
     </Dialog>
   );
 };
