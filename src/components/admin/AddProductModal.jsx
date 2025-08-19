@@ -394,7 +394,6 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
           sx={{
             p: isMobile ? 2 : 4,
             backgroundColor: showPreview ? 'grey.50' : 'transparent',
-            // <<< FIX 2: Adjusted minHeight to better fit the content without scrolling
             minHeight: '400px',
           }}
         >
@@ -456,14 +455,18 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
           )}
         </DialogContent>
 
-        <DialogActions sx={{ p: isMobile ? 2 : 3, borderTop: 1, borderColor: 'divider' }}>
+        <DialogActions sx={{ p: isMobile ? 2 : 3}}>
           {showPreview ? (
             <>
               <Button variant="outlined" onClick={() => setShowPreview(false)}>
                 Back to Edit
               </Button>
               <Box sx={{ flexGrow: 1 }} />
-              <Button variant="contained" type="submit" disabled={isSubmitting}>
+              <Button 
+                variant="contained" 
+                onClick={() => document.getElementById('add-product-form')?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))}
+      disabled={isSubmitting}
+              >
                 {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Create Product'}
               </Button>
             </>
