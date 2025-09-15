@@ -170,8 +170,8 @@ export const handlers = [
       );
     }
     
-    if (categoryId) {
-      products = products.filter(p => p.categoryId === parseInt(categoryId));
+    if (categoryId && categoryId !== 'all') {
+      products = products.filter(p => p.category && p.category.id === parseInt(categoryId));
     }
     
     if (minPrice) {

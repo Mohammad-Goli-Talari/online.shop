@@ -93,6 +93,81 @@ function createPagination(page = 1, limit = 10, totalItems = 100) {
 // MOCK DATA GENERATORS
 // =============================================================================
 
+// This function creates generators that depend on other data sets
+export const createDataGenerators = (categories = []) => {
+  // Categories
+  const generateCategory = () => ({
+    id: generateId('category'),
+    name: faker.commerce.department(),
+    description: faker.lorem.paragraph(),
+    slug: faker.helpers.slugify(faker.commerce.department()).toLowerCase(),
+    isActive: faker.datatype.boolean(0.9),
+    productCount: faker.number.int({ min: 0, max: 50 }),
+    createdAt: faker.date.past().toISOString(),
+    updatedAt: faker.date.recent().toISOString()
+  });
+
+  const generateCategories = (count = 8) => {
+    return Array.from({ length: count }, generateCategory);
+  };
+
+  // Products - use existing categories
+  const generateProductSummary = () => {
+    const category = randomFromArray(categories); // Use existing categories
+    return {
+      id: generateId('product'),
+      name: faker.commerce.productName(),
+      price: parseFloat(faker.commerce.price()),
+      sku: faker.string.alphanumeric(8).toUpperCase(),
+      stock: faker.number.int({ min: 0, max: 100 }),
+      images: Array.from({ length: faker.number.int({ min: 1, max: 4 }) }, (_, index) => 
+        `https://picsum.photos/400/400?random=${Date.now()}-${index}`
+      ),
+      category: {
+        id: category.id,
+        name: category.name,
+        slug: category.slug
+      }
+    };
+  };
+
+  const generateProduct = () => {
+    const summary = generateProductSummary();
+    return {
+      ...summary,
+      description: faker.lorem.paragraphs(2),
+      categoryId: summary.category.id,
+      isActive: faker.datatype.boolean(0.85),
+      createdAt: faker.date.past().toISOString(),
+      updatedAt: faker.date.recent().toISOString()
+    };
+  };
+
+  const generateProductDetail = () => {
+    const product = generateProduct();
+    return {
+      ...product,
+      relatedProducts: Array.from({ length: 4 }, generateProductSummary),
+      averageRating: parseFloat(faker.number.float({ min: 3.5, max: 5, fractionDigits: 1 }).toFixed(1)),
+      reviewCount: faker.number.int({ min: 0, max: 500 })
+    };
+  };
+
+  const generateProducts = (count = 20) => {
+    return Array.from({ length: count }, generateProduct);
+  };
+
+  return {
+    generateCategory,
+    generateCategories,
+    generateProductSummary,
+    generateProduct,
+    generateProductDetail,
+    generateProducts
+  };
+};
+
+// Legacy generators (keep for backward compatibility)
 // Categories
 export const generateCategory = () => ({
   id: generateId('category'),
@@ -109,7 +184,7 @@ export const generateCategories = (count = 8) => {
   return Array.from({ length: count }, generateCategory);
 };
 
-// Products
+// Products - legacy version (generates random categories)
 export const generateProductCategory = () => {
   const name = faker.commerce.department();
   return {
@@ -377,10 +452,15 @@ class MockDataStore {
     // Reserve ID 1 for admin by starting user counter at 2
     idCounters.user = 2;
     
-    // Generate initial data
-    this.users = [this.currentUser, ...Array.from({ length: 49 }, generateUser)];
+    // Generate categories first
     this.categories = generateCategories(12);
-    this.products = Array.from({ length: 100 }, generateProduct);
+    
+    // Create data generators that use the existing categories
+    const dataGenerators = createDataGenerators(this.categories);
+    
+    // Generate initial data with consistent categories
+    this.users = [this.currentUser, ...Array.from({ length: 49 }, generateUser)];
+    this.products = dataGenerators.generateProducts(100);
     this.orders = Array.from({ length: 200 }, generateOrder);
   }
 
