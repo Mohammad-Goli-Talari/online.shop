@@ -1,3 +1,4 @@
+// src/services/productService.js
 /**
  * Products API Service
  * Handles all product-related API calls

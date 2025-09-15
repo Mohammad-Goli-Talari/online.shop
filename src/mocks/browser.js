@@ -1,3 +1,4 @@
+// src/mocks/browser.jsx
 /**
  * MSW Browser Setup
  * Configures Mock Service Worker for the browser environment

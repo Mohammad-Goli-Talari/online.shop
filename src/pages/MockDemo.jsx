@@ -1,3 +1,4 @@
+// src/pages/MockDemo.jsx
 /**
  * Mock Demo Page
  * Demonstrates the mock API system functionality
@@ -7,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import AuthService from '../services/authService.js';
 import ProductService from '../services/productService.js';
 import CartService from '../services/cartService.js';
+
 
 const MockDemo = () => {
   const [currentUser, setCurrentUser] = useState(null);

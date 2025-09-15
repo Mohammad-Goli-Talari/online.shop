@@ -1,3 +1,4 @@
+// src/mocks/handlers/handlers.jsx
 /**
  * MSW (Mock Service Worker) Handlers
  * Intercepts API calls and returns mock data

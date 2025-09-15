@@ -1,3 +1,4 @@
+// src/config/api.js
 /**
  * API Configuration
  * Controls whether to use mock data or real API endpoints

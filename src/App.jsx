@@ -9,6 +9,7 @@ import AdminHome from './pages/admin';
 import ProductListPage from './pages/admin/products';
 import MockDemo from './pages/MockDemo';
 import Home from './pages/Home';
+import ProductDetail from './pages/ProductDetail';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
       <Route path="/admin" element={<AdminHome />} />
       <Route path="/admin/products" element={<ProductListPage />} />
       <Route path="*" element={<Navigate to="/admin" />} />
+      <Route path="/products/:id" element={<ProductDetail />} />
     </Routes>
   );
 }

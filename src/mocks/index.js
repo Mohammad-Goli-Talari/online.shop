@@ -1,3 +1,4 @@
+// src/mocks/index.jsx
 /**
  * Mock Setup and Initialization
  * Main entry point for mock system configuration

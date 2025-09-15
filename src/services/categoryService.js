@@ -1,3 +1,4 @@
+// src/services/categoryService.js
 /**
  * Categories API Service
  * Handles all category-related API calls

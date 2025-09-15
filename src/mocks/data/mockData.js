@@ -1,3 +1,4 @@
+// src/mocks/data/mockData.js
 /**
  * Mock Data Generator for Telar eCommerce Platform
  * Uses Faker.js to generate realistic test data
