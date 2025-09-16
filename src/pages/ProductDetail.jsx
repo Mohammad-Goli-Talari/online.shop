@@ -2,7 +2,6 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, Grid, Typography, Skeleton, Alert, Button, Modal, IconButton } from '@mui/material';
-import { Helmet } from 'react-helmet';
 import { Share as ShareIcon, Close as CloseIcon } from '@mui/icons-material';
 
 import useProductDetail from '../hooks/useProductDetail.js';
@@ -10,6 +9,7 @@ import Breadcrumbs from '../components/customer/Breadcrumbs.jsx';
 import ProductImageGallery from '../components/customer/ProductImageGallery.jsx';
 import ProductInfo from '../components/customer/ProductInfo.jsx';
 import ProductActions from '../components/customer/ProductActions.jsx';
+import SEOHead from '../components/common/SEOHead.jsx';
 
 // Lazy-loaded components
 const RelatedProducts = lazy(() => import('../components/customer/RelatedProducts.jsx'));
@@ -92,34 +92,32 @@ const ProductDetail = () => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 } }}>
-      <Helmet>
-        <title>{product.name} | MyShop</title>
-        <meta name="description" content={product.description?.slice(0, 160)} />
-        <meta property="og:title" content={product.name} />
-        <meta property="og:description" content={product.description?.slice(0, 160)} />
-        <meta property="og:image" content={product.images?.[0]} />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Product",
-            "name": product.name,
-            "image": product.images,
-            "description": product.description,
-            "sku": product.sku,
-            "offers": {
-              "@type": "Offer",
-              "priceCurrency": "USD",
-              "price": product.price,
-              "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
-            },
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": product.averageRating || 5,
-              "reviewCount": product.reviewCount || 0
-            }
-          })}
-        </script>
-      </Helmet>
+      <SEOHead
+        title={product?.name ? `${product.name} | MyShop` : 'Product | MyShop'}
+        description={product?.description ? product.description.slice(0, 160) : 'Product details and information'}
+        ogTitle={product?.name || 'Product'}
+        ogDescription={product?.description ? product.description.slice(0, 160) : 'Product details and information'}
+        ogImage={product?.images?.[0] || ''}
+        structuredData={product ? {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": product.name || '',
+          "image": product.images || [],
+          "description": product.description || '',
+          "sku": product.sku || '',
+          "offers": {
+            "@type": "Offer",
+            "priceCurrency": "USD",
+            "price": product.price || 0,
+            "availability": (product.stock > 0) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": product.averageRating || 5,
+            "reviewCount": product.reviewCount || 0
+          }
+        } : null}
+      />
 
       <Breadcrumbs category={product.category} productName={product.name} />
 

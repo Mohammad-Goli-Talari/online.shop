@@ -3,8 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import ProductService from '../services/productService.js';
 import CartService from '../services/cartService.js';
 import { mockDataStore } from '../mocks/data/mockData.js';
-
-const USE_MOCK = import.meta?.env?.VITE_USE_MOCK === 'true';
+import { isUsingMocks } from '../config/api.js';
 
 export function useProductDetail(rawProductId) {
   const productId = Number(rawProductId);
@@ -21,17 +20,19 @@ export function useProductDetail(rawProductId) {
     setError(null);
     try {
       let data;
-      if (USE_MOCK) {
+      if (isUsingMocks()) {
         data = mockDataStore.getProductById(productId);
         if (!data) throw new Error('Product not found');
         data.relatedProducts = data.relatedProducts || [];
       } else {
-        data = await ProductService.getProductById(productId);
+        const response = await ProductService.getProductById(productId);
+        // Handle the response structure - it might be wrapped in { product: ... }
+        data = response.product;
       }
       setProduct(data);
 
       if (data?.categoryId) {
-        const related = USE_MOCK
+        const related = isUsingMocks()
           ? mockDataStore.getProductsByCategory(data.categoryId).filter(p => p.id !== data.id)
           : await ProductService.getProducts({ categoryId: data.categoryId, limit: 4 });
         setRelatedProducts(related);
@@ -60,7 +61,7 @@ export function useProductDetail(rawProductId) {
     setCartLoading(true);
     setCartSuccess(false);
     try {
-      if (USE_MOCK) {
+      if (isUsingMocks()) {
         mockDataStore.addToCart(product.id, quantity);
       } else {
         await CartService.addToCart(product.id, quantity);

@@ -504,6 +504,10 @@ class MockDataStore {
     return this.products.find(p => p.id === id) || null;
   };
 
+  getProductsByCategory = (categoryId) => {
+    return this.products.filter(p => p.categoryId === categoryId);
+  };
+
   searchProducts = (query, filters = {}) => {
     let results = this.products.filter(p => 
       p.name.toLowerCase().includes(query.toLowerCase()) ||

@@ -23,8 +23,8 @@ function App() {
       <Route path="/auth/verify-email" element={<EmailVerificationPage />} />
       <Route path="/admin" element={<AdminHome />} />
       <Route path="/admin/products" element={<ProductListPage />} />
-      <Route path="*" element={<Navigate to="/admin" />} />
       <Route path="/products/:id" element={<ProductDetail />} />
+      <Route path="*" element={<Navigate to="/admin" />} />
     </Routes>
   );
 }

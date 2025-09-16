@@ -8,29 +8,29 @@ const ProductInfo = ({ product }) => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>{product.name}</Typography>
+      <Typography variant="h4" gutterBottom>{product.name || '-'}</Typography>
       <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-        SKU: {product.sku}
+        SKU: {product.sku || 'N/A'}
       </Typography>
       <Typography variant="h5" color="primary" gutterBottom>
-        ${product.price.toFixed(2)}
+        ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
       </Typography>
       <Typography variant="body1" sx={{ mt: 2 }}>
-        {product.description}
+        {product.description || 'No description available.'}
       </Typography>
       {product.category && (
         <Box sx={{ mt: 2 }}>
           <Chip
-            label={product.category.name}
+            label={product.category.name || '-'}
             component={RouterLink}
-            to={`/category/${product.category.slug}`}
+            to={`/category/${product.category.slug || ''}`}
             clickable
             color="secondary"
           />
         </Box>
       )}
-      <Typography sx={{ mt: 1 }} color={product.stock > 0 ? 'green' : 'error'}>
-        {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
+      <Typography sx={{ mt: 1 }} color={(product.stock || 0) > 0 ? 'green' : 'error'}>
+        {(product.stock || 0) > 0 ? 'In Stock' : 'Out of Stock'}
       </Typography>
     </Box>
   );
