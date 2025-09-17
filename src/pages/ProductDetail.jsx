@@ -119,7 +119,7 @@ const ProductDetail = () => {
         } : null}
       />
 
-      <Breadcrumbs category={product.category} productName={product.name} />
+      <Breadcrumbs product={product} loading={loading} />
 
       <Grid container spacing={4} sx={{ mt: 2 }}>
         <Grid item xs={12} md={6}>
@@ -151,7 +151,10 @@ const ProductDetail = () => {
       {/* Related Products */}
       <Box sx={{ mt: 6 }}>
         <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={200} />}>
-          <RelatedProducts products={relatedProducts || []} onQuickView={openQuickView} />
+          <RelatedProducts 
+            products={relatedProducts}
+            onAddToCart={addToCart}
+          />
         </Suspense>
       </Box>
 

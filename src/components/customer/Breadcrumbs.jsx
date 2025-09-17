@@ -1,31 +1,71 @@
 // src/components/customer/Breadcrumbs.jsx
 import React from 'react';
-import { Breadcrumbs as MUIBreadcrumbs, Link, Typography } from '@mui/material';
+import {
+  Breadcrumbs as MUIBreadcrumbs,
+  Link,
+  Typography,
+  Skeleton,
+  Box,
+} from '@mui/material';
 import { Home, ChevronRight } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
 
-const Breadcrumbs = ({ category, productName }) => {
+const Breadcrumbs = ({ product, loading }) => {
+  if (loading) {
+    return (
+      <Skeleton
+        variant="text"
+        width={250}
+        height={28}
+        sx={{ mb: { xs: 1.5, md: 2 } }}
+      />
+    );
+  }
+
+  if (!product) return null;
+
   return (
-    <MUIBreadcrumbs
-      separator={<ChevronRight fontSize="small" />}
-      aria-label="breadcrumb"
-      sx={{ mb: 2 }}
-    >
-      <Link component={RouterLink} underline="hover" color="inherit" to="/">
-        <Home fontSize="small" sx={{ mr: 0.5, mb: -0.3 }} /> Home
-      </Link>
-      {category && (
+    <Box component="nav" aria-label="breadcrumb">
+      <MUIBreadcrumbs
+        separator={<ChevronRight fontSize="small" />}
+        sx={{ mb: { xs: 2, md: 3 } }}
+      >
         <Link
           component={RouterLink}
           underline="hover"
           color="inherit"
-          to={`/category/${category.slug}`}
+          to="/"
+          sx={{ display: 'flex', alignItems: 'center' }}
         >
-          {category.name}
+          <Home fontSize="small" sx={{ mr: 0.5 }} />
+          Home
         </Link>
-      )}
-      <Typography color="text.primary">{productName}</Typography>
-    </MUIBreadcrumbs>
+
+        {product?.category && (
+          <Link
+            component={RouterLink}
+            underline="hover"
+            color="inherit"
+            to={`/categories/${product?.category?.slug || ''}`}
+          >
+            {product?.category?.name || '...'}
+          </Link>
+        )}
+
+        <Typography
+          color="text.primary"
+          aria-current="page"
+          sx={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: { xs: '120px', sm: '200px', md: '300px' },
+          }}
+        >
+          {product?.name || '...'}
+        </Typography>
+      </MUIBreadcrumbs>
+    </Box>
   );
 };
 
