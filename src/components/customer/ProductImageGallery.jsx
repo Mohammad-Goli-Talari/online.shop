@@ -1,5 +1,5 @@
 // src/components/customer/ProductImageGallery.jsx
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -9,18 +9,19 @@ import {
   Skeleton,
   Stack,
   Dialog,
-  DialogContent
+  DialogContent,
 } from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useSwipeable } from 'react-swipeable';
+import { FocusTrap } from '@mui/base';
 
-export const ProductImageGallery = ({
+const ProductImageGallery = ({
   images = [],
   productName = 'Product',
-  loading = false
+  loading = false,
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [openZoom, setOpenZoom] = useState(false);
@@ -30,26 +31,41 @@ export const ProductImageGallery = ({
     ? images[selectedIndex]
     : 'https://via.placeholder.com/600x600?text=No+Image';
 
+  const zoomRef = useRef(null);
+
+  // Swipe handlers
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => handleNext(),
     onSwipedRight: () => handlePrev(),
-    trackMouse: true
+    trackMouse: true,
   });
 
   const handleOpenZoom = (index) => {
     setSelectedIndex(index);
     setOpenZoom(true);
   };
-
   const handleCloseZoom = () => setOpenZoom(false);
 
-  const handlePrev = () => {
+  // Fix dependency: useCallback
+  const handlePrev = useCallback(() => {
     setSelectedIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-  };
+  }, [images.length]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setSelectedIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  };
+  }, [images.length]);
+
+  // Keyboard navigation inside modal
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (!openZoom) return;
+      if (e.key === 'ArrowLeft') handlePrev();
+      if (e.key === 'ArrowRight') handleNext();
+      if (e.key === 'Escape') handleCloseZoom();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [openZoom, handlePrev, handleNext]);
 
   if (loading) {
     return (
@@ -66,7 +82,7 @@ export const ProductImageGallery = ({
 
   return (
     <Box>
-      {/* Original image */}
+      {/* Main Image with Magnifier hover effect */}
       <Box sx={{ position: 'relative' }}>
         <Card sx={{ mb: 2 }}>
           <CardMedia
@@ -79,7 +95,7 @@ export const ProductImageGallery = ({
               height: { xs: 300, sm: 400 },
               objectFit: 'contain',
               transition: 'transform 0.3s ease',
-              '&:hover': { transform: { sm: 'scale(1.05)' } }
+              '&:hover': { transform: { sm: 'scale(1.1)' } },
             }}
           />
         </Card>
@@ -91,7 +107,7 @@ export const ProductImageGallery = ({
             right: 8,
             bgcolor: 'background.paper',
             boxShadow: 1,
-            '&:hover': { bgcolor: 'background.default' }
+            '&:hover': { bgcolor: 'background.default' },
           }}
           aria-label="Zoom image"
         >
@@ -118,7 +134,7 @@ export const ProductImageGallery = ({
                   borderRadius: 2,
                   overflow: 'hidden',
                   width: 70,
-                  height: 70
+                  height: 70,
                 }}
               >
                 <CardMedia
@@ -141,66 +157,69 @@ export const ProductImageGallery = ({
         fullWidth
         aria-labelledby="zoom-dialog-title"
       >
-        <DialogContent
-          sx={{ p: 1, position: 'relative', textAlign: 'center' }}
-          {...swipeHandlers}
-        >
-          {/* Close button */}
-          <IconButton
-            onClick={handleCloseZoom}
-            sx={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}
-            aria-label="Close zoom modal"
+        <FocusTrap open={openZoom}>
+          <DialogContent
+            sx={{ p: 1, position: 'relative', textAlign: 'center' }}
+            {...swipeHandlers}
+            ref={zoomRef}
           >
-            <CloseIcon />
-          </IconButton>
+            {/* Close button */}
+            <IconButton
+              onClick={handleCloseZoom}
+              sx={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}
+              aria-label="Close zoom modal"
+            >
+              <CloseIcon />
+            </IconButton>
 
-          {/* Navigation arrows */}
-          {images.length > 1 && (
-            <>
-              <IconButton
-                onClick={handlePrev}
-                sx={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: 8,
-                  transform: 'translateY(-50%)',
-                  bgcolor: 'background.paper',
-                  '&:hover': { bgcolor: 'background.default' }
-                }}
-                aria-label="Previous image"
-              >
-                <ArrowBackIosNewIcon />
-              </IconButton>
-              <IconButton
-                onClick={handleNext}
-                sx={{
-                  position: 'absolute',
-                  top: '50%',
-                  right: 8,
-                  transform: 'translateY(-50%)',
-                  bgcolor: 'background.paper',
-                  '&:hover': { bgcolor: 'background.default' }
-                }}
-                aria-label="Next image"
-              >
-                <ArrowForwardIosIcon />
-              </IconButton>
-            </>
-          )}
+            {/* Navigation arrows */}
+            {images.length > 1 && (
+              <>
+                <IconButton
+                  onClick={handlePrev}
+                  sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: 8,
+                    transform: 'translateY(-50%)',
+                    bgcolor: 'background.paper',
+                    '&:hover': { bgcolor: 'background.default' },
+                  }}
+                  aria-label="Previous image"
+                >
+                  <ArrowBackIosNewIcon />
+                </IconButton>
+                <IconButton
+                  onClick={handleNext}
+                  sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    right: 8,
+                    transform: 'translateY(-50%)',
+                    bgcolor: 'background.paper',
+                    '&:hover': { bgcolor: 'background.default' },
+                  }}
+                  aria-label="Next image"
+                >
+                  <ArrowForwardIosIcon />
+                </IconButton>
+              </>
+            )}
 
-          {/* Main zoomed image */}
-          <img
-            src={mainImage}
-            alt={`${productName} zoomed`}
-            style={{
-              width: '100%',
-              height: 'auto',
-              maxHeight: '80vh',
-              objectFit: 'contain',
-              borderRadius: 8
-            }}
-          />
-        </DialogContent>
+            {/* Main zoomed image */}
+            <img
+              src={mainImage}
+              alt={`${productName} zoomed`}
+              style={{
+                width: '100%',
+                height: 'auto',
+                maxHeight: '80vh',
+                objectFit: 'contain',
+                borderRadius: 8,
+              }}
+            />
+          </DialogContent>
+        </FocusTrap>
       </Dialog>
     </Box>
   );

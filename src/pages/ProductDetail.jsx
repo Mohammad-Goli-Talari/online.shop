@@ -1,7 +1,16 @@
 // src/pages/ProductDetail.jsx
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Grid, Typography, Skeleton, Alert, Button, Modal, IconButton } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Typography,
+  Skeleton,
+  Alert,
+  Button,
+  Modal,
+  IconButton,
+} from '@mui/material';
 import { Share as ShareIcon, Close as CloseIcon } from '@mui/icons-material';
 
 import useProductDetail from '../hooks/useProductDetail.js';
@@ -11,7 +20,6 @@ import ProductInfo from '../components/customer/ProductInfo.jsx';
 import ProductActions from '../components/customer/ProductActions.jsx';
 import SEOHead from '../components/common/SEOHead.jsx';
 
-// Lazy-loaded components
 const RelatedProducts = lazy(() => import('../components/customer/RelatedProducts.jsx'));
 const ProductReviews = lazy(() => import('../components/customer/ProductReviews.jsx'));
 
@@ -47,6 +55,7 @@ const ProductDetail = () => {
     }
   }, [product]);
 
+  // Add product to comparison
   const handleAddToComparison = () => {
     if (product && !comparisonList.find(p => p.id === product.id)) {
       setComparisonList([...comparisonList, product].slice(0, 4));
@@ -92,23 +101,24 @@ const ProductDetail = () => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 } }}>
+      {/* SEO */}
       <SEOHead
-        title={product?.name ? `${product.name} | MyShop` : 'Product | MyShop'}
-        description={product?.description ? product.description.slice(0, 160) : 'Product details and information'}
-        ogTitle={product?.name || 'Product'}
-        ogDescription={product?.description ? product.description.slice(0, 160) : 'Product details and information'}
-        ogImage={product?.images?.[0] || ''}
+        title={product.name ? `${product.name} | MyShop` : 'Product | MyShop'}
+        description={product.description ? product.description.slice(0, 160) : 'Product details and information'}
+        ogTitle={product.name || 'Product'}
+        ogDescription={product.description ? product.description.slice(0, 160) : 'Product details and information'}
+        ogImage={product.images?.[0] || ''}
         structuredData={product ? {
           "@context": "https://schema.org",
           "@type": "Product",
-          "name": product.name || '',
+          "name": product.name,
           "image": product.images || [],
-          "description": product.description || '',
-          "sku": product.sku || '',
+          "description": product.description,
+          "sku": product.sku,
           "offers": {
             "@type": "Offer",
             "priceCurrency": "USD",
-            "price": product.price || 0,
+            "price": product.price,
             "availability": (product.stock > 0) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
           },
           "aggregateRating": {
@@ -119,16 +129,21 @@ const ProductDetail = () => {
         } : null}
       />
 
+      {/* Breadcrumbs */}
       <Breadcrumbs product={product} loading={loading} />
 
       <Grid container spacing={4} sx={{ mt: 2 }}>
+        {/* Left: Product Images */}
         <Grid item xs={12} md={6}>
-          <ProductImageGallery images={product.images || []} onZoomClick={() => setZoomModalOpen(true)} />
+          <ProductImageGallery images={product.images || []} productName={product.name} />
           <Box sx={{ mt: 1 }}>
-            <Button startIcon={<ShareIcon />}>Share</Button>
+            <Button startIcon={<ShareIcon />} onClick={() => navigator.clipboard.writeText(window.location.href)}>
+              Share
+            </Button>
           </Box>
         </Grid>
 
+        {/* Right: Product Info & Actions */}
         <Grid item xs={12} md={6}>
           <ProductInfo product={product} />
           <Box sx={{ mt: 3 }}>
@@ -154,11 +169,12 @@ const ProductDetail = () => {
           <RelatedProducts 
             products={relatedProducts}
             onAddToCart={addToCart}
+            onAddToComparison={openQuickView} 
           />
         </Suspense>
       </Box>
 
-      {/* Reviews */}
+      {/* Product Reviews */}
       <Box sx={{ mt: 6 }}>
         <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={150} />}>
           <ProductReviews productId={product.id} />
@@ -167,26 +183,62 @@ const ProductDetail = () => {
 
       {/* Zoom Modal */}
       <Modal open={zoomModalOpen} onClose={() => setZoomModalOpen(false)}>
-        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'background.paper', p: 2, maxWidth: 600, outline: 'none' }}>
-          <IconButton sx={{ position: 'absolute', top: 8, right: 8 }} onClick={() => setZoomModalOpen(false)}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'background.paper',
+            p: 2,
+            maxWidth: 600,
+            outline: 'none',
+          }}
+        >
+          <IconButton
+            sx={{ position: 'absolute', top: 8, right: 8 }}
+            onClick={() => setZoomModalOpen(false)}
+          >
             <CloseIcon />
           </IconButton>
           {product.images?.map((img, idx) => (
-            <img key={idx} src={img} alt={`${product.name} ${idx + 1}`} style={{ width: '100%', marginBottom: 8 }} loading="lazy" />
+            <img
+              key={idx}
+              src={img}
+              alt={`${product.name} ${idx + 1}`}
+              style={{ width: '100%', marginBottom: 8 }}
+              loading="lazy"
+            />
           ))}
         </Box>
       </Modal>
 
       {/* Quick View Modal */}
       <Modal open={!!quickViewProduct} onClose={closeQuickView}>
-        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'background.paper', p: 2, maxWidth: 600, outline: 'none' }}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'background.paper',
+            p: 2,
+            maxWidth: 600,
+            outline: 'none',
+          }}
+        >
           <IconButton sx={{ position: 'absolute', top: 8, right: 8 }} onClick={closeQuickView}>
             <CloseIcon />
           </IconButton>
           {quickViewProduct && (
             <>
               <Typography variant="h6">{quickViewProduct.name}</Typography>
-              <img src={quickViewProduct.images?.[0]} alt={quickViewProduct.name} style={{ width: '100%', marginBottom: 8 }} loading="lazy" />
+              <img
+                src={quickViewProduct.images?.[0]}
+                alt={quickViewProduct.name}
+                style={{ width: '100%', marginBottom: 8 }}
+                loading="lazy"
+              />
               <Typography>${quickViewProduct.price}</Typography>
             </>
           )}

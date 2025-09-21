@@ -52,13 +52,22 @@ const ProductInfo = ({ product, loading }) => {
         variant="h5"
         color="primary"
         gutterBottom
-        sx={{ fontWeight: 'medium', transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.02)' } }}
+        sx={{
+          fontWeight: 'medium',
+          transition: 'transform 0.2s',
+          '&:hover': { transform: 'scale(1.02)' },
+        }}
       >
         ${typeof price === 'number' ? price.toFixed(2) : '0.00'}
       </Typography>
 
       {/* Description */}
-      <Typography variant="body1" paragraph color="text.secondary" sx={{ lineHeight: 1.6 }}>
+      <Typography
+        variant="body1"
+        paragraph
+        color="text.secondary"
+        sx={{ lineHeight: 1.6 }}
+      >
         {description}
       </Typography>
 

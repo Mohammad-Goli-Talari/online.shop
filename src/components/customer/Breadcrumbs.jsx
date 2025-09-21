@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import { Home, ChevronRight } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 
 const Breadcrumbs = ({ product, loading }) => {
   if (loading) {
@@ -24,8 +25,50 @@ const Breadcrumbs = ({ product, loading }) => {
 
   if (!product) return null;
 
+  const categories = [];
+  if (product.category) {
+    // parent categories
+    let current = product.category;
+    while (current) {
+      categories.unshift(current);
+      current = current.parent || null;
+    }
+  }
+  // JSON-LD structured data for SEO
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": `${window.location.origin}/`
+      },
+      ...categories.map((cat, idx) => ({
+        "@type": "ListItem",
+        "position": idx + 2,
+        "name": cat.name,
+        "item": `${window.location.origin}/categories/${cat.slug}`
+      })),
+      {
+        "@type": "ListItem",
+        "position": categories.length + 2,
+        "name": product.name,
+        "item": `${window.location.href}`
+      }
+    ]
+  };
+
   return (
     <Box component="nav" aria-label="breadcrumb">
+      {/* JSON-LD */}
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
+      </Helmet>
+
       <MUIBreadcrumbs
         separator={<ChevronRight fontSize="small" />}
         sx={{ mb: { xs: 2, md: 3 } }}
@@ -41,16 +84,17 @@ const Breadcrumbs = ({ product, loading }) => {
           Home
         </Link>
 
-        {product?.category && (
+        {categories.map((cat, idx) => (
           <Link
+            key={cat.slug || idx}
             component={RouterLink}
             underline="hover"
             color="inherit"
-            to={`/categories/${product?.category?.slug || ''}`}
+            to={`/categories/${cat.slug}`}
           >
-            {product?.category?.name || '...'}
+            {cat.name || '...'}
           </Link>
-        )}
+        ))}
 
         <Typography
           color="text.primary"
@@ -62,7 +106,7 @@ const Breadcrumbs = ({ product, loading }) => {
             maxWidth: { xs: '120px', sm: '200px', md: '300px' },
           }}
         >
-          {product?.name || '...'}
+          {product.name || '...'}
         </Typography>
       </MUIBreadcrumbs>
     </Box>

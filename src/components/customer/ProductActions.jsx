@@ -28,21 +28,10 @@ const ProductActions = ({
   loading = false, // skeleton loader when product data not yet available
 }) => {
   // Callbacks to avoid unnecessary re-renders
-  const handleIncrement = useCallback(() => {
-    incrementQuantity && incrementQuantity();
-  }, [incrementQuantity]);
-
-  const handleDecrement = useCallback(() => {
-    decrementQuantity && decrementQuantity();
-  }, [decrementQuantity]);
-
-  const handleAddToCart = useCallback(() => {
-    addToCart && addToCart();
-  }, [addToCart]);
-
-  const handleBuyNow = useCallback(() => {
-    buyNowHandler && buyNowHandler();
-  }, [buyNowHandler]);
+  const handleIncrement = useCallback(() => incrementQuantity?.(), [incrementQuantity]);
+  const handleDecrement = useCallback(() => decrementQuantity?.(), [decrementQuantity]);
+  const handleAddToCart = useCallback(() => addToCart?.(), [addToCart]);
+  const handleBuyNow = useCallback(() => buyNowHandler?.(), [buyNowHandler]);
 
   // Loading skeleton
   if (loading) {
