@@ -14,11 +14,17 @@ import {
 } from '@mui/material';
 import { FilterList } from '@mui/icons-material';
 
+
 import CustomerLayout from '../layouts/CustomerLayout';
 import ProductGrid from '../components/customer/ProductGrid';
 import CategoryFilter from '../components/customer/CategoryFilter';
 import CartService from '../services/cartService';
+import ShoppingCart from '../components/customer/ShoppingCart';
+import { useCart } from '../context/useCart';
+import { IconButton, Badge } from '@mui/material';
+import { ShoppingCart as ShoppingCartIcon } from '@mui/icons-material';
 import { mockDataStore } from '../mocks/data/mockData';
+
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -30,6 +36,9 @@ const Home = () => {
   const [filters, setFilters] = useState({ search: '', categoryId: null, inStock: true });
   const [isFilterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { cartItems, addToCart, removeFromCart } = useCart();
+
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -44,7 +53,13 @@ const Home = () => {
       setError(null);
 
       try {
+
         let allProducts = mockDataStore.getProducts();
+        // Remove default/mock products that are not in user_cart_ids (for cart display consistency)
+        const userCartIds = JSON.parse(window.localStorage.getItem('user_cart_ids') || '[]');
+        if (userCartIds.length > 0) {
+          allProducts = allProducts.filter(p => userCartIds.includes(p.id));
+        }
 
         if (filters.search) {
           allProducts = allProducts.filter(p =>
@@ -120,9 +135,11 @@ const Home = () => {
     if (isMobile) setFilterDrawerOpen(false);
   };
 
+
+
   const handleAddToCart = async (productId, quantity) => {
     try {
-      await CartService.addToCart(productId, quantity);
+      await addToCart(productId, quantity);
       setSnackbar({
         open: true,
         message: 'Product added to cart successfully!',
@@ -134,7 +151,18 @@ const Home = () => {
         message: err.message || 'Failed to add product to cart.',
         severity: 'error'
       });
-      console.error(err);
+    }
+  };
+
+  const handleRemoveFromCart = async (itemId) => {
+    try {
+      await removeFromCart(itemId);
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: err.message || 'Failed to remove item from cart.',
+        severity: 'error'
+      });
     }
   };
 
@@ -143,8 +171,19 @@ const Home = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
+
   return (
-    <CustomerLayout onSearch={handleSearch}>
+    <CustomerLayout
+      onSearch={handleSearch}
+      cartCount={cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0)}
+      renderCartIcon={
+        <IconButton color="inherit" aria-label="shopping cart" onClick={() => setIsCartOpen(true)}>
+          <Badge badgeContent={cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0)} color="primary">
+            <ShoppingCartIcon />
+          </Badge>
+        </IconButton>
+      }
+    >
       <Box sx={{ my: 4, textAlign: 'center' }}>
         <Typography variant="h3" gutterBottom>
           Welcome to Our Store
@@ -202,6 +241,13 @@ const Home = () => {
           )}
         </Grid>
       </Grid>
+
+      {/* Cart Drawer */}
+      <Drawer anchor="right" open={isCartOpen} onClose={() => setIsCartOpen(false)}>
+        <Box sx={{ width: { xs: 320, sm: 400 }, p: 2 }}>
+          <ShoppingCart cartItems={cartItems} removeFromCart={handleRemoveFromCart} />
+        </Box>
+      </Drawer>
 
       <Snackbar
         open={snackbar.open}

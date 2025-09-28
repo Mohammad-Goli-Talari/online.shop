@@ -10,10 +10,14 @@ import {
   Button,
   Modal,
   IconButton,
+  Snackbar,
+  Badge
 } from '@mui/material';
+import { ShoppingCart as ShoppingCartIcon } from '@mui/icons-material';
 import { Share as ShareIcon, Close as CloseIcon } from '@mui/icons-material';
 
 import useProductDetail from '../hooks/useProductDetail.js';
+import { useCart } from '../context/useCart';
 import Breadcrumbs from '../components/customer/Breadcrumbs.jsx';
 import ProductImageGallery from '../components/customer/ProductImageGallery.jsx';
 import ProductInfo from '../components/customer/ProductInfo.jsx';
@@ -27,6 +31,7 @@ const ProductDetail = () => {
   const { id: rawId } = useParams();
   const id = Number(rawId);
 
+
   const {
     product,
     relatedProducts,
@@ -37,8 +42,39 @@ const ProductDetail = () => {
     cartSuccess,
     incrementQuantity,
     decrementQuantity,
-    addToCart
+    addToCart: addToCartLocal
   } = useProductDetail(id);
+
+  // Cart context
+  const { addToCart, cartItems: globalCartItems } = useCart();
+
+  // Only show user-added items in cart (for badge and floating cart)
+  const [cartItems, setCartItems] = useState([]);
+  useEffect(() => {
+    const userCartIds = JSON.parse(window.localStorage.getItem('user_cart_ids') || '[]');
+    setCartItems(globalCartItems.filter(item => userCartIds.includes(item.id)));
+  }, [globalCartItems]);
+
+  // Snackbar state for feedback (single, like Home.jsx)
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  // Wrapper to update both local and global cart (single snackbar)
+  const handleAddToCart = async () => {
+    try {
+      await addToCartLocal();
+      if (product && quantity) {
+        await addToCart(product.id, quantity);
+        setSnackbar({ open: true, message: 'Product added to cart successfully!', severity: 'success' });
+      }
+    } catch (err) {
+      setSnackbar({ open: true, message: err?.message || 'Failed to add product to cart.', severity: 'error' });
+    }
+  };
+
+  const closeSnackbar = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
 
   const [zoomModalOpen, setZoomModalOpen] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
@@ -100,7 +136,32 @@ const ProductDetail = () => {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 } }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, position: 'relative' }}>
+      {/* Floating Cart Icon */}
+      <Box sx={{ position: 'fixed', bottom: 32, right: 32, zIndex: 1200 }}>
+        <IconButton color="primary" size="large" href="/" aria-label="View cart">
+          <Badge badgeContent={cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0)} color="secondary">
+            <ShoppingCartIcon fontSize="large" />
+          </Badge>
+        </IconButton>
+      </Box>
+
+      {/* Snackbar for feedback */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={closeSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={closeSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
       {/* SEO */}
       <SEOHead
         title={product.name ? `${product.name} | MyShop` : 'Product | MyShop'}
@@ -151,7 +212,7 @@ const ProductDetail = () => {
               quantity={quantity}
               incrementQuantity={incrementQuantity}
               decrementQuantity={decrementQuantity}
-              addToCart={addToCart}
+              addToCart={handleAddToCart}
               cartLoading={cartLoading}
               cartSuccess={cartSuccess}
               stock={product.stock}
@@ -168,7 +229,7 @@ const ProductDetail = () => {
         <Suspense fallback={<Skeleton variant="rectangular" width="100%" height={200} />}>
           <RelatedProducts 
             products={relatedProducts}
-            onAddToCart={addToCart}
+            onAddToCart={handleAddToCart}
             onAddToComparison={openQuickView} 
           />
         </Suspense>

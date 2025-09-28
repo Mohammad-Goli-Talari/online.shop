@@ -3,7 +3,8 @@
 // Props:
 //   - product: Product object (see API schema)
 //   - onAddToCart: function(productId, quantity)
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import {
   Card,
@@ -23,36 +24,22 @@ const formatCurrency = price =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price || 0);
 
 const ProductCard = ({ product, onAddToCart }) => {
-  const [isAdding, setIsAdding] = useState(false);
-  const [error, setError] = useState(null);
-  const [showSnackbar, setShowSnackbar] = useState(false);
-  const [snackbarMsg, setSnackbarMsg] = useState('');
+  const navigate = useNavigate();
 
-  const handleAddToCartClick = async () => {
-    if (!product?.id || isAdding) return;
-    setIsAdding(true);
-    setError(null);
-    setSnackbarMsg('');
-    try {
-      await onAddToCart(product.id, 1);
-      setSnackbarMsg('Added to cart!');
-      setShowSnackbar(true);
-    } catch (err) {
-      setError(err.message || 'Failed to add product to cart.');
-      setSnackbarMsg('Failed to add product to cart.');
-      setShowSnackbar(true);
-    } finally {
-      setIsAdding(false);
+  const handleCardClick = (event) => {
+    // Prevent navigation if the click originated from the add-to-cart button
+    if (event.target.closest('.add-to-cart-btn')) return;
+    if (product?.id) {
+      navigate(`/products/${product.id}`);
     }
   };
 
-  // Auto-dismiss error after 3 seconds
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => setError(null), 3000);
-      return () => clearTimeout(timer);
+  const handleAddToCart = (event) => {
+    event.stopPropagation();
+    if (onAddToCart && product?.id) {
+      onAddToCart(product.id, 1);
     }
-  }, [error]);
+  };
 
   const hasStock = product?.stock > 0;
   const productName = product?.name || 'Unnamed Product';
@@ -78,9 +65,11 @@ const ProductCard = ({ product, onAddToCart }) => {
         height: '100%',
         minHeight: 370,
         transition: 'box-shadow 0.3s',
-        '&:hover': { boxShadow: 6 },
+        '&:hover': { boxShadow: 6, cursor: 'pointer' },
       }}
       aria-label={`Product: ${productName}`}
+      onClick={handleCardClick}
+      tabIndex={0}
     >
       <Box sx={{ position: 'relative' }}>
         <CardMedia
@@ -141,40 +130,22 @@ const ProductCard = ({ product, onAddToCart }) => {
         </Box>
       </CardContent>
 
-      <CardActions sx={{ justifyContent: 'center', p: 2 }}>
+      <CardActions sx={{ justifyContent: 'center', px: 2, pb: 2 }}>
         <Button
+          className="add-to-cart-btn"
           variant="contained"
-          startIcon={
-            isAdding ? <CircularProgress size={20} color="inherit" /> : <AddShoppingCart />
-          }
-          onClick={handleAddToCartClick}
-          disabled={!hasStock || isAdding}
-          aria-label={`Add ${productName} to cart`}
+          color="primary"
+          size="medium"
+          startIcon={<AddShoppingCart />}
+          onClick={handleAddToCart}
+          disabled={!hasStock}
+          aria-label="Add to cart"
           fullWidth
+          sx={{ maxWidth: '100%', fontWeight: 'bold', fontSize: '1rem' }}
         >
-          {isAdding ? 'Adding...' : 'Add to Cart'}
+          Add to Cart
         </Button>
       </CardActions>
-
-      {error && (
-        <Typography
-          variant="body2"
-          color="error"
-          textAlign="center"
-          sx={{ px: 2, pb: 1 }}
-          role="alert"
-        >
-          {error}
-        </Typography>
-      )}
-
-      <Snackbar
-        open={showSnackbar}
-        autoHideDuration={2500}
-        onClose={() => setShowSnackbar(false)}
-        message={snackbarMsg}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      />
     </Card>
   );
 };
@@ -194,7 +165,7 @@ ProductCard.propTypes = {
       PropTypes.shape({ name: PropTypes.string })
     ]),
   }).isRequired,
-  onAddToCart: PropTypes.func.isRequired,
+  onAddToCart: PropTypes.func,
 };
 
 export default ProductCard;

@@ -2,8 +2,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+
 import App from './App';
 import { initializeMockSystem } from './mocks/index.js';
+import { CartProvider } from './context/CartContext.jsx';
 
 // Initialize mock system before rendering the app
 const startApp = async () => {
@@ -14,7 +16,9 @@ const startApp = async () => {
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
       <BrowserRouter>
-        <App />
+        <CartProvider>
+          <App />
+        </CartProvider>
       </BrowserRouter>
     </React.StrictMode>
   );

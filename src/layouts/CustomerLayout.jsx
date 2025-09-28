@@ -12,7 +12,7 @@ import SearchBar from '../components/customer/SearchBar';
  * @param {React.ReactNode} props.children - The main content to be rendered within the layout.
  * @param {Function} props.onSearch - The function to handle search queries from the SearchBar.
  */
-const CustomerLayout = ({ children, onSearch, cartCount }) => {
+const CustomerLayout = ({ children, onSearch, cartCount, renderCartIcon }) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Skip to content link for accessibility */}
@@ -29,11 +29,13 @@ const CustomerLayout = ({ children, onSearch, cartCount }) => {
             <Box sx={{ display: { xs: 'none', md: 'block' }, flexGrow: 2, mx: 2 }}>
               <SearchBar onSearch={onSearch} />
             </Box>
-            <IconButton color="inherit" aria-label="shopping cart">
-              <Badge badgeContent={cartCount || 0} color="primary" aria-label="cart items">
-                <ShoppingCart />
-              </Badge>
-            </IconButton>
+            {renderCartIcon ? renderCartIcon : (
+              <IconButton color="inherit" aria-label="shopping cart">
+                <Badge badgeContent={cartCount || 0} color="primary" aria-label="cart items">
+                  <ShoppingCart />
+                </Badge>
+              </IconButton>
+            )}
           </Toolbar>
           <Box sx={{ display: { xs: 'block', md: 'none' }, p: 1 }}>
             <SearchBar onSearch={onSearch} />
@@ -66,14 +68,17 @@ const CustomerLayout = ({ children, onSearch, cartCount }) => {
   );
 };
 
+
 CustomerLayout.propTypes = {
   children: PropTypes.node.isRequired,
   onSearch: PropTypes.func.isRequired,
   cartCount: PropTypes.number,
+  renderCartIcon: PropTypes.node,
 };
 
 CustomerLayout.defaultProps = {
   cartCount: 0,
+  renderCartIcon: null,
 };
 
 export default CustomerLayout;
