@@ -10,21 +10,18 @@ import {
   useTheme,
   useMediaQuery,
   Snackbar,
-  Alert
+  Alert,
+  IconButton,
+  Badge
 } from '@mui/material';
-import { FilterList } from '@mui/icons-material';
-
+import { FilterList, ShoppingCart as ShoppingCartIcon } from '@mui/icons-material';
 
 import CustomerLayout from '../layouts/CustomerLayout';
 import ProductGrid from '../components/customer/ProductGrid';
 import CategoryFilter from '../components/customer/CategoryFilter';
-import CartService from '../services/cartService';
 import ShoppingCart from '../components/customer/ShoppingCart';
 import { useCart } from '../context/useCart';
-import { IconButton, Badge } from '@mui/material';
-import { ShoppingCart as ShoppingCartIcon } from '@mui/icons-material';
 import { mockDataStore } from '../mocks/data/mockData';
-
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -37,29 +34,23 @@ const Home = () => {
   const [isFilterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const { cartItems, addToCart, removeFromCart } = useCart();
 
+  const { cartItems, addToCart, updateQuantity, removeFromCart, clearCart } = useCart();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const observer = useRef();
 
+  // ----------------- FETCH PRODUCTS -----------------
   useEffect(() => {
     let isMounted = true;
-
     const fetchProducts = () => {
       if (page === 1) setLoading(true);
       else setIsPaginating(true);
       setError(null);
 
       try {
-
         let allProducts = mockDataStore.getProducts();
-        // Remove default/mock products that are not in user_cart_ids (for cart display consistency)
-        const userCartIds = JSON.parse(window.localStorage.getItem('user_cart_ids') || '[]');
-        if (userCartIds.length > 0) {
-          allProducts = allProducts.filter(p => userCartIds.includes(p.id));
-        }
 
         if (filters.search) {
           allProducts = allProducts.filter(p =>
@@ -69,11 +60,7 @@ const Home = () => {
         if (filters.categoryId) {
           allProducts = allProducts.filter(p => {
             const prodCatId =
-              p.categoryId ??
-              p.category_id ??
-              p.catId ??
-              p.category?.id ??
-              p.category;
+              p.categoryId ?? p.category_id ?? p.catId ?? p.category?.id ?? p.category;
             return String(prodCatId) === String(filters.categoryId);
           });
         }
@@ -86,10 +73,7 @@ const Home = () => {
         const paginatedItems = allProducts.slice(startIndex, startIndex + itemsPerPage);
 
         if (!isMounted) return;
-
-        setProducts(prev =>
-          page === 1 ? paginatedItems : [...prev, ...paginatedItems]
-        );
+        setProducts(prev => page === 1 ? paginatedItems : [...prev, ...paginatedItems]);
         setHasMore(startIndex + itemsPerPage < allProducts.length);
       } catch (err) {
         if (!isMounted) return;
@@ -126,43 +110,20 @@ const Home = () => {
     [loading, isPaginating, hasMore]
   );
 
-  const handleSearch = searchQuery => {
-    setFilters(prev => ({ ...prev, search: searchQuery }));
-  };
-
+  // ----------------- FILTER HANDLERS -----------------
+  const handleSearch = searchQuery => setFilters(prev => ({ ...prev, search: searchQuery }));
   const handleCategorySelect = categoryId => {
     setFilters(prev => ({ ...prev, categoryId }));
     if (isMobile) setFilterDrawerOpen(false);
   };
 
-
-
-  const handleAddToCart = async (productId, quantity) => {
+  // ----------------- CART HANDLERS -----------------
+  const handleAddToCart = async (productId, quantity = 1) => {
     try {
       await addToCart(productId, quantity);
-      setSnackbar({
-        open: true,
-        message: 'Product added to cart successfully!',
-        severity: 'success'
-      });
+      setSnackbar({ open: true, message: 'Product added to cart!', severity: 'success' });
     } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.message || 'Failed to add product to cart.',
-        severity: 'error'
-      });
-    }
-  };
-
-  const handleRemoveFromCart = async (itemId) => {
-    try {
-      await removeFromCart(itemId);
-    } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.message || 'Failed to remove item from cart.',
-        severity: 'error'
-      });
+      setSnackbar({ open: true, message: err.message || 'Failed to add product.', severity: 'error' });
     }
   };
 
@@ -171,13 +132,13 @@ const Home = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-
+  // ----------------- RENDER -----------------
   return (
     <CustomerLayout
       onSearch={handleSearch}
       cartCount={cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0)}
       renderCartIcon={
-        <IconButton color="inherit" aria-label="shopping cart" onClick={() => setIsCartOpen(true)}>
+        <IconButton color="inherit" onClick={() => setIsCartOpen(true)}>
           <Badge badgeContent={cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0)} color="primary">
             <ShoppingCartIcon />
           </Badge>
@@ -185,28 +146,15 @@ const Home = () => {
       }
     >
       <Box sx={{ my: 4, textAlign: 'center' }}>
-        <Typography variant="h3" gutterBottom>
-          Welcome to Our Store
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          Discover our exclusive collection of products.
-        </Typography>
+        <Typography variant="h3" gutterBottom>Welcome to Our Store</Typography>
+        <Typography variant="h6" color="text.secondary">Discover our exclusive collection of products.</Typography>
       </Box>
 
       <Grid container spacing={4}>
         {isMobile ? (
           <Grid item xs={12}>
-            <Button
-              startIcon={<FilterList />}
-              onClick={() => setFilterDrawerOpen(true)}
-            >
-              Filters
-            </Button>
-            <Drawer
-              anchor="left"
-              open={isFilterDrawerOpen}
-              onClose={() => setFilterDrawerOpen(false)}
-            >
+            <Button startIcon={<FilterList />} onClick={() => setFilterDrawerOpen(true)}>Filters</Button>
+            <Drawer anchor="left" open={isFilterDrawerOpen} onClose={() => setFilterDrawerOpen(false)}>
               <Box sx={{ width: 250, p: 2 }}>
                 <CategoryFilter onCategorySelect={handleCategorySelect} />
               </Box>
@@ -227,25 +175,20 @@ const Home = () => {
             selectedCategoryId={filters.categoryId}
           />
           <div ref={lastProductElementRef} />
-          {isPaginating && (
-            <Box display="flex" justifyContent="center" my={4}>
-              <CircularProgress />
-            </Box>
-          )}
-          {!hasMore && products.length > 0 && (
-            <Box textAlign="center" my={4}>
-              <Typography color="text.secondary">
-                You've reached the end!
-              </Typography>
-            </Box>
-          )}
+          {isPaginating && <Box display="flex" justifyContent="center" my={4}><CircularProgress /></Box>}
+          {!hasMore && products.length > 0 && <Box textAlign="center" my={4}><Typography color="text.secondary">You've reached the end!</Typography></Box>}
         </Grid>
       </Grid>
 
       {/* Cart Drawer */}
       <Drawer anchor="right" open={isCartOpen} onClose={() => setIsCartOpen(false)}>
         <Box sx={{ width: { xs: 320, sm: 400 }, p: 2 }}>
-          <ShoppingCart cartItems={cartItems} removeFromCart={handleRemoveFromCart} />
+          <ShoppingCart
+            cartItems={cartItems}
+            removeFromCart={removeFromCart}
+            updateQuantity={updateQuantity}
+            clearCart={clearCart}
+          />
         </Box>
       </Drawer>
 
@@ -255,12 +198,7 @@ const Home = () => {
         onClose={closeSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert
-          onClose={closeSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-          variant="filled"
-        >
+        <Alert onClose={closeSnackbar} severity={snackbar.severity} sx={{ width: '100%' }} variant="filled">
           {snackbar.message}
         </Alert>
       </Snackbar>
