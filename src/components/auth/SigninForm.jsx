@@ -11,8 +11,7 @@ import {
   TextField,
   Typography,
   Alert,
-  useTheme,
-  useMediaQuery,
+  
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -50,8 +49,7 @@ const SigninForm = () => {
 
   const navigate = useNavigate();
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  // theme left for potential responsive tweaks
 
   const onSubmit = async (formData) => {
     try {

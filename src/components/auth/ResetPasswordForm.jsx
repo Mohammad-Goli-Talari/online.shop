@@ -75,7 +75,8 @@ const ResetPasswordForm = () => {
       setTimeout(() => {
         navigate('/auth/sign-in');
       }, 2000);
-    } catch (err) {
+    } catch (e) {
+      console.error('ResetPassword error', e);
       setSnackbar({
         open: true,
         message: 'Something went wrong!',

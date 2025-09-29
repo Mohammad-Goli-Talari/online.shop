@@ -69,6 +69,7 @@ export function CartProvider({ children }) {
       const res = await CartService.getCart();
       const items = res?.cart?.items || res?.items || [];
       setCartItems(filterValidCartItems(items));
+      // no product-detail special tracking anymore; keep server cart as authoritative
     } catch (err) {
       // revert optimistic change by removing temp entries for this product
       setCartItems(prev => prev.filter(it => it && it.productId !== productId));
@@ -78,6 +79,9 @@ export function CartProvider({ children }) {
       setLoading(false);
     }
   };
+
+  // Remove items that were added from product detail (called by Home on entry)
+    // Note: removed ProductDetail-specific removal logic to keep cart persistent across pages
 
   const updateQuantity = async (cartItemId, quantity) => {
     if (quantity <= 0) return removeFromCart(cartItemId);
@@ -166,7 +170,7 @@ export function CartProvider({ children }) {
         updateQuantity,
         removeFromCart,
         clearCart,
-        fetchCart,
+        fetchCart
       }}
     >
       {children}

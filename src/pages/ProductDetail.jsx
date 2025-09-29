@@ -11,13 +11,16 @@ import {
   Modal,
   IconButton,
   Snackbar,
-  Badge
+  Badge,
+  Drawer
 } from '@mui/material';
 import { ShoppingCart as ShoppingCartIcon } from '@mui/icons-material';
 import { Share as ShareIcon, Close as CloseIcon } from '@mui/icons-material';
 
 import useProductDetail from '../hooks/useProductDetail.js';
 import { useCart } from '../context/useCart';
+import CustomerLayout from '../layouts/CustomerLayout';
+import ShoppingCart from '../components/customer/ShoppingCart';
 import Breadcrumbs from '../components/customer/Breadcrumbs.jsx';
 import ProductImageGallery from '../components/customer/ProductImageGallery.jsx';
 import ProductInfo from '../components/customer/ProductInfo.jsx';
@@ -42,18 +45,13 @@ const ProductDetail = () => {
     cartSuccess,
     incrementQuantity,
     decrementQuantity,
-    addToCart: addToCartLocal
+  // addToCart provided by useProductDetail is not used; prefer global addToCart from context
   } = useProductDetail(id);
 
-  // Cart context
-  const { addToCart, cartItems: globalCartItems } = useCart();
+  // Cart context - use the same cartItems and actions as the rest of the app so counts and contents match Home
+  const { addToCart, cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
 
-  // Only show user-added items in cart (for badge and floating cart)
-  const [cartItems, setCartItems] = useState([]);
-  useEffect(() => {
-    const userCartIds = JSON.parse(window.localStorage.getItem('user_cart_ids') || '[]');
-    setCartItems(globalCartItems.filter(item => userCartIds.includes(item.id)));
-  }, [globalCartItems]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Snackbar state for feedback (single, like Home.jsx)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -61,7 +59,7 @@ const ProductDetail = () => {
   // Wrapper to update both local and global cart (single snackbar)
   const handleAddToCart = async () => {
     try {
-      await addToCartLocal();
+      // Use the global cart add so we don't duplicate calls (hook also talks to mock/service)
       if (product && quantity) {
         await addToCart(product.id, quantity);
         setSnackbar({ open: true, message: 'Product added to cart successfully!', severity: 'success' });
@@ -136,15 +134,27 @@ const ProductDetail = () => {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, position: 'relative' }}>
-      {/* Floating Cart Icon */}
-      <Box sx={{ position: 'fixed', bottom: 32, right: 32, zIndex: 1200 }}>
-        <IconButton color="primary" size="large" href="/" aria-label="View cart">
-          <Badge badgeContent={cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0)} color="secondary">
-            <ShoppingCartIcon fontSize="large" />
+    <CustomerLayout
+      onSearch={() => {}}
+      renderCartIcon={
+        <IconButton color="inherit" onClick={() => setIsCartOpen(true)}>
+          <Badge badgeContent={cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0)} color="primary">
+            <ShoppingCartIcon />
           </Badge>
         </IconButton>
-      </Box>
+      }
+    >
+      <Box sx={{ p: { xs: 2, md: 4 }, position: 'relative' }}>
+        <Drawer anchor="right" open={isCartOpen} onClose={() => setIsCartOpen(false)}>
+          <Box sx={{ width: { xs: 320, sm: 400 }, p: 2 }}>
+            <ShoppingCart
+              cartItems={cartItems}
+              removeFromCart={removeFromCart}
+              updateQuantity={updateQuantity}
+              clearCart={clearCart}
+            />
+          </Box>
+        </Drawer>
 
       {/* Snackbar for feedback */}
       <Snackbar
@@ -336,7 +346,8 @@ const ProductDetail = () => {
           </Grid>
         </Box>
       )}
-    </Box>
+      </Box>
+    </CustomerLayout>
   );
 };
 

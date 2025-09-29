@@ -49,7 +49,8 @@ const ForgotPasswordForm = () => {
       setTimeout(() => {
         navigate('/reset-password?token=demo-token');
       }, 1800);
-    } catch (err) {
+    } catch (e) {
+      console.error('ForgotPassword error', e);
       setSnackbarMessage('Something went wrong. Please try again.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
