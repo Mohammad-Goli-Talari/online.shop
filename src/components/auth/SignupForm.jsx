@@ -1,4 +1,3 @@
-// src/components/auth/SignupForm.jsx
 import React, { useState } from 'react';
 import {
   Box,
@@ -20,6 +19,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import useAuth from '../../hooks/useAuth';
 
 const schema = yup.object().shape({
   firstName: yup.string().required('First name is required'),
@@ -39,7 +39,6 @@ const calculatePasswordStrength = (password) => {
 };
 
 const SignupForm = () => {
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -60,28 +59,44 @@ const SignupForm = () => {
   });
 
   const navigate = useNavigate();
+  const { register: registerUser, loading, error, clearError } = useAuth();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  React.useEffect(() => {
+    if (error) {
+      clearError();
+    }
+  }, [error, clearError]);
+
   const onSubmit = async (data) => {
     try {
-      setLoading(true);
-      console.log('Form Submitted:', data);
-      await new Promise((res) => setTimeout(res, 1500));
-      setSnackbarSeverity('success');
-      setSnackbarMessage('Account created successfully!');
-      setSnackbarOpen(true);
-      reset();
-      setPasswordValue('');
-      localStorage.setItem('signupEmail', data.email);
-      setTimeout(() => navigate('/auth/verify-email'), 1000);
-    } catch {
+      const result = await registerUser(data);
+      
+      if (result.success) {
+        setSnackbarSeverity('success');
+        setSnackbarMessage('Account created successfully!');
+        setSnackbarOpen(true);
+        reset();
+        setPasswordValue('');
+        
+        if (result.user) {
+          const redirectPath = result.user.role === 'ADMIN' ? '/admin' : '/';
+          setTimeout(() => navigate(redirectPath), 1000);
+        } else {
+          localStorage.setItem('signupEmail', data.email);
+          setTimeout(() => navigate('/auth/verify-email'), 1000);
+        }
+      } else {
+        setSnackbarSeverity('error');
+        setSnackbarMessage(result.error || 'Registration failed!');
+        setSnackbarOpen(true);
+      }
+    } catch (err) {
       setSnackbarSeverity('error');
-      setSnackbarMessage('Something went wrong!');
+      setSnackbarMessage(err.message || 'Something went wrong!');
       setSnackbarOpen(true);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -114,6 +129,12 @@ const SignupForm = () => {
             </Link>
           </Typography>
         </Box>
+
+        {error && (
+          <Alert severity="error" onClose={clearError}>
+            {error}
+          </Alert>
+        )}
 
         <Box
           sx={{

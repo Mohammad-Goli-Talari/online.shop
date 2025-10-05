@@ -1,4 +1,3 @@
-// src/components/admin/ProductForm.jsx
 import React, { useRef } from 'react';
 import {
   Grid, TextField, FormControl, InputLabel, Select, FormControlLabel,
@@ -55,7 +54,7 @@ const ProductForm = ({
 
   const renderStepContent = (step) => {
     switch (step) {
-      case 0: // Product Details
+      case 0:
         return (
           <Grid container spacing={3}>
             <Grid item xs={12} md={6} sx={{ flexGrow: isMobile ? 0.61 : 1 }}>
@@ -141,14 +140,12 @@ const ProductForm = ({
                 label="Set product as active on creation"
               />
             </Grid>
-            {/* END OF CHANGES */}
           </Grid>
         );
 
-      case 1: // Images & Description
+      case 1:
         return (
           <Grid container spacing={3}>
-            {/* Left Column: Image Upload */}
             <Grid item xs={12} md={6} sx={{ flexGrow: isMobile ? 1 : 0 }}>
               <Box sx={{ width: '100%' }}>
                 <Typography variant="h6" gutterBottom>Upload Product Images</Typography>
@@ -217,7 +214,7 @@ const ProductForm = ({
                         try {
                           previewUrl = URL.createObjectURL(image.file);
                         } catch {
-                          previewUrl = 'https://via.placeholder.com/300x300.png?text=No+Preview';
+                          previewUrl = 'https://placehold.co/300x300/4F46E5/FFFFFF?text=No+Preview';
                         }
                       }
                       return (
@@ -257,7 +254,6 @@ const ProductForm = ({
               </Box>
             </Grid>
 
-            {/* Right Column: Description */}
             <Grid item xs={12} md={6} flexGrow={1}>
               <Box sx={{ width: '100%' }}>
                 <Typography variant="h6" gutterBottom>Product Description</Typography>
@@ -278,7 +274,7 @@ const ProductForm = ({
           </Grid>
         );
 
-      case 2: // Pricing & Inventory (NO CHANGES NEEDED, ALREADY CORRECT)
+      case 2:
         return (
           <Grid container spacing={3}>
             <Grid item xs={12} md={6} flexGrow={0.5}>

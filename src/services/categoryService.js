@@ -1,13 +1,6 @@
-// src/services/categoryService.js
-/**
- * Categories API Service
- * Handles all category-related API calls
- */
-
 import { apiClient, handleApiResponse } from '../utils/apiClient.js';
 
 export class CategoryService {
-  // Get all categories
   static async getCategories() {
     try {
       const response = await apiClient.get('/categories');
@@ -18,7 +11,6 @@ export class CategoryService {
     }
   }
 
-  // Get category by ID
   static async getCategoryById(id) {
     try {
       const response = await apiClient.get(`/categories/${id}`);
@@ -29,7 +21,6 @@ export class CategoryService {
     }
   }
 
-  // Get products by category
   static async getProductsByCategory(id, options = {}) {
     try {
       const params = {
@@ -47,7 +38,6 @@ export class CategoryService {
     }
   }
 
-  // Admin: Create category
   static async createCategory(categoryData) {
     try {
       const response = await apiClient.post('/categories', categoryData);
@@ -58,7 +48,6 @@ export class CategoryService {
     }
   }
 
-  // Admin: Update category
   static async updateCategory(id, categoryData) {
     try {
       const response = await apiClient.put(`/categories/${id}`, categoryData);
@@ -69,7 +58,6 @@ export class CategoryService {
     }
   }
 
-  // Admin: Delete category
   static async deleteCategory(id) {
     try {
       const response = await apiClient.delete(`/categories/${id}`);

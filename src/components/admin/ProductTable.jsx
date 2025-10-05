@@ -1,4 +1,3 @@
-// src/components/admin/ProductTable.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Table,
@@ -17,7 +16,10 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
+import { Inventory2Outlined } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { getProductImage } from '../../utils/fallbackImages.js';
+import EmptyState from '../common/EmptyState';
 
 const ProductTable = ({
   products,
@@ -32,6 +34,7 @@ const ProductTable = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const tableRef = useRef(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [imageErrors, setImageErrors] = useState(new Set());
 
   const handleScroll = useCallback(async () => {
     if (!tableRef.current || !hasMore || loading || isLoadingMore) return;
@@ -75,8 +78,19 @@ const ProductTable = ({
     }
   };
 
-  const getProductImage = (images) => {
-    return images && images.length > 0 ? images[0] : null;
+  const getProductImageSrc = (product) => {
+    const originalImage = product.images && product.images.length > 0 ? product.images[0] : null;
+    return getProductImage(originalImage, product.category, product.id, 48, 48);
+  };
+
+  const handleImageError = (e, product) => {
+    const productId = product?.id || product?._id;
+    if (productId && !imageErrors.has(productId)) {
+      setImageErrors(prev => new Set([...prev, productId]));
+      // Force fallback image by passing null as original image
+      const fallbackUrl = getProductImage(null, product.category, productId, 48, 48);
+      e.target.src = fallbackUrl;
+    }
   };
 
   if (error) {
@@ -121,14 +135,30 @@ const ProductTable = ({
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Avatar
-                    src={getProductImage(product.images)}
-                    variant="square"
+                  <Box
                     sx={{
                       width: isMobile ? 32 : 48,
                       height: isMobile ? 32 : 48,
+                      borderRadius: 1,
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: 'grey.100',
                     }}
-                  />
+                  >
+                    <img
+                      src={getProductImageSrc(product)}
+                      alt={product.name || 'Product'}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                      onError={(e) => handleImageError(e, product)}
+                      loading="lazy"
+                    />
+                  </Box>
                 </TableCell>
                 <TableCell>
                   <Box>
@@ -241,10 +271,13 @@ const ProductTable = ({
             )}
             {!loading && products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
-                  <Typography variant="body1" color="text.secondary">
-                    No products found
-                  </Typography>
+                <TableCell colSpan={10} align="center" sx={{ py: 2 }}>
+                  <EmptyState 
+                    icon={Inventory2Outlined}
+                    title="No products found"
+                    description="Start by adding your first product to the inventory"
+                    variant="compact"
+                  />
                 </TableCell>
               </TableRow>
             )}

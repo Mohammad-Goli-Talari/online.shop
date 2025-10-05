@@ -1,6 +1,6 @@
-// src/components/customer/ProductActions.jsx
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
   Button, 
@@ -12,6 +12,9 @@ import {
   Alert 
 } from '@mui/material';
 import { Add, Remove, ShoppingCart } from '@mui/icons-material';
+import useAuth from '../../hooks/useAuth';
+import LoginRequiredDialog from '../common/LoginRequiredDialog';
+import { checkAuthenticationForAction } from '../../utils/authUtils';
 
 const ProductActions = ({
   quantity,
@@ -24,16 +27,60 @@ const ProductActions = ({
   snackbarMessage = '',
   snackbarSeverity = 'success',
   onCloseSnackbar = () => {},
-  buyNowHandler = null, // optional future feature
-  loading = false, // skeleton loader when product data not yet available
+  buyNowHandler = null,
+  loading = false,
 }) => {
-  // Callbacks to avoid unnecessary re-renders
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  
   const handleIncrement = useCallback(() => incrementQuantity?.(), [incrementQuantity]);
   const handleDecrement = useCallback(() => decrementQuantity?.(), [decrementQuantity]);
-  const handleAddToCart = useCallback(() => addToCart?.(), [addToCart]);
-  const handleBuyNow = useCallback(() => buyNowHandler?.(), [buyNowHandler]);
+  
+  const handleAddToCart = useCallback(() => {
+    const authResult = checkAuthenticationForAction(isAuthenticated, 'add_to_cart');
+    if (!authResult.success) {
+      setShowLoginDialog(true);
+      return;
+    }
+    
+    addToCart?.();
+  }, [addToCart, isAuthenticated]);
+  
+  const handleBuyNow = useCallback(() => {
+    const authResult = checkAuthenticationForAction(isAuthenticated, 'buy_now');
+    if (!authResult.success) {
+      setShowLoginDialog(true);
+      return;
+    }
+    
+    buyNowHandler?.();
+  }, [buyNowHandler, isAuthenticated]);
 
-  // Loading skeleton
+  const handleLoginRedirect = () => {
+    setShowLoginDialog(false);
+    navigate('/auth/sign-in', { 
+      state: { 
+        from: window.location.pathname,
+        action: 'add_to_cart' 
+      } 
+    });
+  };
+
+  const handleSignupRedirect = () => {
+    setShowLoginDialog(false);
+    navigate('/auth/sign-up', { 
+      state: { 
+        from: window.location.pathname,
+        action: 'add_to_cart' 
+      } 
+    });
+  };
+
+  const handleCloseLoginDialog = () => {
+    setShowLoginDialog(false);
+  };
+
   if (loading) {
     return (
       <Box sx={{ width: '100%', mt: 3 }}>
@@ -123,11 +170,18 @@ const ProductActions = ({
           {snackbarMessage || 'Added to cart!'}
         </Alert>
       </Snackbar>
+
+      {/* Login Required Dialog */}
+      <LoginRequiredDialog
+        open={showLoginDialog}
+        onClose={handleCloseLoginDialog}
+        onLoginRedirect={handleLoginRedirect}
+        onSignupRedirect={handleSignupRedirect}
+      />
     </Box>
   );
 };
 
-// PropTypes for type safety
 ProductActions.propTypes = {
   quantity: PropTypes.number.isRequired,
   incrementQuantity: PropTypes.func.isRequired,

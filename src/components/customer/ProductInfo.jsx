@@ -1,4 +1,3 @@
-// src/components/customer/ProductInfo.jsx
 import React from 'react';
 import { Box, Typography, Chip, Skeleton, Stack } from '@mui/material';
 import { Link } from 'react-router-dom';
@@ -23,7 +22,6 @@ const ProductInfo = ({ product, loading }) => {
     );
   }
 
-  // Safe destructuring with defaults
   const {
     name = '-',
     price = 0,

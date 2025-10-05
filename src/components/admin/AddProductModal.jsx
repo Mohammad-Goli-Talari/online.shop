@@ -1,4 +1,3 @@
-// src/components/admin/AddProductModal.jsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import {
@@ -22,7 +21,6 @@ import ProductPreview from './ProductPreview';
 import ProductService from '../../services/productService';
 import CategoryService from '../../services/categoryService';
 
-// ... (compressImage and generateSku functions remain unchanged)
 const compressImage = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -87,7 +85,6 @@ const generateSku = (text) => {
 const steps = ['Product Details', 'Images & Description', 'Pricing & Inventory'];
 
 const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
-  // ... (all state and hooks remain unchanged)
   const [activeStep, setActiveStep] = useState(0);
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
@@ -129,7 +126,6 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
   const watchedValues = watch();
   const watchedName = watch('name');
 
-  // ... (all handler functions and useEffects remain unchanged)
   useEffect(() => {
     if (!isSkuManuallyEdited && watchedName && watchedName.trim()) {
       const generatedSku = generateSku(watchedName);
@@ -173,7 +169,6 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
         URL.revokeObjectURL(item.preview);
       }
     } catch {
-      // Safe to ignore
     }
   };
 
@@ -421,7 +416,7 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
                       flex: 1,
                       borderRadius: '20px',
                       textTransform: 'none',
-                      // <<< FIX 3: Set a constant font weight to prevent height jumps
+                      // Constant font weight prevents layout shift during state changes
                       fontWeight: 500,
                       color: activeStep === index ? 'white' : 'text.secondary',
                       boxShadow: activeStep === index ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',

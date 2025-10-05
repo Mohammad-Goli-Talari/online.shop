@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Grid,
@@ -21,7 +20,7 @@ import ProductGrid from '../components/customer/ProductGrid';
 import CategoryFilter from '../components/customer/CategoryFilter';
 import ShoppingCart from '../components/customer/ShoppingCart';
 import { useCart } from '../context/useCart';
-import { mockDataStore } from '../mocks/data/mockData';
+import ProductService from '../services/productService';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -41,46 +40,37 @@ const Home = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const observer = useRef();
 
-  // ----------------- FETCH PRODUCTS -----------------
   useEffect(() => {
     let isMounted = true;
-    const fetchProducts = () => {
+    let abortController = new AbortController();
+    
+    const fetchProducts = async () => {
       if (page === 1) setLoading(true);
       else setIsPaginating(true);
       setError(null);
 
       try {
-        let allProducts = mockDataStore.getProducts();
-
-        if (filters.search) {
-          allProducts = allProducts.filter(p =>
-            p.name.toLowerCase().includes(filters.search.toLowerCase())
-          );
+        if (!filters.search) {
+          const params = {
+            page,
+            limit: 12,
+            categoryId: filters.categoryId || undefined,
+            inStock: filters.inStock
+          };
+          
+          const response = await ProductService.getProducts(params, { signal: abortController.signal });
+          const products = response?.products || [];
+          
+          if (!isMounted || abortController.signal.aborted) return;
+          setProducts(prev => page === 1 ? products : [...prev, ...products]);
+          setHasMore(products.length === 12); // If we got full page, there might be more
         }
-        if (filters.categoryId) {
-          allProducts = allProducts.filter(p => {
-            const prodCatId =
-              p.categoryId ?? p.category_id ?? p.catId ?? p.category?.id ?? p.category;
-            return String(prodCatId) === String(filters.categoryId);
-          });
-        }
-        if (filters.inStock) {
-          allProducts = allProducts.filter(p => p.stock > 0);
-        }
-
-        const itemsPerPage = 12;
-        const startIndex = (page - 1) * itemsPerPage;
-        const paginatedItems = allProducts.slice(startIndex, startIndex + itemsPerPage);
-
-        if (!isMounted) return;
-        setProducts(prev => page === 1 ? paginatedItems : [...prev, ...paginatedItems]);
-        setHasMore(startIndex + itemsPerPage < allProducts.length);
       } catch (err) {
-        if (!isMounted) return;
+        if (!isMounted || abortController.signal.aborted || err.name === 'AbortError') return;
         setError('Failed to fetch products.');
         console.error(err);
       } finally {
-        if (isMounted) {
+        if (isMounted && !abortController.signal.aborted) {
           setLoading(false);
           setIsPaginating(false);
         }
@@ -88,13 +78,16 @@ const Home = () => {
     };
 
     fetchProducts();
-    return () => { isMounted = false; };
-  }, [filters, page]);
+    return () => { 
+      isMounted = false; 
+      abortController.abort();
+    };
+  }, [filters.categoryId, filters.inStock, page, filters.search]);
 
   useEffect(() => {
     setPage(1);
     setHasMore(true);
-  }, [filters]);
+  }, [filters.categoryId, filters.inStock]);
 
   const lastProductElementRef = useCallback(
     node => {
@@ -110,14 +103,56 @@ const Home = () => {
     [loading, isPaginating, hasMore]
   );
 
-  // ----------------- FILTER HANDLERS -----------------
-  const handleSearch = searchQuery => setFilters(prev => ({ ...prev, search: searchQuery }));
+  const handleSearch = useCallback(async (searchQuery, abortSignal) => {
+    try {
+      setPage(1);
+      setProducts([]);
+      setHasMore(true);
+      setError(null);
+      
+      setFilters(prev => ({ ...prev, search: searchQuery }));
+      
+      if (!searchQuery.trim()) {
+        return Promise.resolve();
+      }
+      
+      setLoading(true);
+      const params = {
+        page: 1,
+        limit: 12,
+        search: searchQuery,
+        categoryId: filters.categoryId || undefined,
+        inStock: filters.inStock
+      };
+
+      const response = await ProductService.searchProducts(params, { signal: abortSignal });
+      
+      if (abortSignal?.aborted) {
+        return Promise.resolve();
+      }
+      
+      const { results, pagination } = response;
+      setProducts(results || []);
+      setHasMore(pagination?.hasNext || false);
+      setPage(2);
+      
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        setError(err.message || 'Search failed');
+        setProducts([]);
+        setHasMore(false);
+      }
+    } finally {
+      if (!abortSignal?.aborted) {
+        setLoading(false);
+      }
+    }
+  }, [filters.categoryId, filters.inStock]);
   const handleCategorySelect = categoryId => {
     setFilters(prev => ({ ...prev, categoryId }));
     if (isMobile) setFilterDrawerOpen(false);
   };
 
-  // ----------------- CART HANDLERS -----------------
   const handleAddToCart = async (productId, quantity = 1) => {
     try {
       await addToCart(productId, quantity);
@@ -132,7 +167,6 @@ const Home = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-  // ----------------- RENDER -----------------
   return (
     <CustomerLayout
       onSearch={handleSearch}
@@ -152,7 +186,7 @@ const Home = () => {
 
       <Grid container spacing={4}>
         {isMobile ? (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Button startIcon={<FilterList />} onClick={() => setFilterDrawerOpen(true)}>Filters</Button>
             <Drawer anchor="left" open={isFilterDrawerOpen} onClose={() => setFilterDrawerOpen(false)}>
               <Box sx={{ width: 250, p: 2 }}>
@@ -161,12 +195,12 @@ const Home = () => {
             </Drawer>
           </Grid>
         ) : (
-          <Grid item md={3}>
+          <Grid size={{ md: 3 }}>
             <CategoryFilter onCategorySelect={handleCategorySelect} />
           </Grid>
         )}
 
-        <Grid item xs={12} md={9}>
+        <Grid size={{ xs: 12, md: 9 }}>
           <ProductGrid
             products={products}
             loading={loading}

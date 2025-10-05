@@ -1,13 +1,6 @@
-// src/services/orderService.js
-/**
- * Orders API Service
- * Handles all order-related API calls
- */
-
 import { apiClient, handleApiResponse } from '../utils/apiClient.js';
 
 export class OrderService {
-  // Get user orders with pagination
   static async getOrders(options = {}) {
     try {
       const params = {
@@ -18,7 +11,6 @@ export class OrderService {
         sortOrder: options.sortOrder || 'desc'
       };
 
-      // Remove undefined values
       Object.keys(params).forEach(key => {
         if (params[key] === undefined) {
           delete params[key];
@@ -33,7 +25,6 @@ export class OrderService {
     }
   }
 
-  // Get order by ID
   static async getOrderById(id) {
     try {
       const response = await apiClient.get(`/orders/${id}`);
@@ -44,7 +35,6 @@ export class OrderService {
     }
   }
 
-  // Create order (checkout)
   static async createOrder(checkoutData) {
     try {
       const response = await apiClient.post('/orders', checkoutData);
@@ -55,10 +45,9 @@ export class OrderService {
     }
   }
 
-  // Cancel order
   static async cancelOrder(id, reason = '') {
     try {
-      const response = await apiClient.post(`/orders/${id}/cancel`, { reason });
+      const response = await apiClient.put(`/orders/${id}/cancel`, { reason });
       return handleApiResponse(response);
     } catch (error) {
       console.error('Cancel order error:', error);
@@ -66,7 +55,6 @@ export class OrderService {
     }
   }
 
-  // Admin: Update order status
   static async updateOrderStatus(id, status, notes = '') {
     try {
       const response = await apiClient.put(`/orders/${id}/status`, {
@@ -80,7 +68,22 @@ export class OrderService {
     }
   }
 
-  // Admin: Get all orders
+  static async confirmOrderByOrderNumber(orderNumber, transactionDetails = {}) {
+    try {
+      const response = await apiClient.put(`/orders/confirm-payment`, {
+        orderNo: orderNumber,
+        status: 'CONFIRMED',
+        transactionId: transactionDetails.transactionId,
+        paymentTimestamp: transactionDetails.timestamp,
+        notes: `Payment confirmed. Transaction ID: ${transactionDetails.transactionId}`
+      });
+      return handleApiResponse(response);
+    } catch (error) {
+      console.error('Confirm order by order number error:', error);
+      throw error;
+    }
+  }
+
   static async getAllOrders(options = {}) {
     try {
       const params = {
@@ -94,7 +97,6 @@ export class OrderService {
         sortOrder: options.sortOrder || 'desc'
       };
 
-      // Remove undefined values
       Object.keys(params).forEach(key => {
         if (params[key] === undefined) {
           delete params[key];

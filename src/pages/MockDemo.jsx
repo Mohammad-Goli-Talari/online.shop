@@ -1,7 +1,6 @@
-// src/pages/MockDemo.jsx
 /**
- * Mock Demo Page
- * Demonstrates the mock API system functionality
+ * API Demo Page
+ * Demonstrates the real backend API functionality
  */
 
 import React, { useState, useEffect } from 'react';
@@ -10,7 +9,7 @@ import ProductService from '../services/productService.js';
 import CartService from '../services/cartService.js';
 
 
-const MockDemo = () => {
+const ApiDemo = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState(null);
@@ -23,17 +22,14 @@ const MockDemo = () => {
 
   const loadInitialData = async () => {
     try {
-      // Check if user is already logged in
       if (AuthService.isAuthenticated()) {
         const user = await AuthService.getCurrentUser();
         setCurrentUser(user.user);
       }
       
-      // Load some products
       const productsData = await ProductService.getProducts({ limit: 6 });
-      setProducts(productsData.items || []);
+      setProducts(productsData.products || []); // Changed from productsData.items to productsData.products
       
-      // Load cart
       const cartData = await CartService.getCart();
       setCart(cartData.cart);
     } catch (error) {
@@ -50,7 +46,6 @@ const MockDemo = () => {
       setCurrentUser(result.user);
       setMessage('✅ Login successful!');
       
-      // Reload cart after login
       const cartData = await CartService.getCart();
       setCart(cartData.cart);
     } catch (error) {
@@ -299,4 +294,4 @@ const MockDemo = () => {
   );
 };
 
-export default MockDemo;
+export default ApiDemo;

@@ -1,4 +1,3 @@
-// src/pages/ProductDetail.jsx
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useParams } from 'react-router-dom';
 import {
@@ -19,6 +18,7 @@ import { Share as ShareIcon, Close as CloseIcon } from '@mui/icons-material';
 
 import useProductDetail from '../hooks/useProductDetail.js';
 import { useCart } from '../context/useCart';
+import { getProductImage } from '../utils/fallbackImages.js';
 import CustomerLayout from '../layouts/CustomerLayout';
 import ShoppingCart from '../components/customer/ShoppingCart';
 import Breadcrumbs from '../components/customer/Breadcrumbs.jsx';
@@ -53,7 +53,6 @@ const ProductDetail = () => {
 
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Snackbar state for feedback (single, like Home.jsx)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // Wrapper to update both local and global cart (single snackbar)
@@ -79,7 +78,6 @@ const ProductDetail = () => {
   const [comparisonList, setComparisonList] = useState([]);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
-  // Recently viewed
   useEffect(() => {
     if (product) {
       const viewed = JSON.parse(localStorage.getItem('recentlyViewed')) || [];
@@ -89,7 +87,6 @@ const ProductDetail = () => {
     }
   }, [product]);
 
-  // Add product to comparison
   const handleAddToComparison = () => {
     if (product && !comparisonList.find(p => p.id === product.id)) {
       setComparisonList([...comparisonList, product].slice(0, 4));
@@ -104,10 +101,10 @@ const ProductDetail = () => {
       <Box sx={{ p: 2 }}>
         <Skeleton variant="text" width={200} height={40} />
         <Grid container spacing={4} sx={{ mt: 2 }}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Skeleton variant="rectangular" width="100%" height={400} />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Skeleton variant="text" width="80%" height={50} />
             <Skeleton variant="text" width="60%" height={40} />
             <Skeleton variant="rectangular" width="100%" height={100} sx={{ mt: 2 }} />
@@ -174,7 +171,7 @@ const ProductDetail = () => {
       </Snackbar>
       {/* SEO */}
       <SEOHead
-        title={product.name ? `${product.name} | MyShop` : 'Product | MyShop'}
+        title={product.name ? `${product.name} | Goli Store` : 'Product | Goli Store'}
         description={product.description ? product.description.slice(0, 160) : 'Product details and information'}
         ogTitle={product.name || 'Product'}
         ogDescription={product.description ? product.description.slice(0, 160) : 'Product details and information'}
@@ -205,8 +202,13 @@ const ProductDetail = () => {
 
       <Grid container spacing={4} sx={{ mt: 2 }}>
         {/* Left: Product Images */}
-        <Grid item xs={12} md={6}>
-          <ProductImageGallery images={product.images || []} productName={product.name} />
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ProductImageGallery 
+            images={product.images || []} 
+            productName={product.name}
+            category={product.category}
+            productId={product.id}
+          />
           <Box sx={{ mt: 1 }}>
             <Button startIcon={<ShareIcon />} onClick={() => navigator.clipboard.writeText(window.location.href)}>
               Share
@@ -215,7 +217,7 @@ const ProductDetail = () => {
         </Grid>
 
         {/* Right: Product Info & Actions */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <ProductInfo product={product} />
           <Box sx={{ mt: 3 }}>
             <ProductActions
@@ -275,7 +277,13 @@ const ProductDetail = () => {
           {product.images?.map((img, idx) => (
             <img
               key={idx}
-              src={img}
+              src={getProductImage(
+                img,
+                product.category,
+                product.id,
+                800,
+                600
+              )}
               alt={`${product.name} ${idx + 1}`}
               style={{ width: '100%', marginBottom: 8 }}
               loading="lazy"
@@ -305,7 +313,13 @@ const ProductDetail = () => {
             <>
               <Typography variant="h6">{quickViewProduct.name}</Typography>
               <img
-                src={quickViewProduct.images?.[0]}
+                src={getProductImage(
+                  quickViewProduct.images?.[0],
+                  quickViewProduct.category,
+                  quickViewProduct.id,
+                  400,
+                  300
+                )}
                 alt={quickViewProduct.name}
                 style={{ width: '100%', marginBottom: 8 }}
                 loading="lazy"
@@ -322,8 +336,19 @@ const ProductDetail = () => {
           <Typography variant="h6" gutterBottom>Recently Viewed</Typography>
           <Grid container spacing={2}>
             {recentlyViewed.filter(p => p.id !== product.id).map(p => (
-              <Grid item xs={6} sm={3} key={p.id}>
-                <img src={p.images?.[0]} alt={p.name} style={{ width: '100%' }} loading="lazy" />
+              <Grid size={{ xs: 6, sm: 3 }} key={p.id}>
+                <img 
+                  src={getProductImage(
+                    p.images?.[0],
+                    p.category,
+                    p.id,
+                    200,
+                    200
+                  )} 
+                  alt={p.name} 
+                  style={{ width: '100%' }} 
+                  loading="lazy" 
+                />
                 <Typography variant="body2">{p.name}</Typography>
                 <Button variant="text" onClick={() => openQuickView(p)}>Quick View</Button>
               </Grid>
@@ -338,8 +363,19 @@ const ProductDetail = () => {
           <Typography variant="h6" gutterBottom>Comparison</Typography>
           <Grid container spacing={2}>
             {comparisonList.map(p => (
-              <Grid item xs={6} sm={3} key={p.id}>
-                <img src={p.images?.[0]} alt={p.name} style={{ width: '100%' }} loading="lazy" />
+              <Grid size={{ xs: 6, sm: 3 }} key={p.id}>
+                <img 
+                  src={getProductImage(
+                    p.images?.[0],
+                    p.category,
+                    p.id,
+                    200,
+                    200
+                  )} 
+                  alt={p.name} 
+                  style={{ width: '100%' }} 
+                  loading="lazy" 
+                />
                 <Typography variant="body2">{p.name}</Typography>
               </Grid>
             ))}

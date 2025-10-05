@@ -1,4 +1,3 @@
-// src/pages/admin/products/index.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Button, Container, Stack, Typography } from '@mui/material';
 import AdminLayout from '../../../layouts/AdminLayout';
@@ -13,13 +12,12 @@ const ProductListPage = () => {
   const [openModal, setOpenModal] = useState(false);
   const hasInitialized = useRef(false);
 
-  // Load products from server once
   const loadProducts = async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await ProductService.getProducts({ limit: 9999 });
-      const items = res.items || [];
+      const items = res.products || []; // Changed from res.items to res.products
       items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setProducts(items);
     } catch (err) {
@@ -36,9 +34,7 @@ const ProductListPage = () => {
     }
   }, []);
 
-  // Handler when a product is successfully created
   const handleProductAdded = (createdProduct) => {
-    // Add the product returned by server to the top of the list
     setProducts(prev => [createdProduct, ...prev]);
   };
 

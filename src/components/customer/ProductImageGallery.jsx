@@ -1,4 +1,3 @@
-// src/components/customer/ProductImageGallery.jsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Box,
@@ -17,11 +16,14 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useSwipeable } from 'react-swipeable';
 import { FocusTrap } from '@mui/base';
+import { getProfessionalFallbackImage } from '../../utils/fallbackImages.js';
 
 const ProductImageGallery = ({
   images = [],
   productName = 'Product',
   loading = false,
+  category = null,
+  productId = null,
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [openZoom, setOpenZoom] = useState(false);
@@ -29,11 +31,10 @@ const ProductImageGallery = ({
   const hasImages = images && images.length > 0;
   const mainImage = hasImages
     ? images[selectedIndex]
-    : 'https://via.placeholder.com/600x600?text=No+Image';
+    : getProfessionalFallbackImage(category, productId, 600, 600);
 
   const zoomRef = useRef(null);
 
-  // Swipe handlers
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => handleNext(),
     onSwipedRight: () => handlePrev(),
@@ -46,7 +47,6 @@ const ProductImageGallery = ({
   };
   const handleCloseZoom = () => setOpenZoom(false);
 
-  // Fix dependency: useCallback
   const handlePrev = useCallback(() => {
     setSelectedIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   }, [images.length]);
@@ -55,7 +55,6 @@ const ProductImageGallery = ({
     setSelectedIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   }, [images.length]);
 
-  // Keyboard navigation inside modal
   useEffect(() => {
     const handleKey = (e) => {
       if (!openZoom) return;
@@ -82,7 +81,6 @@ const ProductImageGallery = ({
 
   return (
     <Box>
-      {/* Main Image with Magnifier hover effect */}
       <Box sx={{ position: 'relative' }}>
         <Card sx={{ mb: 2 }}>
           <CardMedia
@@ -115,7 +113,6 @@ const ProductImageGallery = ({
         </IconButton>
       </Box>
 
-      {/* Thumbnails */}
       <Grid container spacing={1}>
         {hasImages &&
           images.map((img, idx) => (
@@ -149,7 +146,6 @@ const ProductImageGallery = ({
           ))}
       </Grid>
 
-      {/* Zoom Modal */}
       <Dialog
         open={openZoom}
         onClose={handleCloseZoom}
@@ -163,7 +159,6 @@ const ProductImageGallery = ({
             {...swipeHandlers}
             ref={zoomRef}
           >
-            {/* Close button */}
             <IconButton
               onClick={handleCloseZoom}
               sx={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}
@@ -172,7 +167,6 @@ const ProductImageGallery = ({
               <CloseIcon />
             </IconButton>
 
-            {/* Navigation arrows */}
             {images.length > 1 && (
               <>
                 <IconButton
@@ -206,7 +200,6 @@ const ProductImageGallery = ({
               </>
             )}
 
-            {/* Main zoomed image */}
             <img
               src={mainImage}
               alt={`${productName} zoomed`}

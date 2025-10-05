@@ -1,27 +1,66 @@
-// src/components/customer/ShoppingCart.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
   IconButton,
   Button,
   Divider,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Avatar,
+  Badge,
+  Chip,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import {
-  Delete as DeleteIcon,
   Add as AddIcon,
   Remove as RemoveIcon,
+  Delete as DeleteIcon,
+  ShoppingCart as CartIcon,
+  Payment as PaymentIcon,
 } from '@mui/icons-material';
+import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import EmptyState from '../common/EmptyState';
+import LoginRequiredDialog from '../common/LoginRequiredDialog';
+import { getProductImage } from '../../utils/fallbackImages.js';
+import CheckoutService from '../../services/checkoutService';
+import PaymentService from '../../services/paymentService';
+import useAuth from '../../hooks/useAuth';
+import { AUTH_MESSAGES } from '../../utils/authUtils';
 
 function ShoppingCart({ cartItems, removeFromCart, updateQuantity, clearCart }) {
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState(null);
+  const [imageErrors, setImageErrors] = useState(new Set());
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
   const getName = (item) => item?.product?.name || item?.name || 'Unknown';
   const getPrice = (item) => item?.product?.price || item?.price || 0;
   const getQuantity = (item) => item?.quantity || 1;
-  const getImage = (item) =>
-    (item?.product?.images?.[0] || item?.product?.image || item?.image || '');
+  const getImage = (item) => {
+    const originalImage = item?.product?.images?.[0] || item?.product?.image || item?.image;
+    const category = item?.product?.category || item?.category;
+    const productId = item?.product?.id || item?.productId || item?.id;
+    return getProductImage(originalImage, category, productId, 48, 48);
+  };
+
+  const handleImageError = (e, item) => {
+    const itemId = item?.id || item?.productId;
+    if (itemId && !imageErrors.has(itemId)) {
+      setImageErrors(prev => new Set([...prev, itemId]));
+      const category = item?.product?.category || item?.category;
+      const productId = item?.product?.id || item?.productId || item?.id;
+      const fallbackUrl = getProductImage(null, category, productId, 48, 48);
+      e.target.src = fallbackUrl;
+    }
+  };
 
   const totalPrice = Array.isArray(cartItems)
     ? cartItems.reduce((acc, item) => acc + getPrice(item) * getQuantity(item), 0)
@@ -39,6 +78,62 @@ function ShoppingCart({ cartItems, removeFromCart, updateQuantity, clearCart }) 
     await updateQuantity(item.id, currentQty - 1);
   };
 
+  const handlePayment = async () => {
+    if (!cartItems || cartItems.length === 0) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setLoginDialogOpen(true);
+      toast.error(AUTH_MESSAGES.CHECKOUT_LOGIN_REQUIRED);
+      return;
+    }
+
+    setProcessingPayment(true);
+    setPaymentError(null);
+
+    try {
+      const validation = CheckoutService.validateCheckout(cartItems);
+      if (!validation.isValid) {
+        throw new Error(validation.errors.join(', '));
+      }
+
+      const checkoutResult = await CheckoutService.processCheckout(cartItems);
+      
+      if (checkoutResult.success && checkoutResult.payment.redirectUrl) {
+        toast.success('Redirecting to secure payment gateway...');
+        
+        setTimeout(() => {
+          PaymentService.redirectToGateway(checkoutResult.payment.redirectUrl);
+        }, 1000);
+      } else {
+        throw new Error('Failed to initiate payment process');
+      }
+
+    } catch (error) {
+      console.error('Payment initiation failed:', error);
+      setPaymentError(error.message);
+      toast.error(`Payment failed: ${error.message}`);
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const handleLoginRedirect = () => {
+    setLoginDialogOpen(false);
+    navigate('/auth/sign-in');
+  };
+
+  const handleSignupRedirect = () => {
+    setLoginDialogOpen(false);
+    navigate('/auth/sign-up');
+  };
+
+  const handleCloseLoginDialog = () => {
+    setLoginDialogOpen(false);
+  };
+
   return (
     <Box sx={{ p: 2, minWidth: 320 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
@@ -51,21 +146,24 @@ function ShoppingCart({ cartItems, removeFromCart, updateQuantity, clearCart }) 
       </Box>
 
       {cartItems.length === 0 ? (
-        <Typography color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
-          Your cart is empty.
-        </Typography>
+        <EmptyState 
+          icon={CartIcon}
+          title="Your cart is empty"
+          description="Add some products to your cart to get started with your shopping."
+          variant="compact"
+        />
       ) : (
         <>
           <List>
             {cartItems.map((item, idx) => (
               <ListItem key={item.id || idx} divider alignItems="flex-start">
-                {getImage(item) && (
-                  <img
-                    src={getImage(item)}
-                    alt={getName(item)}
-                    style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6, marginRight: 12 }}
-                  />
-                )}
+                <img
+                  src={getImage(item)}
+                  alt={getName(item)}
+                  style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6, marginRight: 12 }}
+                  onError={(e) => handleImageError(e, item)}
+                  loading="lazy"
+                />
 
                 <ListItemText
                   primary={getName(item)}
@@ -123,12 +221,28 @@ function ShoppingCart({ cartItems, removeFromCart, updateQuantity, clearCart }) 
             color="primary"
             fullWidth
             sx={{ mt: 2 }}
-            onClick={() => alert('Payment gateway will be added soon!')}
+            onClick={handlePayment}
+            disabled={processingPayment || cartItems.length === 0}
+            startIcon={processingPayment ? <CircularProgress size={20} /> : <PaymentIcon />}
           >
-            Payment and purchase completion
+            {processingPayment ? 'Processing...' : 'Payment and purchase completion'}
           </Button>
+
+          {paymentError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {paymentError}
+            </Alert>
+          )}
         </>
       )}
+
+      {/* Login Required Dialog */}
+      <LoginRequiredDialog
+        open={loginDialogOpen}
+        onClose={handleCloseLoginDialog}
+        onLoginRedirect={handleLoginRedirect}
+        onSignupRedirect={handleSignupRedirect}
+      />
     </Box>
   );
 }

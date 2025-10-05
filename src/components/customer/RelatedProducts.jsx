@@ -1,4 +1,3 @@
-// src/components/customer/RelatedProducts.jsx
 import React, { useState, Suspense } from 'react';
 import {
   Box,
@@ -13,6 +12,7 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon, Share as ShareIcon, CompareArrows } from '@mui/icons-material';
 import ProductCard from './ProductCard';
+import { getProductImage } from '../../utils/fallbackImages.js';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -40,11 +40,28 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
   const theme = useTheme();
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
-  // Responsive breakpoints
+  // MUST be called before any conditional returns
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
   const isSm = useMediaQuery(theme.breakpoints.between('sm', 'md'));
   const isMd = useMediaQuery(theme.breakpoints.between('md', 'lg'));
   const isLg = useMediaQuery(theme.breakpoints.up('lg'));
+
+  // Defensive type checking to prevent runtime errors
+  const safeProducts = Array.isArray(products) ? products : [];
+  
+  
+  if (!loading && safeProducts.length === 0) {
+    return (
+      <Box mt={6}>
+        <Typography variant="h5" component="h2" gutterBottom fontWeight="bold">
+          Related Products
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          No related products available at this time.
+        </Typography>
+      </Box>
+    );
+  }
 
   let columns = 5;
   if (isXs) columns = 1;
@@ -59,9 +76,11 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
 
   const handleAddToCart = async (productId) => {
     try {
-      await onAddToCart(productId, 1);
+      if (onAddToCart && typeof onAddToCart === 'function') {
+        await onAddToCart(productId, 1);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Error adding product to cart:', err);
     }
   };
 
@@ -93,7 +112,7 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
               ? skeletons.map((_, idx) => (
                   <Skeleton key={idx} variant="rectangular" height={350} sx={{ borderRadius: 1 }} />
                 ))
-              : products.map((product) => (
+              : safeProducts.map((product) => (
                   <Box
                     key={product.id}
                     sx={{
@@ -180,7 +199,13 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
               </Typography>
               <Box
                 component="img"
-                src={quickViewProduct.images?.[0]}
+                src={getProductImage(
+                  quickViewProduct.images?.[0],
+                  quickViewProduct.category,
+                  quickViewProduct.id,
+                  400,
+                  300
+                )}
                 alt={quickViewProduct.name}
                 sx={{ width: '100%', maxHeight: '60vh', objectFit: 'contain', mb: 2 }}
                 loading="lazy"

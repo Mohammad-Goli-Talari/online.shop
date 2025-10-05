@@ -1,56 +1,73 @@
-// src/context/CartContext.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import CartService from '../services/cartService';
-import { isUsingMocks } from '../config/api.js';
 import { CartContext } from './CartContextInstance';
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Do not show mock-generated cart until the user interacts with the cart.
-  const [userCartInitialized, setUserCartInitialized] = useState(false);
-  const markUserCartInitialized = () => setUserCartInitialized(true);
-
-  // Always filter out mock/random items (no id or productId)
   const filterValidCartItems = (items) => {
     if (!Array.isArray(items) || items.length === 0) return [];
     return items.filter(item => item && item.id != null && item.productId != null);
   };
 
+  const saveCartToStorage = (items) => {
+    try {
+      localStorage.setItem('cart', JSON.stringify(items));
+    } catch (err) {
+      console.warn('Failed to save cart to localStorage:', err);
+    }
+  };
+
+  const loadCartFromStorage = () => {
+    try {
+      const stored = localStorage.getItem('cart');
+      return stored ? JSON.parse(stored) : [];
+    } catch (err) {
+      console.warn('Failed to load cart from localStorage:', err);
+      return [];
+    }
+  };
+
   const fetchCart = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await CartService.getCart();
       let items = res?.cart?.items || res?.items || [];
-      if (!userCartInitialized && isUsingMocks()) {
-        // Hide mock/random cart until the user interacts
-        setCartItems([]);
-      } else {
-        setCartItems(filterValidCartItems(items));
-      }
+      const validItems = filterValidCartItems(items);
+      setCartItems(validItems);
+      saveCartToStorage(validItems);
     } catch (err) {
       setError(err.message || 'Failed to fetch cart');
       console.error('Fetch cart error:', err);
+      const storedItems = loadCartFromStorage();
+      setCartItems(storedItems);
     } finally {
       setLoading(false);
+      setIsInitialized(true);
     }
-  }, [userCartInitialized]);
+  }, []);
 
   useEffect(() => {
+    const storedItems = loadCartFromStorage();
+    setCartItems(storedItems);
+    
     fetchCart();
   }, [fetchCart]);
 
   const addToCart = async (productId, quantity = 1) => {
-    // Mark that user has interacted so fetchCart will surface server cart
-    markUserCartInitialized();
-
-    // Optimistically update UI: if product exists increment, else add temp item
+    setError(null);
+    
+    const originalCartItems = [...cartItems];
     setCartItems(prev => {
       const existing = prev.find(it => it && it.productId === productId);
       if (existing) {
-        return prev.map(it => it && it.productId === productId ? { ...it, quantity: (it.quantity || 1) + quantity } : it);
+        const updatedItems = prev.map(it => it && it.productId === productId ? { ...it, quantity: (it.quantity || 1) + quantity } : it);
+        saveCartToStorage(updatedItems);
+        return updatedItems;
       }
       const tempItem = {
         id: `temp-${productId}-${Date.now()}`,
@@ -59,59 +76,62 @@ export function CartProvider({ children }) {
         unitPrice: 0,
         totalPrice: 0,
       };
-      return [ ...(prev || []), tempItem ];
+      const newItems = [ ...(prev || []), tempItem ];
+      saveCartToStorage(newItems);
+      return newItems;
     });
 
     setLoading(true);
     try {
       await CartService.addToCart(productId, quantity);
-      // re-sync authoritative cart
       const res = await CartService.getCart();
       const items = res?.cart?.items || res?.items || [];
-      setCartItems(filterValidCartItems(items));
-      // no product-detail special tracking anymore; keep server cart as authoritative
+      const validItems = filterValidCartItems(items);
+      setCartItems(validItems);
+      saveCartToStorage(validItems);
     } catch (err) {
-      // revert optimistic change by removing temp entries for this product
-      setCartItems(prev => prev.filter(it => it && it.productId !== productId));
+      setCartItems(originalCartItems);
+      saveCartToStorage(originalCartItems);
       setError(err.message || 'Failed to add to cart');
       console.error('Add to cart error:', err);
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  // Remove items that were added from product detail (called by Home on entry)
-    // Note: removed ProductDetail-specific removal logic to keep cart persistent across pages
-
   const updateQuantity = async (cartItemId, quantity) => {
     if (quantity <= 0) return removeFromCart(cartItemId);
 
-    // Optimistic local update so UI responds immediately
-    setCartItems(prev => prev.map(it => {
-      if (!it || it.id !== cartItemId) return it;
-      const unitPrice = it.unitPrice ?? it.product?.price ?? it.price ?? 0;
-      return {
-        ...it,
-        quantity,
-        totalPrice: unitPrice * quantity
-      };
-    }));
+    setCartItems(prev => {
+      const updatedItems = prev.map(it => {
+        if (!it || it.id !== cartItemId) return it;
+        const unitPrice = it.unitPrice ?? it.product?.price ?? it.price ?? 0;
+        return {
+          ...it,
+          quantity,
+          totalPrice: unitPrice * quantity
+        };
+      });
+      saveCartToStorage(updatedItems);
+      return updatedItems;
+    });
 
     setLoading(true);
     try {
       await CartService.updateCartItem(cartItemId, quantity);
-      if (!isUsingMocks()) {
-        // Re-sync with server only when not using mocks
-        const res = await CartService.getCart();
-        const items = res?.cart?.items || res?.items || [];
-        setCartItems(filterValidCartItems(items));
-      }
+      const res = await CartService.getCart();
+      const items = res?.cart?.items || res?.items || [];
+      const validItems = filterValidCartItems(items);
+      setCartItems(validItems);
+      saveCartToStorage(validItems);
     } catch (err) {
-      // Revert by fetching authoritative state
       try {
         const res = await CartService.getCart();
-        const items = res?.cart?.items || res?.items || [];
-        setCartItems(filterValidCartItems(items));
+        const revertItems = res?.cart?.items || res?.items || [];
+        const validRevertItems = filterValidCartItems(revertItems);
+        setCartItems(validRevertItems);
+        saveCartToStorage(validRevertItems);
       } catch (fetchErr) {
         console.error('Failed to revert cart after update error:', fetchErr);
       }
@@ -123,22 +143,22 @@ export function CartProvider({ children }) {
   };
 
   const removeFromCart = async (cartItemId) => {
-    // Optimistically remove locally
     const prevItems = cartItems;
-    setCartItems(prev => prev.filter(it => it && it.id !== cartItemId));
+    const updatedItems = cartItems.filter(it => it && it.id !== cartItemId);
+    setCartItems(updatedItems);
+    saveCartToStorage(updatedItems);
 
     setLoading(true);
     try {
       await CartService.removeFromCart(cartItemId);
-      if (!isUsingMocks()) {
-        // re-sync only when not using mocks
-        const res = await CartService.getCart();
-        const items = res?.cart?.items || res?.items || [];
-        setCartItems(filterValidCartItems(items));
-      }
+      const res = await CartService.getCart();
+      const items = res?.cart?.items || res?.items || [];
+      const validItems = filterValidCartItems(items);
+      setCartItems(validItems);
+      saveCartToStorage(validItems);
     } catch (err) {
-      // Revert to previous state on failure
       setCartItems(prevItems);
+      saveCartToStorage(prevItems);
       setError(err.message || 'Failed to remove from cart');
       console.error('Remove from cart error:', err);
     } finally {
@@ -147,12 +167,18 @@ export function CartProvider({ children }) {
   };
 
   const clearCart = async () => {
+    const prevItems = cartItems;
+    setCartItems([]);
+    saveCartToStorage([]);
+
     setLoading(true);
     try {
       await CartService.clearCart();
-      // After clear, always set to []
       setCartItems([]);
+      saveCartToStorage([]);
     } catch (err) {
+      setCartItems(prevItems);
+      saveCartToStorage(prevItems);
       setError(err.message || 'Failed to clear cart');
       console.error('Clear cart error:', err);
     } finally {
@@ -166,6 +192,7 @@ export function CartProvider({ children }) {
         cartItems,
         loading,
         error,
+        isInitialized,
         addToCart,
         updateQuantity,
         removeFromCart,

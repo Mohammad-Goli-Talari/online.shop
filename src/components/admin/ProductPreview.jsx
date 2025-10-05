@@ -1,4 +1,3 @@
-// src/components/admin/ProductPreview.jsx
 import React from 'react';
 import {
   Box, Typography, Card, CardContent, CardMedia, Grid, Chip, ImageList, ImageListItem,
@@ -6,6 +5,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { CheckCircle, Cancel } from '@mui/icons-material';
+import { getProfessionalFallbackImage } from '../../utils/fallbackImages.js';
 
 const ProductPreview = ({ formData, images = [], categoryName = 'N/A' }) => {
   const theme = useTheme();
@@ -14,7 +14,7 @@ const ProductPreview = ({ formData, images = [], categoryName = 'N/A' }) => {
   const primaryImage =
     images.length > 0
       ? images[0].preview || images[0].url
-      : 'https://via.placeholder.com/600x400.png?text=No+Image';
+      : getProfessionalFallbackImage(categoryName, formData.name, 600, 400);
 
   const priceValue = Number(formData.price);
   const displayPrice = isNaN(priceValue) ? '0.00' : priceValue.toFixed(2);

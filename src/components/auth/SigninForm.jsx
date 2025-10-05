@@ -1,4 +1,3 @@
-// src/components/auth/SigninForm.jsx
 import React, { useState } from 'react';
 import {
   Box,
@@ -13,7 +12,7 @@ import {
   Alert,
   
 } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Google,
   GitHub,
@@ -25,6 +24,7 @@ import {
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
+import useAuth from '../../hooks/useAuth';
 
 const schema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Email is required'),
@@ -41,34 +41,46 @@ const SigninForm = () => {
     resolver: yupResolver(schema),
   });
 
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, loading, error, clearError } = useAuth();
 
-  // theme left for potential responsive tweaks
+  React.useEffect(() => {
+    if (error) {
+      clearError();
+    }
+  }, [error, clearError]);
 
   const onSubmit = async (formData) => {
     try {
-      setLoading(true);
-      console.log('Form Submitted:', formData);
-      await new Promise((res) => setTimeout(res, 1500));
-      setSnackbarSeverity('success');
-      setSnackbarMessage('Signed in successfully!');
-      setSnackbarOpen(true);
-      reset();
-      setTimeout(() => {
-        navigate('/admin');
-      }, 1000);
-    } catch {
+      const result = await login(formData.email, formData.password);
+      
+      if (result.success) {
+        setSnackbarSeverity('success');
+        setSnackbarMessage('Signed in successfully!');
+        setSnackbarOpen(true);
+        reset();
+        
+        const from = location.state?.from?.pathname;
+        const redirectPath = from || (result.user.role === 'ADMIN' ? '/admin' : '/');
+        
+        setTimeout(() => {
+          navigate(redirectPath, { replace: true });
+        }, 1000);
+      } else {
+        setSnackbarSeverity('error');
+        setSnackbarMessage(result.error || 'Sign in failed!');
+        setSnackbarOpen(true);
+      }
+    } catch (err) {
       setSnackbarSeverity('error');
-      setSnackbarMessage('Sign in failed!');
+      setSnackbarMessage(err.message || 'Sign in failed!');
       setSnackbarOpen(true);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -93,7 +105,7 @@ const SigninForm = () => {
         <Box>
           <Typography variant="h5" fontWeight={700}>Sign In</Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
-            Don’t have an account?{' '}
+            Don't have an account?{' '}
             <Link
               to="/auth/sign-up"
               style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}
@@ -102,6 +114,12 @@ const SigninForm = () => {
             </Link>
           </Typography>
         </Box>
+
+        {error && (
+          <Alert severity="error" onClose={clearError}>
+            {error}
+          </Alert>
+        )}
 
         <TextField
           label="Email"

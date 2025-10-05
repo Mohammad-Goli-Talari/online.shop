@@ -1,4 +1,3 @@
-// src/layouts/AdminLayout.jsx
 import React, { useState } from 'react';
 import { Box, CssBaseline, useMediaQuery, createTheme, ThemeProvider } from '@mui/material';
 import Sidebar from '../components/admin/Sidebar';

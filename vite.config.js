@@ -9,6 +9,15 @@ export default defineConfig({
     outDir: 'dist'
   },
   server: {
+    port: 5173,
+    host: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8088',
+        changeOrigin: true,
+        secure: false
+      }
+    },
     historyApiFallback: true
   }
 });

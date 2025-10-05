@@ -1,19 +1,12 @@
-// src/components/customer/ProductGrid.jsx
-// ProductGrid: Displays products in a responsive grid layout with filtering, loading, error, and empty states.
-// Props:
-//   - products: Array of product objects
-//   - loading: Boolean for loading state
-//   - error: Error message string
-//   - onAddToCart: Function(productId, quantity)
-//   - selectedCategoryId: Selected category for filtering
-//
-// Note: Pagination/infinite scroll is not implemented yet. See TODO below.
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Box, CircularProgress, Typography, Alert } from '@mui/material';
+import { Box, Typography, Alert } from '@mui/material';
+import { Inventory2Outlined } from '@mui/icons-material';
 import ProductCard from './ProductCard';
+import { ProductCardSkeleton } from '../skeletons';
+import EmptyState from '../common/EmptyState';
 
-const ProductGrid = ({ products, loading, error, onAddToCart, selectedCategoryId }) => {
+const ProductGrid = ({ products, loading = false, error = null, onAddToCart, selectedCategoryId = null }) => {
   const filteredProducts = selectedCategoryId
     ? products.filter(p => {
         const prodCatId =
@@ -28,8 +21,24 @@ const ProductGrid = ({ products, loading, error, onAddToCart, selectedCategoryId
 
   if (loading && filteredProducts.length === 0) {
     return (
-      <Box display="flex" justifyContent="center" my={4}>
-        <CircularProgress />
+      <Box sx={{ width: '100%' }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(1, minmax(0, 1fr))',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              md: 'repeat(3, minmax(0, 1fr))',
+              lg: 'repeat(4, minmax(0, 1fr))',
+              xl: 'repeat(4, minmax(0, 1fr))',
+            },
+            gap: 3,
+          }}
+        >
+          {Array.from({ length: 12 }, (_, index) => (
+            <ProductCardSkeleton key={`product-skeleton-${index}`} />
+          ))}
+        </Box>
       </Box>
     );
   }
@@ -44,22 +53,18 @@ const ProductGrid = ({ products, loading, error, onAddToCart, selectedCategoryId
 
   if (filteredProducts.length === 0) {
     return (
-      <Box textAlign="center" my={4}>
-        <Box sx={{ mb: 2 }}>
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
-            alt="No products found"
-            width={80}
-            height={80}
-            style={{ opacity: 0.5 }}
-          />
-        </Box>
-        <Typography variant="h6" color="text.secondary">No products found.</Typography>
-      </Box>
+      <EmptyState 
+        icon={Inventory2Outlined}
+        title="No products found"
+        description={
+          selectedCategoryId 
+            ? 'No products available in the selected category. Try browsing other categories or check back later.' 
+            : 'We don\'t have any products available right now. Please check back later or contact us for more information.'
+        }
+      />
     );
   }
 
-  // TODO: Implement pagination or infinite scroll for large product lists
   return (
     <Box sx={{ width: '100%' }}>
       <Box
@@ -70,11 +75,11 @@ const ProductGrid = ({ products, loading, error, onAddToCart, selectedCategoryId
           gridTemplateColumns: {
             xs: 'repeat(1, minmax(0, 1fr))',
             sm: 'repeat(2, minmax(0, 1fr))',
-            md: 'repeat(4, minmax(0, 1fr))',
-            lg: 'repeat(5, minmax(0, 1fr))',
-            xl: 'repeat(6, minmax(0, 1fr))',
+            md: 'repeat(3, minmax(0, 1fr))',
+            lg: 'repeat(4, minmax(0, 1fr))',
+            xl: 'repeat(4, minmax(0, 1fr))',
           },
-          gap: 2,
+          gap: 3,
         }}
       >
         {filteredProducts.map(product => (
@@ -93,12 +98,6 @@ ProductGrid.propTypes = {
   error: PropTypes.string,
   onAddToCart: PropTypes.func.isRequired,
   selectedCategoryId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-};
-
-ProductGrid.defaultProps = {
-  loading: false,
-  error: null,
-  selectedCategoryId: null,
 };
 
 export default ProductGrid;

@@ -1,12 +1,5 @@
-// src/utils//apiClient.js
-/**
- * API Client
- * Unified HTTP client for both mock and real API endpoints
- */
-
 import { API_CONFIG, getApiBaseUrl } from '../config/api.js';
 
-// Generic API error class
 export class ApiError extends Error {
   constructor(message, status, code) {
     super(message);
@@ -16,7 +9,6 @@ export class ApiError extends Error {
   }
 }
 
-// HTTP methods enum
 export const HTTP_METHODS = {
   GET: 'GET',
   POST: 'POST',
@@ -25,7 +17,6 @@ export const HTTP_METHODS = {
   PATCH: 'PATCH'
 };
 
-// Generic API client
 class ApiClient {
   constructor() {
     this.baseUrl = getApiBaseUrl();
@@ -33,31 +24,33 @@ class ApiClient {
     this.defaultHeaders = { ...API_CONFIG.DEFAULT_HEADERS };
   }
 
-  // Update base URL when switching between mock/real API
   updateBaseUrl() {
     this.baseUrl = getApiBaseUrl();
   }
 
-  // Build full URL
   buildUrl(endpoint) {
-    // Remove leading slash from endpoint if present
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
     
-    // For mock APIs (relative URLs), don't use URL constructor
     if (API_CONFIG.USE_MOCKS) {
       return `${this.baseUrl}/${cleanEndpoint}`;
     }
     
-    // For real APIs (absolute URLs), use URL constructor
     return `${this.baseUrl}/${cleanEndpoint}`;
   }
 
-  // Get authentication token from localStorage
   getAuthToken() {
     return localStorage.getItem('auth_token');
   }
 
-  // Build headers with authentication
+  getSessionId() {
+    let sessionId = localStorage.getItem('session_id');
+    if (!sessionId) {
+      sessionId = `frontend-session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('session_id', sessionId);
+    }
+    return sessionId;
+  }
+
   buildHeaders(customHeaders = {}) {
     const headers = { ...this.defaultHeaders, ...customHeaders };
     
@@ -65,17 +58,18 @@ class ApiClient {
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
+
+    const sessionId = this.getSessionId();
+    headers['x-session-id'] = sessionId;
     
     return headers;
   }
 
-  // Generic request method
   async request(method, endpoint, options = {}) {
     const { data, params, headers: customHeaders, ...fetchOptions } = options;
     
     let requestUrl = this.buildUrl(endpoint);
     
-    // Add query parameters
     if (params) {
       const searchParams = new URLSearchParams();
       Object.keys(params).forEach(key => {
@@ -95,7 +89,6 @@ class ApiClient {
       ...fetchOptions
     };
 
-    // Add body for non-GET requests
     if (data && method !== HTTP_METHODS.GET) {
       config.body = JSON.stringify(data);
     }
@@ -111,7 +104,6 @@ class ApiClient {
 
       clearTimeout(timeoutId);
 
-      // Parse response
       const contentType = response.headers.get('content-type');
       let responseData;
       
@@ -121,7 +113,6 @@ class ApiClient {
         responseData = await response.text();
       }
 
-      // Handle API errors
       if (!response.ok) {
         const errorMessage = responseData?.message || `HTTP ${response.status}: ${response.statusText}`;
         const errorCode = responseData?.code || `HTTP_${response.status}`;
@@ -138,12 +129,10 @@ class ApiClient {
         throw error;
       }
       
-      // Network or other errors
       throw new ApiError(error.message || 'Network error', 0, 'NETWORK_ERROR');
     }
   }
 
-  // Convenience methods
   async get(endpoint, options = {}) {
     return this.request(HTTP_METHODS.GET, endpoint, options);
   }
@@ -165,25 +154,30 @@ class ApiClient {
   }
 }
 
-// Create and export singleton instance
 export const apiClient = new ApiClient();
 
-// Helper function to handle API responses consistently
 export const handleApiResponse = (response) => {
-  // Check if response follows our API format
-  if (response && typeof response === 'object' && 'status' in response) {
-    if (response.status === true) {
+  if (response && typeof response === 'object') {
+    if ('error' in response || ('success' in response && response.success === false)) {
+      throw new ApiError(response.error || response.message || 'API Error', 400, response.code);
+    }
+    
+    if ('success' in response && response.success === true) {
+      if ('data' in response) {
+        return response.data;
+      }
+      const { success: _success, message: _message, ...data } = response;
+      return Object.keys(data).length > 0 ? data : response;
+    }
+    
+    if ('data' in response) {
       return response.data;
-    } else {
-      throw new ApiError(response.message || 'API Error', 400, response.code);
     }
   }
   
-  // Return response as-is if it doesn't follow our format
   return response;
 };
 
-// Update API client when switching between mock/real API
 export const updateApiClient = () => {
   apiClient.updateBaseUrl();
   console.log(`📡 API Client updated - Base URL: ${apiClient.baseUrl}`);
