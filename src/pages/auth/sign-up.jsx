@@ -1,4 +1,3 @@
-// src/pages/auth/sign-up.jsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import AuthLayout from '../../layouts/AuthLayout';

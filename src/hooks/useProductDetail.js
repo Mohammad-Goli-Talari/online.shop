@@ -1,10 +1,7 @@
-// src/hooks/useProductDetail.js
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import ProductService from '../services/productService.js';
 import CartService from '../services/cartService.js';
-import { mockDataStore } from '../mocks/data/mockData.js';
-import { isUsingMocks } from '../config/api.js';
 
 function useProductDetail(rawProductId) {
   const { id: routeId } = useParams();
@@ -26,14 +23,9 @@ function useProductDetail(rawProductId) {
     setError(null);
     setNotFound(false);
     try {
-      let data;
-      if (isUsingMocks()) {
-        data = mockDataStore.getProductById(productId);
-        if (!data) throw new Error('Product not found');
-      } else {
-        const response = await ProductService.getProductById(productId);
-        data = response?.product;
-      }
+      const response = await ProductService.getProductById(productId);
+      const data = response?.product;
+      
       if (!data) {
         setNotFound(true);
         setProduct(null);
@@ -43,9 +35,7 @@ function useProductDetail(rawProductId) {
 
       const related = data.relatedProducts
         ? data.relatedProducts
-        : isUsingMocks()
-          ? mockDataStore.getProductsByCategory(data.categoryId).filter(p => p.id !== data.id)
-          : await ProductService.getProducts({ categoryId: data.categoryId, limit: 4, exclude: data.id });
+        : await ProductService.getProducts({ categoryId: data.categoryId, limit: 4, exclude: data.id });
 
       setRelatedProducts(related || []);
     } catch (err) {
@@ -70,13 +60,9 @@ function useProductDetail(rawProductId) {
     setCartLoading(true);
     setCartSuccess(false);
     try {
-      if (isUsingMocks()) {
-        mockDataStore.addToCart(product.id, quantity);
-      } else {
-        await CartService.addToCart(product.id, quantity);
-        const cart = await CartService.getCart();
-        setCartCount(cart.totalCount);
-      }
+      await CartService.addToCart(product.id, quantity);
+      const cart = await CartService.getCart();
+      setCartCount(cart.totalCount);
       setCartSuccess(true);
     } catch (err) {
       console.error('Add to cart error:', err);

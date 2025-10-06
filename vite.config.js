@@ -8,7 +8,26 @@ export default defineConfig({
   build: {
     outDir: 'dist'
   },
+  optimizeDeps: {
+    include: [
+      '@emotion/react',
+      '@emotion/styled',
+      '@mui/material',
+      '@mui/icons-material',
+      '@mantine/core',
+      '@mantine/hooks'
+    ]
+  },
   server: {
+    port: 5173,
+    host: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8088',
+        changeOrigin: true,
+        secure: false
+      }
+    },
     historyApiFallback: true
   }
 });

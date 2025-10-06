@@ -1,4 +1,3 @@
-// src/components/customer/RelatedProducts.jsx
 import React, { useState, Suspense } from 'react';
 import {
   Box,
@@ -13,6 +12,8 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon, Share as ShareIcon, CompareArrows } from '@mui/icons-material';
 import ProductCard from './ProductCard';
+import { getProductImage } from '../../utils/fallbackImages.js';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -37,14 +38,32 @@ class ErrorBoundary extends React.Component {
 }
 
 const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToComparison }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
-  // Responsive breakpoints
+  // MUST be called before any conditional returns
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
   const isSm = useMediaQuery(theme.breakpoints.between('sm', 'md'));
   const isMd = useMediaQuery(theme.breakpoints.between('md', 'lg'));
   const isLg = useMediaQuery(theme.breakpoints.up('lg'));
+
+  // Defensive type checking to prevent runtime errors
+  const safeProducts = Array.isArray(products) ? products : [];
+  
+  
+  if (!loading && safeProducts.length === 0) {
+    return (
+      <Box mt={6}>
+        <Typography variant="h5" component="h2" gutterBottom fontWeight="bold">
+          Related Products
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          No related products available at this time.
+        </Typography>
+      </Box>
+    );
+  }
 
   let columns = 5;
   if (isXs) columns = 1;
@@ -59,9 +78,11 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
 
   const handleAddToCart = async (productId) => {
     try {
-      await onAddToCart(productId, 1);
+      if (onAddToCart && typeof onAddToCart === 'function') {
+        await onAddToCart(productId, 1);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Error adding product to cart:', err);
     }
   };
 
@@ -93,7 +114,7 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
               ? skeletons.map((_, idx) => (
                   <Skeleton key={idx} variant="rectangular" height={350} sx={{ borderRadius: 1 }} />
                 ))
-              : products.map((product) => (
+              : safeProducts.map((product) => (
                   <Box
                     key={product.id}
                     sx={{
@@ -111,7 +132,7 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
                       aria-label={`Related product: ${product.name}, Price: $${product.price}`}
                     />
                     <Box display="flex" justifyContent="space-between" mt={1}>
-                      <Tooltip title="Quick View">
+                      <Tooltip title={t('ui.quickView')}>
                         <Button
                           size="small"
                           variant="outlined"
@@ -120,7 +141,7 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
                           Quick View
                         </Button>
                       </Tooltip>
-                      <Tooltip title="Add to Comparison">
+                      <Tooltip title={t('ui.addToComparison')}>
                         <Button
                           size="small"
                           variant="outlined"
@@ -129,7 +150,7 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
                           <CompareArrows fontSize="small" />
                         </Button>
                       </Tooltip>
-                      <Tooltip title="Share">
+                      <Tooltip title={t('ui.share')}>
                         <Button
                           size="small"
                           variant="outlined"
@@ -169,7 +190,7 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
           <IconButton
             sx={{ position: 'absolute', top: 8, right: 8 }}
             onClick={closeQuickView}
-            aria-label="Close quick view modal"
+            aria-label={t('ui.closeQuickViewModal')}
           >
             <CloseIcon />
           </IconButton>
@@ -180,7 +201,13 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
               </Typography>
               <Box
                 component="img"
-                src={quickViewProduct.images?.[0]}
+                src={getProductImage(
+                  quickViewProduct.images?.[0],
+                  quickViewProduct.category,
+                  quickViewProduct.id,
+                  400,
+                  300
+                )}
                 alt={quickViewProduct.name}
                 sx={{ width: '100%', maxHeight: '60vh', objectFit: 'contain', mb: 2 }}
                 loading="lazy"
@@ -194,7 +221,7 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
                 sx={{ mt: 2 }}
                 onClick={() => handleAddToCart(quickViewProduct.id)}
               >
-                Add to Cart
+{t('product.addToCart')}
               </Button>
             </>
           )}

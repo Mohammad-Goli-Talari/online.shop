@@ -1,14 +1,7 @@
-// src/services/productService.js
-/**
- * Products API Service
- * Handles all product-related API calls
- */
-
 import { apiClient, handleApiResponse } from '../utils/apiClient.js';
 
 export class ProductService {
-  // Get all products with filters and pagination
-  static async getProducts(filters = {}) {
+  static async getProducts(filters = {}, options = {}) {
     try {
       const params = {
         page: filters.page || 1,
@@ -22,14 +15,18 @@ export class ProductService {
         sortOrder: filters.sortOrder
       };
 
-      // Remove undefined values
       Object.keys(params).forEach(key => {
         if (params[key] === undefined || params[key] === '') {
           delete params[key];
         }
       });
 
-      const response = await apiClient.get('/products', { params });
+      const config = { params };
+      if (options.signal) {
+        config.signal = options.signal;
+      }
+
+      const response = await apiClient.get('/products', config);
       return handleApiResponse(response);
     } catch (error) {
       console.error('Get products error:', error);
@@ -37,7 +34,6 @@ export class ProductService {
     }
   }
 
-  // Get product by ID
   static async getProductById(id) {
     try {
       const response = await apiClient.get(`/products/${id}`);
@@ -48,17 +44,32 @@ export class ProductService {
     }
   }
 
-  // Search products
-  static async searchProducts(query, options = {}) {
+  static async searchProducts(params = {}, options = {}) {
     try {
-      const params = {
-        q: query,
-        page: options.page || 1,
-        limit: options.limit || 10,
-        ...options.filters
+      const searchParams = {
+        q: params.search || '',
+        page: params.page || 1,
+        limit: params.limit || 10,
+        categoryId: params.categoryId,
+        minPrice: params.minPrice,
+        maxPrice: params.maxPrice,
+        inStock: params.inStock,
+        sortBy: params.sortBy,
+        sortOrder: params.sortOrder
       };
 
-      const response = await apiClient.get('/products/search', { params });
+      Object.keys(searchParams).forEach(key => {
+        if (searchParams[key] === undefined || searchParams[key] === '') {
+          delete searchParams[key];
+        }
+      });
+
+      const config = { params: searchParams };
+      if (options.signal) {
+        config.signal = options.signal;
+      }
+
+      const response = await apiClient.get('/products/search', config);
       return handleApiResponse(response);
     } catch (error) {
       console.error('Search products error:', error);
@@ -66,7 +77,6 @@ export class ProductService {
     }
   }
 
-  // Get featured products
   static async getFeaturedProducts(limit = 8) {
     try {
       const response = await apiClient.get('/products/featured', {
@@ -79,7 +89,6 @@ export class ProductService {
     }
   }
 
-  // Admin: Create product
   static async createProduct(productData) {
     try {
       const response = await apiClient.post('/products', productData);
@@ -90,7 +99,6 @@ export class ProductService {
     }
   }
 
-  // Admin: Update product
   static async updateProduct(id, productData) {
     try {
       const response = await apiClient.put(`/products/${id}`, productData);
@@ -101,7 +109,6 @@ export class ProductService {
     }
   }
 
-  // Admin: Delete product
   static async deleteProduct(id) {
     try {
       const response = await apiClient.delete(`/products/${id}`);
@@ -112,7 +119,6 @@ export class ProductService {
     }
   }
 
-  // Admin: Upload product images
   static async uploadProductImages(id, images) {
     try {
       const formData = new FormData();

@@ -1,5 +1,4 @@
-// src/components/customer/Breadcrumbs.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Breadcrumbs as MUIBreadcrumbs,
   Link,
@@ -9,9 +8,65 @@ import {
 } from '@mui/material';
 import { Home, ChevronRight } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
 
 const Breadcrumbs = ({ product, loading }) => {
+  useEffect(() => {
+    if (!product) return;
+
+    const categories = [];
+    if (product.category) {
+      let current = product.category;
+      while (current) {
+        categories.unshift(current);
+        current = current.parent || null;
+      }
+    }
+
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": `${window.location.origin}/`
+        },
+        ...categories.map((cat, idx) => ({
+          "@type": "ListItem",
+          "position": idx + 2,
+          "name": cat.name,
+          "item": `${window.location.origin}/categories/${cat.slug}`
+        })),
+        {
+          "@type": "ListItem",
+          "position": categories.length + 2,
+          "name": product.name,
+          "item": `${window.location.href}`
+        }
+      ]
+    };
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(breadcrumbSchema);
+    script.id = 'breadcrumb-schema';
+    
+    const existingScript = document.getElementById('breadcrumb-schema');
+    if (existingScript) {
+      document.head.removeChild(existingScript);
+    }
+    
+    document.head.appendChild(script);
+    
+    return () => {
+      const scriptToRemove = document.getElementById('breadcrumb-schema');
+      if (scriptToRemove) {
+        document.head.removeChild(scriptToRemove);
+      }
+    };
+  }, [product]);
+
   if (loading) {
     return (
       <Skeleton
@@ -27,48 +82,15 @@ const Breadcrumbs = ({ product, loading }) => {
 
   const categories = [];
   if (product.category) {
-    // parent categories
     let current = product.category;
     while (current) {
       categories.unshift(current);
       current = current.parent || null;
     }
   }
-  // JSON-LD structured data for SEO
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": `${window.location.origin}/`
-      },
-      ...categories.map((cat, idx) => ({
-        "@type": "ListItem",
-        "position": idx + 2,
-        "name": cat.name,
-        "item": `${window.location.origin}/categories/${cat.slug}`
-      })),
-      {
-        "@type": "ListItem",
-        "position": categories.length + 2,
-        "name": product.name,
-        "item": `${window.location.href}`
-      }
-    ]
-  };
 
   return (
     <Box component="nav" aria-label="breadcrumb">
-      {/* JSON-LD */}
-      <Helmet>
-        <script type="application/ld+json">
-          {JSON.stringify(breadcrumbSchema)}
-        </script>
-      </Helmet>
-
       <MUIBreadcrumbs
         separator={<ChevronRight fontSize="small" />}
         sx={{ mb: { xs: 2, md: 3 } }}

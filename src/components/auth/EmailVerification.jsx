@@ -1,4 +1,3 @@
-// src/components/auth/EmailVerification.jsx
 import React, { useEffect, useState } from 'react';
 import {
   Box,
@@ -19,7 +18,6 @@ const EmailVerification = () => {
   const [status, setStatus] = useState(null); // 'success' | 'error' | null
   const [resendCooldown, setResendCooldown] = useState(0);
 
-  // Simulate token verification
   useEffect(() => {
     if (token) {
       console.log('🔐 Token from email link:', token);
@@ -32,7 +30,6 @@ const EmailVerification = () => {
     }
   }, [token]);
 
-  // Countdown for resend button
   useEffect(() => {
     let timer;
     if (resendCooldown > 0) {

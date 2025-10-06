@@ -2,12 +2,10 @@ import { useEffect } from 'react';
 
 const SEOHead = ({ title, description, ogTitle, ogDescription, ogImage, structuredData }) => {
   useEffect(() => {
-    // Update document title
     if (title) {
       document.title = title;
     }
 
-    // Update meta tags
     const updateMetaTag = (property, content) => {
       if (!content) return;
       
@@ -26,12 +24,10 @@ const SEOHead = ({ title, description, ogTitle, ogDescription, ogImage, structur
       meta.setAttribute('content', content);
     };
 
-    // Update description
     if (description) {
       updateMetaTag('description', description);
     }
 
-    // Update Open Graph tags
     if (ogTitle) {
       updateMetaTag('og:title', ogTitle);
     }
@@ -42,7 +38,6 @@ const SEOHead = ({ title, description, ogTitle, ogDescription, ogImage, structur
       updateMetaTag('og:image', ogImage);
     }
 
-    // Update structured data
     if (structuredData) {
       let script = document.querySelector('script[type="application/ld+json"]');
       if (!script) {
@@ -53,14 +48,12 @@ const SEOHead = ({ title, description, ogTitle, ogDescription, ogImage, structur
       script.textContent = JSON.stringify(structuredData);
     }
 
-    // Cleanup function
     return () => {
-      // Reset title to default when component unmounts
-      document.title = 'MyShop';
+      document.title = 'Goli Store';
     };
   }, [title, description, ogTitle, ogDescription, ogImage, structuredData]);
 
-  return null; // This component doesn't render anything
+  return null;
 };
 
 export default SEOHead;

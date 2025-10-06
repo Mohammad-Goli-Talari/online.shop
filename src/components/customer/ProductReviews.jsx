@@ -1,5 +1,4 @@
-// src/components/customer/ProductReviews.jsx
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -12,7 +11,6 @@ import {
   Paper,
 } from '@mui/material';
 import RateReviewOutlinedIcon from '@mui/icons-material/RateReviewOutlined';
-import { Helmet } from 'react-helmet';
 
 const ProductReviews = ({
   productId,
@@ -23,8 +21,8 @@ const ProductReviews = ({
   onWriteReview = null,
 }) => {
 
-  const schemaMarkup =
-    averageRating !== null && reviewCount !== null
+  const schemaMarkup = useMemo(() => {
+    return averageRating !== null && reviewCount !== null
       ? {
           '@context': 'https://schema.org/',
           '@type': 'Product',
@@ -38,6 +36,30 @@ const ProductReviews = ({
           },
         }
       : null;
+  }, [averageRating, reviewCount, productId]);
+
+  useEffect(() => {
+    if (schemaMarkup) {
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.textContent = JSON.stringify(schemaMarkup);
+      script.id = 'product-reviews-schema';
+      
+      const existingScript = document.getElementById('product-reviews-schema');
+      if (existingScript) {
+        document.head.removeChild(existingScript);
+      }
+      
+      document.head.appendChild(script);
+      
+      return () => {
+        const scriptToRemove = document.getElementById('product-reviews-schema');
+        if (scriptToRemove) {
+          document.head.removeChild(scriptToRemove);
+        }
+      };
+    }
+  }, [schemaMarkup]);
 
   return (
     <Box
@@ -56,15 +78,6 @@ const ProductReviews = ({
       >
         Customer Reviews
       </Typography>
-
-      {/* SEO structured data */}
-      {schemaMarkup && (
-        <Helmet>
-          <script type="application/ld+json">
-            {JSON.stringify(schemaMarkup)}
-          </script>
-        </Helmet>
-      )}
 
       {/* Loading state */}
       {isLoading && (

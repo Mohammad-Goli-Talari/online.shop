@@ -1,4 +1,3 @@
-// src/pages/admin/index.jsx
 import React from 'react';
 import AdminLayout from '../../layouts/AdminLayout';
 import { Typography, Box, Grid, Card, CardContent, Button } from '@mui/material';

@@ -1,10 +1,9 @@
-// src/components/customer/CategoryFilter.jsx
-// CategoryFilter: Displays product categories as selectable chips for filtering products.
-// Fetches categories from CategoryService or uses provided prop. Handles loading, error, and selection states.
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Typography, CircularProgress, Box, Alert, Chip } from '@mui/material';
+import { Typography, Box, Alert, Chip } from '@mui/material';
 import CategoryService from '../../services/categoryService';
+import { CategoryChipSkeleton } from '../skeletons';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const isNumericString = (v) => typeof v === 'string' && /^\d+$/.test(v);
 const coerceId = (v) => (isNumericString(v) ? Number(v) : v);
@@ -21,10 +20,10 @@ const normalizeCategories = (arr = []) =>
     .filter((c) => c.id !== null && c.id !== undefined);
 
 const CategoryFilter = ({ onCategorySelect, categories: categoriesProp }) => {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // Use null for 'All' selection for consistency
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
@@ -70,8 +69,11 @@ const CategoryFilter = ({ onCategorySelect, categories: categoriesProp }) => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" my={4}>
-        <CircularProgress size={24} />
+      <Box>
+        <Typography variant="h6" gutterBottom>
+          Categories
+        </Typography>
+        <CategoryChipSkeleton count={6} />
       </Box>
     );
   }
@@ -90,21 +92,20 @@ const CategoryFilter = ({ onCategorySelect, categories: categoriesProp }) => {
         Categories
       </Typography>
       <Box
-        aria-label="Product Categories"
+        aria-label={t('ui.productCategories')}
         sx={{
           display: 'flex',
           flexWrap: 'wrap',
           gap: 1,
           overflowX: { xs: 'scroll', sm: 'auto' },
           py: 1,
-          // Hide scrollbar visually but keep it accessible
           '&::-webkit-scrollbar': { display: 'none' },
           msOverflowStyle: 'none',
           scrollbarWidth: 'none',
         }}
       >
         <Chip
-          label="All"
+          label={t('ui.all')}
           clickable
           color={selectedCategory === null ? 'primary' : 'default'}
           onClick={() => handleSelect(null)}

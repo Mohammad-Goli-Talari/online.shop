@@ -1,4 +1,3 @@
-// src/components/auth/SignupForm.jsx
 import React, { useState } from 'react';
 import {
   Box,
@@ -20,6 +19,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import useAuth from '../../hooks/useAuth';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const schema = yup.object().shape({
   firstName: yup.string().required('First name is required'),
@@ -39,7 +40,7 @@ const calculatePasswordStrength = (password) => {
 };
 
 const SignupForm = () => {
-  const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -60,28 +61,44 @@ const SignupForm = () => {
   });
 
   const navigate = useNavigate();
+  const { register: registerUser, loading, error, clearError } = useAuth();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  React.useEffect(() => {
+    if (error) {
+      clearError();
+    }
+  }, [error, clearError]);
+
   const onSubmit = async (data) => {
     try {
-      setLoading(true);
-      console.log('Form Submitted:', data);
-      await new Promise((res) => setTimeout(res, 1500));
-      setSnackbarSeverity('success');
-      setSnackbarMessage('Account created successfully!');
-      setSnackbarOpen(true);
-      reset();
-      setPasswordValue('');
-      localStorage.setItem('signupEmail', data.email);
-      setTimeout(() => navigate('/auth/verify-email'), 1000);
-    } catch {
+      const result = await registerUser(data);
+      
+      if (result.success) {
+        setSnackbarSeverity('success');
+        setSnackbarMessage(t('auth.accountCreatedSuccessfully'));
+        setSnackbarOpen(true);
+        reset();
+        setPasswordValue('');
+        
+        if (result.user) {
+          const redirectPath = result.user.role === 'ADMIN' ? '/admin' : '/';
+          setTimeout(() => navigate(redirectPath), 1000);
+        } else {
+          localStorage.setItem('signupEmail', data.email);
+          setTimeout(() => navigate('/auth/verify-email'), 1000);
+        }
+      } else {
+        setSnackbarSeverity('error');
+        setSnackbarMessage(result.error || t('auth.registrationFailed'));
+        setSnackbarOpen(true);
+      }
+    } catch (err) {
       setSnackbarSeverity('error');
-      setSnackbarMessage('Something went wrong!');
+      setSnackbarMessage(err.message || t('auth.somethingWentWrong'));
       setSnackbarOpen(true);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -106,14 +123,20 @@ const SignupForm = () => {
     >
       <Stack spacing={2}>
         <Box>
-          <Typography variant="h5" fontWeight={700}>Sign Up</Typography>
+          <Typography variant="h5" fontWeight={700}>{t('auth.signUp')}</Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
-            Already have an account?{' '}
+            {t('auth.alreadyHaveAccount')}{' '}
             <Link to="/auth/sign-in" style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}>
-              Sign in
+              {t('auth.signIn')}
             </Link>
           </Typography>
         </Box>
+
+        {error && (
+          <Alert severity="error" onClose={clearError}>
+            {error}
+          </Alert>
+        )}
 
         <Box
           sx={{
@@ -123,7 +146,7 @@ const SignupForm = () => {
           }}
         >
           <TextField
-            label="First Name"
+            label={t('auth.firstName')}
             fullWidth
             size="small"
             {...register('firstName')}
@@ -131,7 +154,7 @@ const SignupForm = () => {
             helperText={errors.firstName?.message}
           />
           <TextField
-            label="Last Name"
+            label={t('auth.lastName')}
             fullWidth
             size="small"
             {...register('lastName')}
@@ -141,7 +164,7 @@ const SignupForm = () => {
         </Box>
 
         <TextField
-          label="Email"
+          label={t('auth.email')}
           fullWidth
           size="small"
           {...register('email')}
@@ -150,7 +173,7 @@ const SignupForm = () => {
         />
 
         <TextField
-          label="Password"
+          label={t('auth.password')}
           type={showPassword ? 'text' : 'password'}
           fullWidth
           size="small"
@@ -167,7 +190,7 @@ const SignupForm = () => {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" aria-label="toggle password visibility">
+                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" aria-label={t('auth.togglePasswordVisibility')}>
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>
@@ -209,22 +232,22 @@ const SignupForm = () => {
             '&:hover': { backgroundColor: '#333' },
           }}
         >
-          {loading ? 'Loading...' : 'Sign Up'}
+          {loading ? t('loading.signingUp') : t('auth.signUp')}
         </Button>
 
         <Typography variant="caption" textAlign="center" sx={{ fontSize: '0.6rem', lineHeight: 1.4, px: 0.5 }}>
-          By signing up, I agree to{' '}
+          {t('auth.bySigningUpAgree')}{' '}
           <Typography component="span" color="success.main" sx={{ fontWeight: 500, cursor: 'pointer' }}>
-            Terms of Service
+            {t('auth.termsOfService')}
           </Typography>{' '}
-          and{' '}
+          {t('common.and')}{' '}
           <Typography component="span" color="success.main" sx={{ fontWeight: 500, cursor: 'pointer' }}>
-            Privacy Policy
+            {t('auth.privacyPolicy')}
           </Typography>
           .
         </Typography>
 
-        <Divider sx={{ fontSize: '0.65rem', my: 1 }}>OR</Divider>
+        <Divider sx={{ fontSize: '0.65rem', my: 1 }}>{t('auth.or')}</Divider>
 
         <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
           <IconButton sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}>

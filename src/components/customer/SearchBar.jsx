@@ -1,52 +1,133 @@
-// src/components/customer/SearchBar.jsx
-// SearchBar: Product search input with debounce, clear, and accessibility features.
-// Props:
-//   - onSearch: function(query)
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { TextField, InputAdornment, IconButton } from '@mui/material';
 import { Search, Clear } from '@mui/icons-material';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
-const SearchBar = ({ onSearch }) => {
+const SearchBar = ({ onSearch = () => Promise.resolve(), minQueryLength = 3, debounceMs = 800 }) => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState(query);
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceTimerRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedQuery(query.trim()), 500);
-    return () => clearTimeout(handler);
-  }, [query]);
-
-  useEffect(() => {
-    if (debouncedQuery !== '') {
-      onSearch(debouncedQuery);
+  const debouncedSearch = useCallback((searchQuery) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
-  }, [debouncedQuery, onSearch]);
 
-  const handleInputChange = (e) => setQuery(e.target.value);
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
 
-  const handleClear = () => {
+    debounceTimerRef.current = setTimeout(() => {
+      const trimmedQuery = searchQuery.trim();
+      
+      if (trimmedQuery === '' || trimmedQuery.length >= minQueryLength) {
+        setIsSearching(true);
+        
+        abortControllerRef.current = new AbortController();
+        
+        onSearch(trimmedQuery, abortControllerRef.current.signal)
+          .finally(() => {
+            setIsSearching(false);
+            abortControllerRef.current = null;
+          });
+      }
+    }, debounceMs);
+  }, [onSearch, minQueryLength, debounceMs]);
+
+  const handleInputChange = useCallback((e) => {
+    const newQuery = e.target.value;
+    setQuery(newQuery);
+    debouncedSearch(newQuery);
+  }, [debouncedSearch]);
+
+  const handleClear = useCallback(() => {
     setQuery('');
-    onSearch('');
-  };
+    setIsSearching(false);
+    
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    onSearch('').catch(() => {});
+  }, [onSearch]);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      onSearch(query.trim());
+      const trimmedQuery = query.trim();
+      
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      
+      if (trimmedQuery === '' || trimmedQuery.length >= minQueryLength) {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+        
+        setIsSearching(true);
+        abortControllerRef.current = new AbortController();
+        
+        onSearch(trimmedQuery, abortControllerRef.current.signal)
+          .finally(() => {
+            setIsSearching(false);
+            abortControllerRef.current = null;
+          });
+      }
     }
-  };
+  }, [query, onSearch, minQueryLength]);
+
+  const handleSearchClick = useCallback(() => {
+    const trimmedQuery = query.trim();
+    if (trimmedQuery === '' || trimmedQuery.length >= minQueryLength) {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      setIsSearching(true);
+      abortControllerRef.current = new AbortController();
+      
+      onSearch(trimmedQuery, abortControllerRef.current.signal)
+        .finally(() => {
+          setIsSearching(false);
+          abortControllerRef.current = null;
+        });
+    }
+  }, [query, onSearch, minQueryLength]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   return (
     <TextField
       fullWidth
       variant="outlined"
-      placeholder="Search products..."
-      aria-label="Search products"
+      placeholder={t('placeholders.searchProducts')}
+      aria-label={t('ui.searchProducts')}
       value={query}
       onChange={handleInputChange}
       onKeyDown={handleKeyDown}
+      disabled={isSearching}
       inputProps={{
         'aria-label': 'Search products',
+        'aria-describedby': 'search-help',
         autoComplete: 'off',
         maxLength: 100,
       }}
@@ -54,11 +135,12 @@ const SearchBar = ({ onSearch }) => {
         startAdornment: (
           <InputAdornment position="start">
             <IconButton
-              onClick={() => onSearch(query.trim())}
+              onClick={handleSearchClick}
               edge="start"
-              aria-label="search"
+              aria-label={t('common.search')}
               size="small"
               tabIndex={0}
+              disabled={isSearching || (query.trim() !== '' && query.trim().length < minQueryLength)}
             >
               <Search />
             </IconButton>
@@ -68,10 +150,11 @@ const SearchBar = ({ onSearch }) => {
           <InputAdornment position="end">
             <IconButton
               onClick={handleClear}
-              aria-label="clear search"
+              aria-label={t('ui.clearSearch')}
               size="small"
               edge="end"
               tabIndex={0}
+              disabled={isSearching}
             >
               <Clear />
             </IconButton>
@@ -84,7 +167,9 @@ const SearchBar = ({ onSearch }) => {
 };
 
 SearchBar.propTypes = {
-  onSearch: PropTypes.func.isRequired,
+  onSearch: PropTypes.func,
+  minQueryLength: PropTypes.number,
+  debounceMs: PropTypes.number,
 };
 
 export default SearchBar;

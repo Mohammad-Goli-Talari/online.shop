@@ -1,13 +1,6 @@
-// src/services/authService.js
-/**
- * Authentication API Service
- * Handles all authentication-related API calls
- */
-
 import { apiClient, handleApiResponse } from '../utils/apiClient.js';
 
 export class AuthService {
-  // Login user
   static async login(email, password) {
     try {
       const response = await apiClient.post('/auth/login', {
@@ -17,10 +10,11 @@ export class AuthService {
       
       const data = handleApiResponse(response);
       
-      // Store token in localStorage
       if (data.token) {
         localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('refresh_token', data.refreshToken);
+        if (data.refreshToken) {
+          localStorage.setItem('refresh_token', data.refreshToken);
+        }
         localStorage.setItem('user', JSON.stringify(data.user));
       }
       
@@ -31,16 +25,24 @@ export class AuthService {
     }
   }
 
-  // Register new user
   static async register(userData) {
     try {
-      const response = await apiClient.post('/auth/register', userData);
+      const registerData = {
+        email: userData.email,
+        password: userData.password,
+        fullName: userData.firstName && userData.lastName 
+          ? `${userData.firstName} ${userData.lastName}` 
+          : userData.fullName || userData.firstName || userData.lastName
+      };
+      
+      const response = await apiClient.post('/auth/register', registerData);
       const data = handleApiResponse(response);
       
-      // Store token in localStorage
       if (data.token) {
         localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('refresh_token', data.refreshToken);
+        if (data.refreshToken) {
+          localStorage.setItem('refresh_token', data.refreshToken);
+        }
         localStorage.setItem('user', JSON.stringify(data.user));
       }
       
@@ -51,7 +53,6 @@ export class AuthService {
     }
   }
 
-  // Get current user profile
   static async getCurrentUser() {
     try {
       const response = await apiClient.get('/auth/me');
@@ -62,12 +63,10 @@ export class AuthService {
     }
   }
 
-  // Logout user
   static async logout() {
     try {
       await apiClient.post('/auth/logout');
       
-      // Clear stored data
       localStorage.removeItem('auth_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
@@ -75,7 +74,6 @@ export class AuthService {
       return true;
     } catch (error) {
       console.error('Logout error:', error);
-      // Clear local data even if API call fails
       localStorage.removeItem('auth_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
@@ -83,12 +81,20 @@ export class AuthService {
     }
   }
 
-  // Refresh authentication token
   static async refreshToken() {
     try {
       const refreshToken = localStorage.getItem('refresh_token');
+      
       if (!refreshToken) {
-        throw new Error('No refresh token available');
+        const response = await apiClient.post('/auth/refresh');
+        const data = handleApiResponse(response);
+        
+        localStorage.setItem('auth_token', data.token);
+        if (data.refreshToken) {
+          localStorage.setItem('refresh_token', data.refreshToken);
+        }
+        
+        return data;
       }
 
       const response = await apiClient.post('/auth/refresh', {
@@ -97,7 +103,6 @@ export class AuthService {
       
       const data = handleApiResponse(response);
       
-      // Update stored tokens
       localStorage.setItem('auth_token', data.token);
       if (data.refreshToken) {
         localStorage.setItem('refresh_token', data.refreshToken);
@@ -110,7 +115,6 @@ export class AuthService {
     }
   }
 
-  // Forgot password
   static async forgotPassword(email) {
     try {
       const response = await apiClient.post('/auth/forgot-password', { email });
@@ -121,7 +125,6 @@ export class AuthService {
     }
   }
 
-  // Reset password
   static async resetPassword(token, password, confirmPassword) {
     try {
       const response = await apiClient.post('/auth/reset-password', {
@@ -136,13 +139,11 @@ export class AuthService {
     }
   }
 
-  // Update user profile
   static async updateProfile(profileData) {
     try {
       const response = await apiClient.put('/auth/profile', profileData);
       const data = handleApiResponse(response);
       
-      // Update stored user data
       localStorage.setItem('user', JSON.stringify(data.user));
       
       return data;
@@ -152,12 +153,10 @@ export class AuthService {
     }
   }
 
-  // Check if user is authenticated
   static isAuthenticated() {
     return !!localStorage.getItem('auth_token');
   }
 
-  // Get stored user data
   static getStoredUser() {
     const userData = localStorage.getItem('user');
     return userData ? JSON.parse(userData) : null;

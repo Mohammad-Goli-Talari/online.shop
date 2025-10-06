@@ -1,4 +1,3 @@
-// src/components/auth/SigninForm.jsx
 import React, { useState } from 'react';
 import {
   Box,
@@ -13,7 +12,7 @@ import {
   Alert,
   
 } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Google,
   GitHub,
@@ -25,6 +24,8 @@ import {
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
+import useAuth from '../../hooks/useAuth';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const schema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Email is required'),
@@ -32,6 +33,7 @@ const schema = yup.object().shape({
 });
 
 const SigninForm = () => {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -41,34 +43,46 @@ const SigninForm = () => {
     resolver: yupResolver(schema),
   });
 
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, loading, error, clearError } = useAuth();
 
-  // theme left for potential responsive tweaks
+  React.useEffect(() => {
+    if (error) {
+      clearError();
+    }
+  }, [error, clearError]);
 
   const onSubmit = async (formData) => {
     try {
-      setLoading(true);
-      console.log('Form Submitted:', formData);
-      await new Promise((res) => setTimeout(res, 1500));
-      setSnackbarSeverity('success');
-      setSnackbarMessage('Signed in successfully!');
-      setSnackbarOpen(true);
-      reset();
-      setTimeout(() => {
-        navigate('/admin');
-      }, 1000);
-    } catch {
+      const result = await login(formData.email, formData.password);
+      
+      if (result.success) {
+        setSnackbarSeverity('success');
+        setSnackbarMessage(t('auth.signedInSuccessfully'));
+        setSnackbarOpen(true);
+        reset();
+        
+        const from = location.state?.from?.pathname;
+        const redirectPath = from || (result.user.role === 'ADMIN' ? '/admin' : '/');
+        
+        setTimeout(() => {
+          navigate(redirectPath, { replace: true });
+        }, 1000);
+      } else {
+        setSnackbarSeverity('error');
+        setSnackbarMessage(result.error || t('auth.signInFailed'));
+        setSnackbarOpen(true);
+      }
+    } catch (err) {
       setSnackbarSeverity('error');
-      setSnackbarMessage('Sign in failed!');
+      setSnackbarMessage(err.message || t('auth.signInFailed'));
       setSnackbarOpen(true);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -91,20 +105,26 @@ const SigninForm = () => {
     >
       <Stack spacing={2}>
         <Box>
-          <Typography variant="h5" fontWeight={700}>Sign In</Typography>
+          <Typography variant="h5" fontWeight={700}>{t('auth.signIn')}</Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
-            Don’t have an account?{' '}
+            {t('auth.dontHaveAccount')}{' '}
             <Link
               to="/auth/sign-up"
               style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}
             >
-              Sign up
+              {t('auth.signUp')}
             </Link>
           </Typography>
         </Box>
 
+        {error && (
+          <Alert severity="error" onClose={clearError}>
+            {error}
+          </Alert>
+        )}
+
         <TextField
-          label="Email"
+          label={t('auth.email')}
           fullWidth
           size="small"
           {...register('email')}
@@ -113,7 +133,7 @@ const SigninForm = () => {
         />
 
         <TextField
-          label="Password"
+          label={t('auth.password')}
           type={showPassword ? 'text' : 'password'}
           fullWidth
           size="small"
@@ -123,7 +143,7 @@ const SigninForm = () => {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" aria-label="toggle password visibility">
+                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" aria-label={t('auth.togglePasswordVisibility')}>
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>
@@ -136,7 +156,7 @@ const SigninForm = () => {
             to="/auth/forgot-password"
             style={{ fontSize: '0.75rem', color: '#2e7d32', textDecoration: 'none' }}
           >
-            Forgot password?
+            {t('auth.forgotPassword')}
           </Link>
         </Box>
 
@@ -152,10 +172,10 @@ const SigninForm = () => {
             '&:hover': { backgroundColor: '#333' },
           }}
         >
-          {loading ? 'Signing in...' : 'Sign In'}
+          {loading ? t('loading.signingIn') : t('auth.signIn')}
         </Button>
 
-        <Divider sx={{ fontSize: '0.65rem', my: 1 }}>OR</Divider>
+        <Divider sx={{ fontSize: '0.65rem', my: 1 }}>{t('auth.or')}</Divider>
 
         <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
           <IconButton sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}>

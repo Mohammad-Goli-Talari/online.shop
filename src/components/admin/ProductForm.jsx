@@ -1,4 +1,3 @@
-// src/components/admin/ProductForm.jsx
 import React, { useRef } from 'react';
 import {
   Grid, TextField, FormControl, InputLabel, Select, FormControlLabel,
@@ -8,6 +7,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { Controller } from 'react-hook-form';
 import { CameraAltOutlined as CameraIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const ProductForm = ({
   activeStep,
@@ -27,6 +27,7 @@ const ProductForm = ({
   onCreateCategory,
   isCreatingCategory,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [isDragging, setIsDragging] = React.useState(false);
   const fileInputRef = useRef(null);
@@ -55,7 +56,7 @@ const ProductForm = ({
 
   const renderStepContent = (step) => {
     switch (step) {
-      case 0: // Product Details
+      case 0:
         return (
           <Grid container spacing={3}>
             <Grid item xs={12} md={6} sx={{ flexGrow: isMobile ? 0.61 : 1 }}>
@@ -64,7 +65,7 @@ const ProductForm = ({
                   required: 'Product name is required',
                   minLength: { value: 3, message: 'Name must be at least 3 characters' },
                 })}
-                label="Product Name"
+                label={t('ui.productName')}
                 fullWidth
                 required
                 error={!!errors.name}
@@ -74,13 +75,13 @@ const ProductForm = ({
             </Grid>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth required error={!!errors.categoryId}>
-                <InputLabel id="category-select-label">Category</InputLabel>
+                <InputLabel id="category-select-label">{t('ui.category')}</InputLabel>
                 <Controller
                   name="categoryId"
                   control={control}
                   rules={{ required: 'Category is required' }}
                   render={({ field }) => (
-                    <Select {...field} labelId="category-select-label" label="Category" fullWidth>
+                    <Select {...field} labelId="category-select-label" label={t('ui.category')} fullWidth>
                       {categoryOptions}
                     </Select>
                   )}
@@ -89,12 +90,12 @@ const ProductForm = ({
               </FormControl>
               <Box mt={1} sx={{ width: '100%' }}>
                 <Button size="small" startIcon={<AddIcon />} onClick={onToggleAddCategory}>
-                  {showAddCategory ? 'Cancel' : 'Add New Category'}
+                  {showAddCategory ? t('common.cancel') : t('ui.addNewCategory')}
                 </Button>
                 <Collapse in={showAddCategory}>
                   <Box display="flex" gap={2} mt={1} p={2} border="1px solid" borderColor="divider" borderRadius={1} width="100%">
                     <TextField
-                      label="New Category Name"
+                      label={t('ui.newCategoryName')}
                       value={newCategoryName}
                       onChange={onNewCategoryNameChange}
                       size="small"
@@ -102,7 +103,7 @@ const ProductForm = ({
                       autoComplete="off"
                     />
                     <Button variant="contained" onClick={onCreateCategory} disabled={isCreatingCategory || !newCategoryName.trim()}>
-                      {isCreatingCategory ? <CircularProgress size={20} /> : 'Save'}
+                      {isCreatingCategory ? <CircularProgress size={20} /> : t('common.save')}
                     </Button>
                   </Box>
                 </Collapse>
@@ -138,20 +139,18 @@ const ProductForm = ({
                     render={({ field }) => <Switch {...field} checked={!!field.value} />}
                   />
                 }
-                label="Set product as active on creation"
+                label={t('ui.setProductActive')}
               />
             </Grid>
-            {/* END OF CHANGES */}
           </Grid>
         );
 
-      case 1: // Images & Description
+      case 1:
         return (
           <Grid container spacing={3}>
-            {/* Left Column: Image Upload */}
             <Grid item xs={12} md={6} sx={{ flexGrow: isMobile ? 1 : 0 }}>
               <Box sx={{ width: '100%' }}>
-                <Typography variant="h6" gutterBottom>Upload Product Images</Typography>
+                <Typography variant="h6" gutterBottom>{t('ui.uploadProductImages')}</Typography>
                 <Box
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
@@ -217,7 +216,7 @@ const ProductForm = ({
                         try {
                           previewUrl = URL.createObjectURL(image.file);
                         } catch {
-                          previewUrl = 'https://via.placeholder.com/300x300.png?text=No+Preview';
+                          previewUrl = 'https://placehold.co/300x300/4F46E5/FFFFFF?text=No+Preview';
                         }
                       }
                       return (
@@ -257,15 +256,14 @@ const ProductForm = ({
               </Box>
             </Grid>
 
-            {/* Right Column: Description */}
             <Grid item xs={12} md={6} flexGrow={1}>
               <Box sx={{ width: '100%' }}>
-                <Typography variant="h6" gutterBottom>Product Description</Typography>
+                <Typography variant="h6" gutterBottom>{t('ui.productDescription')}</Typography>
                 <TextField
                   {...register('description', {
                     maxLength: { value: 500, message: 'Description cannot exceed 500 characters' }
                   })}
-                  placeholder="Describe your product in detail..."
+                  placeholder={t('placeholders.describeProduct')}
                   multiline
                   rows={5}
                   fullWidth
@@ -278,7 +276,7 @@ const ProductForm = ({
           </Grid>
         );
 
-      case 2: // Pricing & Inventory (NO CHANGES NEEDED, ALREADY CORRECT)
+      case 2:
         return (
           <Grid container spacing={3}>
             <Grid item xs={12} md={6} flexGrow={0.5}>
@@ -288,7 +286,7 @@ const ProductForm = ({
                   valueAsNumber: true,
                   validate: (value) => value > 0 || 'Price must be positive',
                 })}
-                label="Price"
+                label={t('ui.price')}
                 type="number"
                 fullWidth
                 required
@@ -307,7 +305,7 @@ const ProductForm = ({
                   valueAsNumber: true,
                   validate: (value) => (Number.isInteger(value) && value >= 0) || 'Stock must be a non-negative integer',
                 })}
-                label="Stock"
+                label={t('ui.stock')}
                 type="number"
                 fullWidth
                 required

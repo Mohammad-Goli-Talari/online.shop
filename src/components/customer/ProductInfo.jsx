@@ -1,9 +1,10 @@
-// src/components/customer/ProductInfo.jsx
 import React from 'react';
 import { Box, Typography, Chip, Skeleton, Stack } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const ProductInfo = ({ product, loading }) => {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <Stack spacing={2}>
@@ -23,7 +24,6 @@ const ProductInfo = ({ product, loading }) => {
     );
   }
 
-  // Safe destructuring with defaults
   const {
     name = '-',
     price = 0,
@@ -85,7 +85,7 @@ const ProductInfo = ({ product, loading }) => {
         />
 
         <Chip
-          label={stock > 0 ? 'In Stock' : 'Out of Stock'}
+          label={stock > 0 ? t('product.inStock') : t('product.outOfStock')}
           color={stock > 0 ? 'success' : 'error'}
           sx={{ transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.05)' } }}
         />
