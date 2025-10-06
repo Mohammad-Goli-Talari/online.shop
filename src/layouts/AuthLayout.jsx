@@ -1,10 +1,12 @@
 import React from 'react';
 import { Box, Typography, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from '../hooks/useTranslation.js';
 
 const AuthLayout = ({ children }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { t } = useTranslation();
 
   return (
     <Box
@@ -31,10 +33,10 @@ const AuthLayout = ({ children }) => {
         {!isMobile && (
           <Box textAlign="center">
             <Typography variant="h4" fontWeight={800}>
-              Hi, Welcome Back To Online Shop
+              {t('auth.welcomeBack')}
             </Typography>
             <Typography variant="body2" sx={{ mt: 1.5 }}>
-              To keep connected with us, please login with your personal info
+              {t('auth.keepConnectedMessage')}
             </Typography>
           </Box>
         )}

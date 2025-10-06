@@ -5,6 +5,8 @@ import { ShoppingCart, Storefront } from '@mui/icons-material';
 import SearchBar from '../components/customer/SearchBar';
 import ThemeToggle from '../components/common/ThemeToggle.jsx';
 import UserMenu from '../components/common/UserMenu.jsx';
+import LanguageSelector from '../components/common/LanguageSelector.jsx';
+import { useTranslation } from '../hooks/useTranslation.js';
 
 /**
  * CustomerLayout provides the main structure for customer-facing pages.
@@ -14,14 +16,16 @@ import UserMenu from '../components/common/UserMenu.jsx';
  * @param {Function} props.onSearch - The function to handle search queries from the SearchBar.
  */
 const CustomerLayout = ({ children, onSearch = () => {}, cartCount = 0, renderCartIcon = null }) => {
+  const { t } = useTranslation();
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Skip to content link for accessibility */}
       <a href="#main-content" style={{ position: 'absolute', left: -9999, top: 'auto', width: 1, height: 1, overflow: 'hidden' }}
-        tabIndex={0} aria-label="Skip to main content">
-        Skip to main content
+        tabIndex={0} aria-label={t('ui.skipToMainContent')}>
+        {t('ui.skipToMainContent')}
       </a>
-      <header aria-label="Main header">
+      <header aria-label={t('ui.mainHeader')}>
         <AppBar position="sticky" sx={{ backgroundColor: 'white', color: 'black', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
           <Toolbar>
             <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
@@ -46,19 +50,20 @@ const CustomerLayout = ({ children, onSearch = () => {}, cartCount = 0, renderCa
                   letterSpacing: '0.5px'
                 }}
               >
-                Goli Store
+                {t('messages.welcome', { defaultValue: 'Goli Store' })}
               </Typography>
             </Box>
             <Box sx={{ display: { xs: 'none', md: 'block' }, flexGrow: 2, mx: 2 }}>
               <SearchBar onSearch={onSearch} />
             </Box>
             {renderCartIcon ? renderCartIcon : (
-              <IconButton color="inherit" aria-label="shopping cart">
-                <Badge badgeContent={cartCount || 0} color="primary" aria-label="cart items">
+              <IconButton color="inherit" aria-label={t('navigation.cart', { defaultValue: 'shopping cart' })}>
+                <Badge badgeContent={cartCount || 0} color="primary" aria-label={t('cart.items', { defaultValue: 'cart items' })}>
                   <ShoppingCart />
                 </Badge>
               </IconButton>
             )}
+            <LanguageSelector variant="minimal" />
             <ThemeToggle />
             <UserMenu />
           </Toolbar>
@@ -68,11 +73,11 @@ const CustomerLayout = ({ children, onSearch = () => {}, cartCount = 0, renderCa
         </AppBar>
       </header>
 
-      <Container component="main" id="main-content" sx={{ flexGrow: 1, py: 4 }} aria-label="Main content">
+      <Container component="main" id="main-content" sx={{ flexGrow: 1, py: 4 }} aria-label={t('ui.mainContent')}>
         {children}
       </Container>
 
-      <footer aria-label="Main footer">
+      <footer aria-label={t('ui.mainFooter')}>
         <Box
           sx={{
             py: 3,

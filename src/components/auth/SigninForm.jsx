@@ -25,6 +25,7 @@ import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import useAuth from '../../hooks/useAuth';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const schema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Email is required'),
@@ -32,6 +33,7 @@ const schema = yup.object().shape({
 });
 
 const SigninForm = () => {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -62,7 +64,7 @@ const SigninForm = () => {
       
       if (result.success) {
         setSnackbarSeverity('success');
-        setSnackbarMessage('Signed in successfully!');
+        setSnackbarMessage(t('auth.signedInSuccessfully'));
         setSnackbarOpen(true);
         reset();
         
@@ -74,12 +76,12 @@ const SigninForm = () => {
         }, 1000);
       } else {
         setSnackbarSeverity('error');
-        setSnackbarMessage(result.error || 'Sign in failed!');
+        setSnackbarMessage(result.error || t('auth.signInFailed'));
         setSnackbarOpen(true);
       }
     } catch (err) {
       setSnackbarSeverity('error');
-      setSnackbarMessage(err.message || 'Sign in failed!');
+      setSnackbarMessage(err.message || t('auth.signInFailed'));
       setSnackbarOpen(true);
     }
   };
@@ -103,14 +105,14 @@ const SigninForm = () => {
     >
       <Stack spacing={2}>
         <Box>
-          <Typography variant="h5" fontWeight={700}>Sign In</Typography>
+          <Typography variant="h5" fontWeight={700}>{t('auth.signIn')}</Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
-            Don't have an account?{' '}
+            {t('auth.dontHaveAccount')}{' '}
             <Link
               to="/auth/sign-up"
               style={{ color: '#2e7d32', fontWeight: 500, textDecoration: 'none' }}
             >
-              Sign up
+              {t('auth.signUp')}
             </Link>
           </Typography>
         </Box>
@@ -122,7 +124,7 @@ const SigninForm = () => {
         )}
 
         <TextField
-          label="Email"
+          label={t('auth.email')}
           fullWidth
           size="small"
           {...register('email')}
@@ -131,7 +133,7 @@ const SigninForm = () => {
         />
 
         <TextField
-          label="Password"
+          label={t('auth.password')}
           type={showPassword ? 'text' : 'password'}
           fullWidth
           size="small"
@@ -141,7 +143,7 @@ const SigninForm = () => {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" aria-label="toggle password visibility">
+                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" aria-label={t('auth.togglePasswordVisibility')}>
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>
@@ -154,7 +156,7 @@ const SigninForm = () => {
             to="/auth/forgot-password"
             style={{ fontSize: '0.75rem', color: '#2e7d32', textDecoration: 'none' }}
           >
-            Forgot password?
+            {t('auth.forgotPassword')}
           </Link>
         </Box>
 
@@ -170,10 +172,10 @@ const SigninForm = () => {
             '&:hover': { backgroundColor: '#333' },
           }}
         >
-          {loading ? 'Signing in...' : 'Sign In'}
+          {loading ? t('loading.signingIn') : t('auth.signIn')}
         </Button>
 
-        <Divider sx={{ fontSize: '0.65rem', my: 1 }}>OR</Divider>
+        <Divider sx={{ fontSize: '0.65rem', my: 1 }}>{t('auth.or')}</Divider>
 
         <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
           <IconButton sx={{ border: '1px solid #e0e0e0', bgcolor: '#fff', width: 36, height: 36 }}>

@@ -17,6 +17,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from '../../hooks/useTranslation.js';
 import {
   Visibility,
   MoreVert,
@@ -37,6 +38,7 @@ const OrderTable = ({
   onViewOrder,
   onStatusUpdate,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const tableRef = useRef(null);
@@ -46,7 +48,7 @@ const OrderTable = ({
   const statusConfig = {
     PENDING: { color: 'warning', icon: <Pending />, label: 'Pending' },
     CONFIRMED: { color: 'info', icon: <CheckCircle />, label: 'Confirmed' },
-    PROCESSING: { color: 'primary', icon: <Assessment />, label: 'Processing' },
+    PROCESSING: { color: 'primary', icon: <Assessment />, label: t('ui.processing') },
     SHIPPED: { color: 'secondary', icon: <LocalShipping />, label: 'Shipped' },
     DELIVERED: { color: 'success', icon: <CheckCircle />, label: 'Delivered' },
     CANCELLED: { color: 'error', icon: <Cancel />, label: 'Cancelled' }
@@ -156,8 +158,8 @@ const OrderTable = ({
       <Paper sx={{ overflow: 'hidden' }}>
         <EmptyState 
           icon={ReceiptIcon}
-          title="No orders found"
-          description="Orders will appear here when customers place them."
+          title={t('emptyStates.noOrdersFound')}
+          description={t('emptyStates.ordersWillAppear')}
           variant="default"
         />
       </Paper>
@@ -229,7 +231,7 @@ const OrderTable = ({
                     <IconButton
                       size="small"
                       onClick={() => onViewOrder(order)}
-                      title="View Details"
+                      title={t('ui.viewDetails')}
                     >
                       <Visibility />
                     </IconButton>
@@ -239,7 +241,7 @@ const OrderTable = ({
                         <IconButton
                           size="small"
                           onClick={(e) => handleStatusMenuOpen(e, order.id)}
-                          title="Change Status"
+                          title={t('ui.changeStatus')}
                         >
                           <MoreVert />
                         </IconButton>

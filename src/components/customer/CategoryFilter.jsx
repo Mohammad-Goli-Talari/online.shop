@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { Typography, Box, Alert, Chip } from '@mui/material';
 import CategoryService from '../../services/categoryService';
 import { CategoryChipSkeleton } from '../skeletons';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const isNumericString = (v) => typeof v === 'string' && /^\d+$/.test(v);
 const coerceId = (v) => (isNumericString(v) ? Number(v) : v);
@@ -19,6 +20,7 @@ const normalizeCategories = (arr = []) =>
     .filter((c) => c.id !== null && c.id !== undefined);
 
 const CategoryFilter = ({ onCategorySelect, categories: categoriesProp }) => {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -90,7 +92,7 @@ const CategoryFilter = ({ onCategorySelect, categories: categoriesProp }) => {
         Categories
       </Typography>
       <Box
-        aria-label="Product Categories"
+        aria-label={t('ui.productCategories')}
         sx={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -103,7 +105,7 @@ const CategoryFilter = ({ onCategorySelect, categories: categoriesProp }) => {
         }}
       >
         <Chip
-          label="All"
+          label={t('ui.all')}
           clickable
           color={selectedCategory === null ? 'primary' : 'default'}
           onClick={() => handleSelect(null)}

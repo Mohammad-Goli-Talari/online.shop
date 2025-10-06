@@ -5,8 +5,10 @@ import { Inventory2Outlined } from '@mui/icons-material';
 import ProductCard from './ProductCard';
 import { ProductCardSkeleton } from '../skeletons';
 import EmptyState from '../common/EmptyState';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const ProductGrid = ({ products, loading = false, error = null, onAddToCart, selectedCategoryId = null }) => {
+  const { t } = useTranslation();
   const filteredProducts = selectedCategoryId
     ? products.filter(p => {
         const prodCatId =
@@ -55,7 +57,7 @@ const ProductGrid = ({ products, loading = false, error = null, onAddToCart, sel
     return (
       <EmptyState 
         icon={Inventory2Outlined}
-        title="No products found"
+        title={t('ui.noProductsFound')}
         description={
           selectedCategoryId 
             ? 'No products available in the selected category. Try browsing other categories or check back later.' 
@@ -68,7 +70,7 @@ const ProductGrid = ({ products, loading = false, error = null, onAddToCart, sel
   return (
     <Box sx={{ width: '100%' }}>
       <Box
-        aria-label="Product grid"
+        aria-label={t('ui.productGrid')}
         role="list"
         sx={{
           display: 'grid',

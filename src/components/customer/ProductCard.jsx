@@ -18,12 +18,14 @@ import { AddShoppingCart, Inventory } from '@mui/icons-material';
 import { getProductImage } from '../../utils/fallbackImages.js';
 import useAuth from '../../hooks/useAuth';
 import LoginRequiredDialog from '../common/LoginRequiredDialog';
+import { useTranslation } from '../../hooks/useTranslation.js';
 import { checkAuthenticationForAction, AUTH_MESSAGES } from '../../utils/authUtils';
 
 const formatCurrency = price =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price || 0);
 
 const ProductCard = ({ product, onAddToCart }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [imageLoading, setImageLoading] = useState(true);
@@ -217,7 +219,7 @@ const ProductCard = ({ product, onAddToCart }) => {
           </Typography>
           <Chip
             icon={<Inventory fontSize="small" />}
-            label={hasStock ? 'In Stock' : 'Out of Stock'}
+            label={hasStock ? t('product.inStock') : t('product.outOfStock')}
             color={hasStock ? 'success' : 'error'}
             variant="outlined"
             size="small"
@@ -234,11 +236,11 @@ const ProductCard = ({ product, onAddToCart }) => {
           startIcon={addingToCart ? <CircularProgress size={20} color="inherit" /> : <AddShoppingCart />}
           onClick={handleAddToCart}
           disabled={!hasStock || addingToCart}
-          aria-label={addingToCart ? "Adding to cart..." : "Add to cart"}
+          aria-label={addingToCart ? t('ui.addingToCart') : t('ui.addToCart')}
           fullWidth
           sx={{ maxWidth: '100%', fontWeight: 'bold', fontSize: '1rem' }}
         >
-          {addingToCart ? 'Adding...' : 'Add to Cart'}
+          {addingToCart ? t('loading.addingToCart') : t('product.addToCart')}
         </Button>
         {addToCartError && (
           <Typography 

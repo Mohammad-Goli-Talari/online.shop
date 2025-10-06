@@ -1,0 +1,375 @@
+/* RTL Support Styles */
+
+/* Base RTL styles */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .MuiFormControl-root {
+  text-align: right;
+}
+
+[dir="rtl"] .MuiInputBase-input {
+  text-align: right;
+}
+
+/* RTL Navigation */
+[dir="rtl"] .MuiDrawer-paper {
+  right: 0;
+  left: auto;
+}
+
+[dir="rtl"] .MuiAppBar-root {
+  right: 0;
+  left: auto;
+}
+
+/* RTL Button Groups */
+[dir="rtl"] .MuiButtonGroup-root {
+  flex-direction: row-reverse;
+}
+
+/* RTL Lists */
+[dir="rtl"] .MuiListItemIcon-root {
+  margin-left: 16px;
+  margin-right: 0;
+}
+
+/* RTL Cards */
+[dir="rtl"] .MuiCardActions-root {
+  justify-content: flex-start;
+}
+
+/* RTL Tables */
+[dir="rtl"] .MuiTableHead-root {
+  text-align: right;
+}
+
+[dir="rtl"] .MuiTableCell-head {
+  text-align: right;
+}
+
+[dir="rtl"] .MuiTableCell-body {
+  text-align: right;
+}
+
+/* RTL Forms */
+[dir="rtl"] .MuiFormLabel-root {
+  text-align: right;
+}
+
+[dir="rtl"] .MuiInputLabel-root {
+  transform-origin: top right;
+}
+
+[dir="rtl"] .MuiInputLabel-shrink {
+  transform: translate(14px, -9px) scale(0.75);
+}
+
+/* RTL Tooltips */
+[dir="rtl"] .MuiTooltip-tooltip {
+  text-align: right;
+}
+
+/* RTL Dialogs */
+[dir="rtl"] .MuiDialogTitle-root {
+  text-align: right;
+}
+
+[dir="rtl"] .MuiDialogContent-root {
+  text-align: right;
+}
+
+[dir="rtl"] .MuiDialogActions-root {
+  justify-content: flex-start;
+}
+
+/* RTL Snackbars */
+[dir="rtl"] .MuiSnackbar-root {
+  left: 24px;
+  right: auto;
+}
+
+/* RTL Stepper */
+[dir="rtl"] .MuiStepper-root {
+  direction: rtl;
+}
+
+[dir="rtl"] .MuiStepLabel-label {
+  text-align: right;
+}
+
+/* RTL Tabs */
+[dir="rtl"] .MuiTabs-root {
+  direction: rtl;
+}
+
+[dir="rtl"] .MuiTab-root {
+  text-align: right;
+}
+
+/* RTL Breadcrumbs */
+[dir="rtl"] .MuiBreadcrumbs-separator {
+  transform: scaleX(-1);
+}
+
+/* RTL Accordion */
+[dir="rtl"] .MuiAccordionSummary-content {
+  margin-right: 8px;
+  margin-left: 0;
+}
+
+[dir="rtl"] .MuiAccordionSummary-expandIconWrapper {
+  margin-left: 8px;
+  margin-right: 0;
+}
+
+/* RTL SpeedDial */
+[dir="rtl"] .MuiSpeedDial-fab {
+  left: 16px;
+  right: auto;
+}
+
+[dir="rtl"] .MuiSpeedDial-actions {
+  left: 0;
+  right: auto;
+}
+
+/* RTL Pagination */
+[dir="rtl"] .MuiPagination-root {
+  direction: rtl;
+}
+
+/* RTL Rating */
+[dir="rtl"] .MuiRating-root {
+  direction: rtl;
+}
+
+/* RTL Timeline */
+[dir="rtl"] .MuiTimeline-root {
+  direction: rtl;
+}
+
+/* RTL TreeView */
+[dir="rtl"] .MuiTreeView-root {
+  direction: rtl;
+}
+
+/* Custom RTL styles for e-commerce components */
+[dir="rtl"] .product-card {
+  text-align: right;
+}
+
+[dir="rtl"] .product-price {
+  text-align: right;
+}
+
+[dir="rtl"] .cart-item {
+  text-align: right;
+}
+
+[dir="rtl"] .order-summary {
+  text-align: right;
+}
+
+[dir="rtl"] .shipping-address {
+  text-align: right;
+}
+
+[dir="rtl"] .billing-address {
+  text-align: right;
+}
+
+/* RTL Navigation Menu */
+[dir="rtl"] .navigation-menu {
+  text-align: right;
+}
+
+[dir="rtl"] .navigation-menu .MuiMenuItem-root {
+  text-align: right;
+}
+
+/* RTL Search */
+[dir="rtl"] .search-input {
+  text-align: right;
+}
+
+/* RTL Filters */
+[dir="rtl"] .filter-section {
+  text-align: right;
+}
+
+[dir="rtl"] .filter-option {
+  text-align: right;
+}
+
+/* RTL Product Grid */
+[dir="rtl"] .product-grid {
+  direction: rtl;
+}
+
+/* RTL Category Menu */
+[dir="rtl"] .category-menu {
+  text-align: right;
+}
+
+/* RTL User Profile */
+[dir="rtl"] .user-profile {
+  text-align: right;
+}
+
+[dir="rtl"] .profile-section {
+  text-align: right;
+}
+
+/* RTL Admin Panel */
+[dir="rtl"] .admin-panel {
+  text-align: right;
+}
+
+[dir="rtl"] .admin-sidebar {
+  right: 0;
+  left: auto;
+}
+
+[dir="rtl"] .admin-content {
+  margin-right: 240px;
+  margin-left: 0;
+}
+
+/* RTL Toast Notifications */
+[dir="rtl"] .react-hot-toast {
+  right: 16px;
+  left: auto;
+}
+
+/* RTL Modal */
+[dir="rtl"] .modal-content {
+  text-align: right;
+}
+
+[dir="rtl"] .modal-header {
+  text-align: right;
+}
+
+[dir="rtl"] .modal-footer {
+  justify-content: flex-start;
+}
+
+/* RTL Loading States */
+[dir="rtl"] .loading-spinner {
+  text-align: right;
+}
+
+/* RTL Error Messages */
+[dir="rtl"] .error-message {
+  text-align: right;
+}
+
+/* RTL Success Messages */
+[dir="rtl"] .success-message {
+  text-align: right;
+}
+
+/* RTL Form Validation */
+[dir="rtl"] .form-error {
+  text-align: right;
+}
+
+/* RTL Currency Display */
+[dir="rtl"] .currency-display {
+  text-align: right;
+}
+
+/* RTL Date Display */
+[dir="rtl"] .date-display {
+  text-align: right;
+}
+
+/* RTL Quantity Selector */
+[dir="rtl"] .quantity-selector {
+  direction: rtl;
+}
+
+/* RTL Product Reviews */
+[dir="rtl"] .product-reviews {
+  text-align: right;
+}
+
+[dir="rtl"] .review-item {
+  text-align: right;
+}
+
+/* RTL Checkout Process */
+[dir="rtl"] .checkout-steps {
+  direction: rtl;
+}
+
+[dir="rtl"] .checkout-step {
+  text-align: right;
+}
+
+/* RTL Payment Form */
+[dir="rtl"] .payment-form {
+  text-align: right;
+}
+
+[dir="rtl"] .payment-method {
+  text-align: right;
+}
+
+/* RTL Order Confirmation */
+[dir="rtl"] .order-confirmation {
+  text-align: right;
+}
+
+[dir="rtl"] .order-details {
+  text-align: right;
+}
+
+/* RTL Responsive Design */
+@media (max-width: 768px) {
+  [dir="rtl"] .admin-content {
+    margin-right: 0;
+    margin-left: 0;
+  }
+  
+  [dir="rtl"] .admin-sidebar {
+    transform: translateX(100%);
+  }
+  
+  [dir="rtl"] .admin-sidebar.open {
+    transform: translateX(0);
+  }
+}
+
+/* RTL Animation Support */
+[dir="rtl"] .slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+[dir="rtl"] .slide-in-left {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

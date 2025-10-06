@@ -21,6 +21,7 @@ import ProductListPage from './pages/admin/products';
 import AdminOrdersPage from './pages/admin/orders';
 
 import { AdminRoute, GuestRoute, AuthenticatedRoute } from './components/common/ProtectedRoute';
+import MultiLanguageDemo from './components/common/MultiLanguageDemo.jsx';
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
       } />
       
       <Route path="/debug" element={<DebugNavigation />} />
+      <Route path="/language-demo" element={<MultiLanguageDemo />} />
       
       <Route path="/auth/sign-in" element={
         <GuestRoute>

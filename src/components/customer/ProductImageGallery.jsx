@@ -15,8 +15,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useSwipeable } from 'react-swipeable';
-import { FocusTrap } from '@mui/base';
 import { getProfessionalFallbackImage } from '../../utils/fallbackImages.js';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const ProductImageGallery = ({
   images = [],
@@ -25,6 +25,7 @@ const ProductImageGallery = ({
   category = null,
   productId = null,
 }) => {
+  const { t } = useTranslation();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [openZoom, setOpenZoom] = useState(false);
 
@@ -107,7 +108,7 @@ const ProductImageGallery = ({
             boxShadow: 1,
             '&:hover': { bgcolor: 'background.default' },
           }}
-          aria-label="Zoom image"
+          aria-label={t('ui.zoomImage')}
         >
           <ZoomInIcon />
         </IconButton>
@@ -153,16 +154,15 @@ const ProductImageGallery = ({
         fullWidth
         aria-labelledby="zoom-dialog-title"
       >
-        <FocusTrap open={openZoom}>
-          <DialogContent
-            sx={{ p: 1, position: 'relative', textAlign: 'center' }}
-            {...swipeHandlers}
-            ref={zoomRef}
-          >
+        <DialogContent
+          sx={{ p: 1, position: 'relative', textAlign: 'center' }}
+          {...swipeHandlers}
+          ref={zoomRef}
+        >
             <IconButton
               onClick={handleCloseZoom}
               sx={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}
-              aria-label="Close zoom modal"
+              aria-label={t('ui.closeZoomModal')}
             >
               <CloseIcon />
             </IconButton>
@@ -179,7 +179,7 @@ const ProductImageGallery = ({
                     bgcolor: 'background.paper',
                     '&:hover': { bgcolor: 'background.default' },
                   }}
-                  aria-label="Previous image"
+                  aria-label={t('ui.previousImage')}
                 >
                   <ArrowBackIosNewIcon />
                 </IconButton>
@@ -193,7 +193,7 @@ const ProductImageGallery = ({
                     bgcolor: 'background.paper',
                     '&:hover': { bgcolor: 'background.default' },
                   }}
-                  aria-label="Next image"
+                  aria-label={t('ui.nextImage')}
                 >
                   <ArrowForwardIosIcon />
                 </IconButton>
@@ -212,7 +212,6 @@ const ProductImageGallery = ({
               }}
             />
           </DialogContent>
-        </FocusTrap>
       </Dialog>
     </Box>
   );

@@ -31,8 +31,10 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import useAuth from '../../hooks/useAuth';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const UserMenu = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isAuthenticated, user, logout, loading, isAdmin } = useAuth();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -103,7 +105,7 @@ const UserMenu = () => {
           onClick={() => navigate('/auth/sign-in')}
           sx={{ display: { xs: 'none', sm: 'flex' } }}
         >
-          Sign In
+{t('auth.signIn')}
         </Button>
         <Button
           variant="outlined"
@@ -119,10 +121,10 @@ const UserMenu = () => {
             }
           }}
         >
-          Sign Up
+{t('auth.signUp')}
         </Button>
         {/* Mobile - just show login icon */}
-        <Tooltip title="Sign In">
+        <Tooltip title={t('auth.signIn')}>
           <IconButton
             color="inherit"
             onClick={() => navigate('/auth/sign-in')}

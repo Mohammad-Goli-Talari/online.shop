@@ -18,6 +18,7 @@ import { Close as CloseIcon } from '@mui/icons-material';
 
 import ProductForm from './ProductForm';
 import ProductPreview from './ProductPreview';
+import { useTranslation } from '../../hooks/useTranslation.js';
 import ProductService from '../../services/productService';
 import CategoryService from '../../services/categoryService';
 
@@ -85,6 +86,7 @@ const generateSku = (text) => {
 const steps = ['Product Details', 'Images & Description', 'Pricing & Inventory'];
 
 const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
+  const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState(0);
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
@@ -169,6 +171,7 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
         URL.revokeObjectURL(item.preview);
       }
     } catch {
+      // Ignore errors when revoking object URLs
     }
   };
 
@@ -454,7 +457,7 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
           {showPreview ? (
             <>
               <Button variant="outlined" onClick={() => setShowPreview(false)}>
-                Back to Edit
+{t('ui.backToEdit')}
               </Button>
               <Box sx={{ flexGrow: 1 }} />
               <Button 
@@ -469,7 +472,7 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
             <>
               <Box sx={{ flexGrow: 1 }} />
               <Button variant="text" disabled={activeStep === 0 || isSubmitting} onClick={handleBack} sx={{mr: 1}}>
-                Previous Step
+{t('ui.previousStep')}
               </Button>
               {activeStep === steps.length - 1 ? (
                 <>
@@ -482,7 +485,7 @@ const AddProductModal = ({ open, onClose, onSuccess, onCreated }) => {
                 </>
               ) : (
                 <Button variant="contained" onClick={handleNext}>
-                  Next Step
+{t('ui.nextStep')}
                 </Button>
               )}
             </>

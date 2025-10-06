@@ -18,10 +18,12 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { FilterList, Refresh } from '@mui/icons-material';
 import AdminLayout from '../../../layouts/AdminLayout';
 import OrderTable from '../../../components/admin/OrderTable';
+import { useTranslation } from '../../../hooks/useTranslation.js';
 import OrderDetailModal from '../../../components/admin/OrderDetailModal';
 import OrderService from '../../../services/orderService';
 
 const AdminOrdersPage = () => {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -45,10 +47,10 @@ const AdminOrdersPage = () => {
   });
 
   const statusOptions = [
-    { value: '', label: 'All Status' },
+    { value: '', label: t('ui.allStatus') },
     { value: 'PENDING', label: 'Pending' },
     { value: 'CONFIRMED', label: 'Confirmed' },
-    { value: 'PROCESSING', label: 'Processing' },
+    { value: 'PROCESSING', label: t('ui.processing') },
     { value: 'SHIPPED', label: 'Shipped' },
     { value: 'DELIVERED', label: 'Delivered' },
     { value: 'CANCELLED', label: 'Cancelled' }
@@ -198,11 +200,11 @@ const AdminOrdersPage = () => {
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <Box sx={{ mb: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: 1, borderColor: 'divider' }}>
             <Typography variant="h6" gutterBottom startIcon={<FilterList />}>
-              Filters
+{t('ui.filters')}
             </Typography>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="end">
               <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>Status</InputLabel>
+                <InputLabel>{t('ui.status')}</InputLabel>
                 <Select
                   value={filters.status}
                   label="Status"
@@ -239,7 +241,7 @@ const AdminOrdersPage = () => {
               />
 
               <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>Sort By</InputLabel>
+                <InputLabel>{t('ui.sortBy')}</InputLabel>
                 <Select
                   value={filters.sortBy}
                   label="Sort By"

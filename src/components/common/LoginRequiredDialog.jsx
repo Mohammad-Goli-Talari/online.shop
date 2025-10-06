@@ -20,6 +20,7 @@ import {
   CheckCircle as CheckIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const LoginRequiredDialog = ({
   open,
@@ -32,8 +33,9 @@ const LoginRequiredDialog = ({
     'Faster checkout process',
     'Personalized recommendations'
   ],
-  redirectPath = null // If provided, redirect here after login instead of just closing
+  redirectPath = null 
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handleLoginRedirect = () => {
@@ -95,7 +97,7 @@ const LoginRequiredDialog = ({
       
       <DialogActions sx={{ p: 3, pt: 0 }}>
         <Button onClick={onClose} color="inherit">
-          Cancel
+{t('common.cancel')}
         </Button>
         <Button 
           onClick={handleSignupRedirect} 
@@ -111,7 +113,7 @@ const LoginRequiredDialog = ({
           startIcon={<LoginIcon />}
           autoFocus
         >
-          Sign In
+{t('auth.signIn')}
         </Button>
       </DialogActions>
     </Dialog>

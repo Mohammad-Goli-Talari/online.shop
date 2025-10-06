@@ -37,8 +37,10 @@ import {
   Payment,
 } from '@mui/icons-material';
 import { getProductImage } from '../../utils/fallbackImages.js';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const OrderDetailModal = ({ open, order, onClose, onStatusUpdate }) => {
+  const { t } = useTranslation();
   const [updating, setUpdating] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [statusNotes, setStatusNotes] = useState('');
@@ -47,7 +49,7 @@ const OrderDetailModal = ({ open, order, onClose, onStatusUpdate }) => {
   const statusConfig = {
     PENDING: { color: 'warning', icon: <Pending />, label: 'Pending' },
     CONFIRMED: { color: 'info', icon: <CheckCircle />, label: 'Confirmed' },
-    PROCESSING: { color: 'primary', icon: <Assessment />, label: 'Processing' },
+    PROCESSING: { color: 'primary', icon: <Assessment />, label: t('ui.processing') },
     SHIPPED: { color: 'secondary', icon: <LocalShipping />, label: 'Shipped' },
     DELIVERED: { color: 'success', icon: <CheckCircle />, label: 'Delivered' },
     CANCELLED: { color: 'error', icon: <Cancel />, label: 'Cancelled' }
@@ -355,7 +357,7 @@ const OrderDetailModal = ({ open, order, onClose, onStatusUpdate }) => {
             <Grid item xs={12}>
               <Divider sx={{ my: 2 }} />
               <Typography variant="h6" gutterBottom>
-                Update Order Status
+{t('ui.updateOrderStatus')}
               </Typography>
               
               {error && (
@@ -369,7 +371,7 @@ const OrderDetailModal = ({ open, order, onClose, onStatusUpdate }) => {
                   <InputLabel>New Status</InputLabel>
                   <Select
                     value={newStatus}
-                    label="New Status"
+                    label={t('ui.newStatus')}
                     onChange={(e) => setNewStatus(e.target.value)}
                   >
                     {availableStatuses.map((status) => (
@@ -400,7 +402,7 @@ const OrderDetailModal = ({ open, order, onClose, onStatusUpdate }) => {
                   disabled={!newStatus || updating}
                   sx={{ minWidth: 100 }}
                 >
-                  {updating ? 'Updating...' : 'Update'}
+                  {updating ? t('loading.updating') : t('common.update')}
                 </Button>
               </Box>
             </Grid>
@@ -409,7 +411,7 @@ const OrderDetailModal = ({ open, order, onClose, onStatusUpdate }) => {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

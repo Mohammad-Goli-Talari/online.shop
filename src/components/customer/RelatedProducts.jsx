@@ -13,6 +13,7 @@ import {
 import { Close as CloseIcon, Share as ShareIcon, CompareArrows } from '@mui/icons-material';
 import ProductCard from './ProductCard';
 import { getProductImage } from '../../utils/fallbackImages.js';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -37,6 +38,7 @@ class ErrorBoundary extends React.Component {
 }
 
 const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToComparison }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
@@ -130,7 +132,7 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
                       aria-label={`Related product: ${product.name}, Price: $${product.price}`}
                     />
                     <Box display="flex" justifyContent="space-between" mt={1}>
-                      <Tooltip title="Quick View">
+                      <Tooltip title={t('ui.quickView')}>
                         <Button
                           size="small"
                           variant="outlined"
@@ -139,7 +141,7 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
                           Quick View
                         </Button>
                       </Tooltip>
-                      <Tooltip title="Add to Comparison">
+                      <Tooltip title={t('ui.addToComparison')}>
                         <Button
                           size="small"
                           variant="outlined"
@@ -148,7 +150,7 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
                           <CompareArrows fontSize="small" />
                         </Button>
                       </Tooltip>
-                      <Tooltip title="Share">
+                      <Tooltip title={t('ui.share')}>
                         <Button
                           size="small"
                           variant="outlined"
@@ -188,7 +190,7 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
           <IconButton
             sx={{ position: 'absolute', top: 8, right: 8 }}
             onClick={closeQuickView}
-            aria-label="Close quick view modal"
+            aria-label={t('ui.closeQuickViewModal')}
           >
             <CloseIcon />
           </IconButton>
@@ -219,7 +221,7 @@ const RelatedProducts = ({ products = [], onAddToCart, loading = false, onAddToC
                 sx={{ mt: 2 }}
                 onClick={() => handleAddToCart(quickViewProduct.id)}
               >
-                Add to Cart
+{t('product.addToCart')}
               </Button>
             </>
           )}

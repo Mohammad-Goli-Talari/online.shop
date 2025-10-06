@@ -15,6 +15,7 @@ import { Add, Remove, ShoppingCart } from '@mui/icons-material';
 import useAuth from '../../hooks/useAuth';
 import LoginRequiredDialog from '../common/LoginRequiredDialog';
 import { checkAuthenticationForAction } from '../../utils/authUtils';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const ProductActions = ({
   quantity,
@@ -30,6 +31,7 @@ const ProductActions = ({
   buyNowHandler = null,
   loading = false,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
@@ -135,9 +137,9 @@ const ProductActions = ({
             bottom: { xs: 0, sm: 'auto' },
             zIndex: { xs: 1000, sm: 'auto' },
           }}
-          aria-label="Add to cart"
+          aria-label={t('product.addToCart')}
         >
-          {cartLoading ? 'Adding...' : 'Add to Cart'}
+          {cartLoading ? t('loading.addingToCart') : t('product.addToCart')}
         </Button>
 
         {/* Optional Buy Now button */}
@@ -151,9 +153,9 @@ const ProductActions = ({
             sx={{
               width: { xs: '100%', sm: 'auto' },
             }}
-            aria-label="Buy now"
+            aria-label={t('product.buyNow')}
           >
-            Buy Now
+{t('product.buyNow')}
           </Button>
         )}
       </Stack>

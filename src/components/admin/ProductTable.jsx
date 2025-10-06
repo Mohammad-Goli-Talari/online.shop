@@ -20,6 +20,7 @@ import { Inventory2Outlined } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { getProductImage } from '../../utils/fallbackImages.js';
 import EmptyState from '../common/EmptyState';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const ProductTable = ({
   products,
@@ -30,6 +31,7 @@ const ProductTable = ({
   onEdit,
   onDelete,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const tableRef = useRef(null);
@@ -118,12 +120,12 @@ const ProductTable = ({
               <TableCell>Image</TableCell>
               <TableCell>Name</TableCell>
               <TableCell>SKU</TableCell>
-              <TableCell>Category</TableCell>
+              <TableCell>{t('ui.category')}</TableCell>
               <TableCell>Price</TableCell>
               <TableCell>Stock</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Created</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell>{t('ui.status')}</TableCell>
+              <TableCell>{t('ui.created')}</TableCell>
+              <TableCell align="right">{t('ui.actions')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -234,7 +236,7 @@ const ProductTable = ({
                       variant="outlined"
                       onClick={() => onEdit && onEdit(product)}
                     >
-                      Edit
+{t('common.edit')}
                     </Button>
                     <Button
                       size="small"
@@ -242,7 +244,7 @@ const ProductTable = ({
                       variant="outlined"
                       onClick={() => onDelete && onDelete(product)}
                     >
-                      Delete
+{t('common.delete')}
                     </Button>
                   </Box>
                 </TableCell>
@@ -274,8 +276,8 @@ const ProductTable = ({
                 <TableCell colSpan={10} align="center" sx={{ py: 2 }}>
                   <EmptyState 
                     icon={Inventory2Outlined}
-                    title="No products found"
-                    description="Start by adding your first product to the inventory"
+                    title={t('ui.noProductsFound')}
+                    description={t('ui.startAddingProducts')}
                     variant="compact"
                   />
                 </TableCell>

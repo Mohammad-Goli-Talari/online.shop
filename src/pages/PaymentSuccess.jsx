@@ -21,8 +21,10 @@ import { useNavigate } from 'react-router-dom';
 import PaymentService from '../services/paymentService';
 import OrderService from '../services/orderService';
 import { useCart } from '../context/useCart';
+import { useTranslation } from '../hooks/useTranslation.js';
 
 function PaymentSuccess() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { clearCart } = useCart();
   const [paymentData, setPaymentData] = useState(null);
@@ -137,7 +139,7 @@ function PaymentSuccess() {
           {orderConfirmationError && (
             <Alert severity="warning" sx={{ mb: 3 }}>
               <Typography variant="body2">
-                <strong>Payment Successful</strong> - Your payment was processed, but there was an issue updating your order status. 
+                <strong>{t('ui.paymentSuccessful')}</strong> - {t('ui.paymentProcessedIssue')} 
                 Please contact support with your order ID: <strong>{paymentData.orderId}</strong>
               </Typography>
             </Alert>
@@ -211,7 +213,7 @@ function PaymentSuccess() {
               startIcon={<ShoppingBagIcon />}
               onClick={handleViewOrders}
             >
-              View Orders
+{t('ui.viewOrders')}
             </Button>
           </Box>
 

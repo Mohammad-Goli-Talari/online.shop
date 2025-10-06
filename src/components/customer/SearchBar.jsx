@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { TextField, InputAdornment, IconButton } from '@mui/material';
 import { Search, Clear } from '@mui/icons-material';
+import { useTranslation } from '../../hooks/useTranslation.js';
 
 const SearchBar = ({ onSearch = () => Promise.resolve(), minQueryLength = 3, debounceMs = 800 }) => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const debounceTimerRef = useRef(null);
@@ -117,8 +119,8 @@ const SearchBar = ({ onSearch = () => Promise.resolve(), minQueryLength = 3, deb
     <TextField
       fullWidth
       variant="outlined"
-      placeholder="Search products..."
-      aria-label="Search products"
+      placeholder={t('placeholders.searchProducts')}
+      aria-label={t('ui.searchProducts')}
       value={query}
       onChange={handleInputChange}
       onKeyDown={handleKeyDown}
@@ -135,7 +137,7 @@ const SearchBar = ({ onSearch = () => Promise.resolve(), minQueryLength = 3, deb
             <IconButton
               onClick={handleSearchClick}
               edge="start"
-              aria-label="search"
+              aria-label={t('common.search')}
               size="small"
               tabIndex={0}
               disabled={isSearching || (query.trim() !== '' && query.trim().length < minQueryLength)}
@@ -148,7 +150,7 @@ const SearchBar = ({ onSearch = () => Promise.resolve(), minQueryLength = 3, deb
           <InputAdornment position="end">
             <IconButton
               onClick={handleClear}
-              aria-label="clear search"
+              aria-label={t('ui.clearSearch')}
               size="small"
               edge="end"
               tabIndex={0}

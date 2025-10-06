@@ -21,8 +21,10 @@ import CategoryFilter from '../components/customer/CategoryFilter';
 import ShoppingCart from '../components/customer/ShoppingCart';
 import { useCart } from '../context/useCart';
 import ProductService from '../services/productService';
+import { useTranslation } from '../hooks/useTranslation.js';
 
 const Home = () => {
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isPaginating, setIsPaginating] = useState(false);
@@ -180,14 +182,14 @@ const Home = () => {
       }
     >
       <Box sx={{ my: 4, textAlign: 'center' }}>
-        <Typography variant="h3" gutterBottom>Welcome to Our Store</Typography>
-        <Typography variant="h6" color="text.secondary">Discover our exclusive collection of products.</Typography>
+        <Typography variant="h3" gutterBottom>{t('ui.welcomeToStore')}</Typography>
+        <Typography variant="h6" color="text.secondary">{t('ui.discoverCollection')}</Typography>
       </Box>
 
       <Grid container spacing={4}>
         {isMobile ? (
           <Grid size={12}>
-            <Button startIcon={<FilterList />} onClick={() => setFilterDrawerOpen(true)}>Filters</Button>
+            <Button startIcon={<FilterList />} onClick={() => setFilterDrawerOpen(true)}>{t('ui.filters')}</Button>
             <Drawer anchor="left" open={isFilterDrawerOpen} onClose={() => setFilterDrawerOpen(false)}>
               <Box sx={{ width: 250, p: 2 }}>
                 <CategoryFilter onCategorySelect={handleCategorySelect} />
@@ -210,7 +212,7 @@ const Home = () => {
           />
           <div ref={lastProductElementRef} />
           {isPaginating && <Box display="flex" justifyContent="center" my={4}><CircularProgress /></Box>}
-          {!hasMore && products.length > 0 && <Box textAlign="center" my={4}><Typography color="text.secondary">You've reached the end!</Typography></Box>}
+          {!hasMore && products.length > 0 && <Box textAlign="center" my={4}><Typography color="text.secondary">{t('ui.reachedEnd')}</Typography></Box>}
         </Grid>
       </Grid>
 

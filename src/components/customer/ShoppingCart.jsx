@@ -23,6 +23,7 @@ import {
   Payment as PaymentIcon,
 } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from '../../hooks/useTranslation.js';
 import { useNavigate } from 'react-router-dom';
 import EmptyState from '../common/EmptyState';
 import LoginRequiredDialog from '../common/LoginRequiredDialog';
@@ -33,6 +34,7 @@ import useAuth from '../../hooks/useAuth';
 import { AUTH_MESSAGES } from '../../utils/authUtils';
 
 function ShoppingCart({ cartItems, removeFromCart, updateQuantity, clearCart }) {
+  const { t } = useTranslation();
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
   const [imageErrors, setImageErrors] = useState(new Set());
@@ -137,10 +139,10 @@ function ShoppingCart({ cartItems, removeFromCart, updateQuantity, clearCart }) 
   return (
     <Box sx={{ p: 2, minWidth: 320 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">Shopping Cart</Typography>
+        <Typography variant="h6">{t('cart.title')}</Typography>
         {cartItems.length > 0 && (
           <Button variant="outlined" color="secondary" size="small" onClick={clearCart}>
-            Clear Cart
+            {t('ui.clearCart')}
           </Button>
         )}
       </Box>
@@ -148,8 +150,8 @@ function ShoppingCart({ cartItems, removeFromCart, updateQuantity, clearCart }) 
       {cartItems.length === 0 ? (
         <EmptyState 
           icon={CartIcon}
-          title="Your cart is empty"
-          description="Add some products to your cart to get started with your shopping."
+          title={t('ui.yourCartIsEmpty')}
+          description={t('ui.addProductsToCart')}
           variant="compact"
         />
       ) : (
@@ -225,7 +227,7 @@ function ShoppingCart({ cartItems, removeFromCart, updateQuantity, clearCart }) 
             disabled={processingPayment || cartItems.length === 0}
             startIcon={processingPayment ? <CircularProgress size={20} /> : <PaymentIcon />}
           >
-            {processingPayment ? 'Processing...' : 'Payment and purchase completion'}
+            {processingPayment ? t('loading.processing') : t('cart.checkout')}
           </Button>
 
           {paymentError && (

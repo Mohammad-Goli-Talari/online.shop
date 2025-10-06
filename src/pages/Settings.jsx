@@ -30,8 +30,10 @@ import {
   Info as InfoIcon
 } from '@mui/icons-material';
 import AccountLayout from '../layouts/AccountLayout';
+import { useTranslation } from '../hooks/useTranslation.js';
 
 const Settings = () => {
+  const { t } = useTranslation();
   const [emailNotifications, setEmailNotifications] = React.useState(true);
   const [darkMode, setDarkMode] = React.useState(false);
   const [twoFactor, setTwoFactor] = React.useState(false);
@@ -47,7 +49,7 @@ const Settings = () => {
   };
 
   return (
-    <AccountLayout title="Settings">
+    <AccountLayout title={t('ui.settings')}>
       {/* Settings Notice */}
       <Alert 
         severity="info" 
@@ -60,11 +62,11 @@ const Settings = () => {
             startIcon={<SaveIcon />}
             onClick={handleSaveSettings}
           >
-            Save All
+{t('ui.saveAll')}
           </Button>
         }
       >
-        Changes are saved automatically. Use "Save All" to sync with your account.
+        {t('ui.changesSavedAutomatically')}
       </Alert>
 
       <Grid container spacing={3}>
@@ -81,8 +83,8 @@ const Settings = () => {
               <List>
                 <ListItem>
                   <ListItemText
-                    primary="Email Notifications"
-                    secondary="Receive order updates and promotional emails"
+                    primary={t('ui.emailNotifications')}
+                    secondary={t('ui.receiveOrderUpdates')}
                   />
                   <FormControlLabel
                     control={
@@ -97,8 +99,8 @@ const Settings = () => {
                 
                 <ListItem>
                   <ListItemText
-                    primary="SMS Notifications"
-                    secondary="Get text updates for urgent order changes"
+                    primary={t('ui.smsNotifications')}
+                    secondary={t('ui.getTextUpdates')}
                   />
                   <FormControlLabel
                     control={<Switch disabled />}
@@ -108,8 +110,8 @@ const Settings = () => {
                 
                 <ListItem>
                   <ListItemText
-                    primary="Push Notifications"
-                    secondary="Browser notifications for new features"
+                    primary={t('ui.pushNotifications')}
+                    secondary={t('ui.browserNotifications')}
                   />
                   <FormControlLabel
                     control={<Switch disabled />}
@@ -134,8 +136,8 @@ const Settings = () => {
               <List>
                 <ListItem>
                   <ListItemText
-                    primary="Dark Mode"
-                    secondary="Toggle between light and dark themes"
+                    primary={t('ui.darkMode')}
+                    secondary={t('ui.toggleThemes')}
                   />
                   <FormControlLabel
                     control={
@@ -150,11 +152,11 @@ const Settings = () => {
                 
                 <ListItem>
                   <ListItemText
-                    primary="Language"
-                    secondary="Choose your preferred language"
+                    primary={t('ui.language')}
+                    secondary={t('ui.chooseLanguage')}
                   />
                   <FormControl size="small" sx={{ minWidth: 120 }}>
-                    <InputLabel>Language</InputLabel>
+                    <InputLabel>{t('ui.language')}</InputLabel>
                     <Select
                       value={language}
                       label="Language"
@@ -186,7 +188,7 @@ const Settings = () => {
                 <ListItem>
                   <ListItemText
                     primary="Two-Factor Authentication"
-                    secondary="Add an extra layer of security to your account"
+                    secondary={t('ui.addSecurityLayer')}
                   />
                   <FormControlLabel
                     control={
@@ -204,8 +206,8 @@ const Settings = () => {
                     <PrivacyIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Data Privacy"
-                    secondary="Manage how your data is used and shared"
+                    primary={t('ui.dataPrivacy')}
+                    secondary={t('ui.manageDataUsage')}
                   />
                   <Button size="small" variant="outlined">
                     Manage
@@ -214,11 +216,11 @@ const Settings = () => {
 
                 <ListItem>
                   <ListItemText
-                    primary="Login Sessions"
-                    secondary="View and manage your active sessions"
+                    primary={t('ui.loginSessions')}
+                    secondary={t('ui.manageSessions')}
                   />
                   <Button size="small" variant="outlined">
-                    View
+{t('common.view')}
                   </Button>
                 </ListItem>
               </List>
@@ -257,7 +259,7 @@ const Settings = () => {
                   color="error"
                   fullWidth
                 >
-                  Delete Account
+{t('ui.deleteAccount')}
                 </Button>
               </Box>
             </CardContent>
